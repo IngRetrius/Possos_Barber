@@ -94,5 +94,5 @@ Con `exports` declarado, `import "@possos/booking/src/internal/x"` no resuelve: 
 
 - Un proyecto de Vercel con *Root Directory* `apps/web` y el comando de build `turbo run build --filter=web...`.
 - Turborepo omite el build cuando los cambios no afectan a `web` ni a sus dependencias.
-- Las migraciones de Supabase no se aplican en el build de Vercel. Se aplican con `supabase db push` en un paso de CI aparte, antes del despliegue.
+- Las migraciones de Supabase no se aplican en el build de Vercel ni con la integración de GitHub de Supabase (comprobado el 19/11/2026). Hoy se aplican a mano con `pnpm db:push` (`supabase db push --remote` sobre el proyecto enlazado), después de que pasen `pnpm db:test` y el CI. Con la CLI 3, los comandos `db` y `migration` apuntan a la base local si no llevan `--remote`. Pasarlo a un paso de CI exigiría guardar un token de acceso de Supabase en los secrets de GitHub; está pendiente de decidir.
 - Variables de entorno en Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (la clave publicable, antes "anon key"), `SUPABASE_SECRET_KEY` (la clave secreta, antes "service role"; solo en el servidor), token y phone number ID de WhatsApp, token de verificación del webhook, secreto de la app de Meta (para validar la firma `X-Hub-Signature-256`), claves VAPID y `CRON_SECRET`.

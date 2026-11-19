@@ -48,6 +48,7 @@ pnpm dev                   # http://localhost:3000
 | `pnpm format` / `pnpm format:check` | Prettier |
 | `pnpm db:test` | Pruebas pgTAP de `supabase/tests/` |
 | `pnpm db:reset` | Recrea la base local con las migraciones y `supabase/seed.sql` |
+| `pnpm db:push` | Aplica las migraciones nuevas a producción (proyecto enlazado; ver [F2-entrega](fases/F2-entrega.md#despliegue)). Solo con el CI en verde, y nunca con `--include-seed` |
 | `pnpm db:types` | Regenera `packages/supabase/src/database.types.ts` desde la base local |
 | `pnpm db:stop` | Apaga Supabase local |
 

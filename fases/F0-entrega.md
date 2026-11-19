@@ -49,7 +49,7 @@ Estado del proyecto al cerrar la parte técnica de [F0](F0-base.md), el 19/11/20
 - Docker lo da **Colima** (`colima start`), no Docker Desktop.
 - Variables con las claves nuevas: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (antes anon key) y `SUPABASE_SECRET_KEY` (antes service role). En local van en `apps/web/.env.local`, que está fuera del repo.
 - En Vercel las carga la integración, **solo en Production**. Además agrega `POSTGRES_*`, `SUPABASE_JWT_SECRET` y las claves antiguas, que el código no usa.
-- Migraciones: `supabase/migrations/<timestamp>_<módulo>_<nombre>.sql`. La integración de GitHub de Supabase puede aplicarlas sola a producción en cada push a `main`. **Pendiente:** confirmar si "Deploy to production" quedó activo. Si es así, [docs/08](../docs/08-estructura-monorepo.md#despliegue-en-vercel) debe decir que no hace falta `supabase db push` en CI.
+- Migraciones: `supabase/migrations/<timestamp>_<módulo>_<nombre>.sql`. **La integración de GitHub de Supabase no las aplica sola** (comprobado el 19/11/2026: después del push de F2, producción no tenía ninguna). Se aplican a mano con `pnpm db:push` (ver [docs/08](../docs/08-estructura-monorepo.md#despliegue-en-vercel)).
 - Broadcast desde la base: `realtime.send(payload, event, topic, private => false)`. El envío falla si ese día nadie se ha conectado por WebSocket, y el trigger debe tolerarlo sin abortar la reserva ([docs/07](../docs/07-stack.md#decisiones-y-alternativas-descartadas)).
 - `pnpm db:types` regenera `packages/supabase/src/database.types.ts` desde la base local.
 
@@ -58,7 +58,7 @@ Estado del proyecto al cerrar la parte técnica de [F0](F0-base.md), el 19/11/20
 - *Root Directory* `apps/web`, build `turbo run build --filter=web...`, Node 24.x.
 - `ENABLE_EXPERIMENTAL_COREPACK=1` hace que Vercel use el pnpm 12.6.0 de `packageManager`. Si se quita, el build usa otro pnpm.
 - Las URL que no son de producción piden inicio de sesión de Vercel (protección por omisión del equipo).
-- Las funciones están en `iad1` (Washington). **Pendiente:** moverlas a la región del proyecto de Supabase si es otra (por ejemplo, `gru1` si Supabase está en São Paulo).
+- Las funciones están en `iad1` (Washington). **Pendiente:** el proyecto de Supabase está en `us-west-2` (Oregón), así que conviene mover las funciones a `pdx1` (Portland). Es un cambio en la configuración del proyecto de Vercel; lo decide Juan.
 
 ## Pendiente fuera del código
 

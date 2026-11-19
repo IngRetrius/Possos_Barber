@@ -68,7 +68,8 @@ if (!result.ok) return { error: bookingErrorMessage(result.error) };
 
 ## Despliegue
 
-- Las migraciones llegan a producción con la integración de GitHub de Supabase, si "Deploy to production" quedó activo. Sigue **pendiente de confirmar** (ver [F0-entrega](F0-entrega.md#supabase)). Si no está activo, hay que aplicarlas con `supabase db push` antes de F3.
+- **Las migraciones no llegan solas a producción.** Las de F2 se aplicaron el 19/11/2026 con `pnpm db:push`. En producción quedaron 21 tablas, todas con RLS, más `no_double_booking`, `booking_settings` y los buckets. Cada fase que agregue migraciones las aplica igual, después de que el CI quede en verde.
+- Para enlazar el repo con producción, una sola vez por equipo: `pnpm exec supabase login` y `pnpm exec supabase link --project-ref <ref del proyecto Possos_Barber>`. El enlace queda en `supabase/.temp`, que no se sube al repo.
 - La semilla no se aplica en producción.
 
 ## Pendiente
