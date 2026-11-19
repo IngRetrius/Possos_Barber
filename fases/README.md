@@ -22,7 +22,7 @@ Para no confundirlas con las fases de producto, las de construcción se llaman *
 
 F1 y F2 pueden avanzar en paralelo. F6 puede empezar apenas termine F3, en paralelo con F4 y F5.
 
-Para empezar F1 o F2, lee primero [F0-entrega.md](F0-entrega.md): qué existe, cómo se trabaja y lo que no es evidente en el código.
+Para empezar F1 o F2, lee primero [F0-entrega.md](F0-entrega.md): qué existe, cómo se trabaja y lo que no es evidente en el código. Para F3 en adelante, lee también [F1-entrega.md](F1-entrega.md): cómo se usan los tokens y componentes de `@possos/ui`.
 
 ## Pista paralela: trámite con Meta
 
