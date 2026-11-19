@@ -262,6 +262,10 @@ importers:
         version: 6.0.3
 
   packages/auth:
+    dependencies:
+      '@possos/supabase':
+        specifier: workspace:*
+        version: link:../supabase
     devDependencies:
       '@possos/config':
         specifier: workspace:*
@@ -274,6 +278,13 @@ importers:
         version: 6.0.3
 
   packages/barbers:
+    dependencies:
+      '@possos/supabase':
+        specifier: workspace:*
+        version: link:../supabase
+      server-only:
+        specifier: 0.0.1
+        version: 0.0.1
     devDependencies:
       '@possos/config':
         specifier: workspace:*
@@ -284,8 +295,21 @@ importers:
       typescript:
         specifier: 6.0.3
         version: 6.0.3
+      vitest:
+        specifier: 5.1.1
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0))
 
   packages/booking:
+    dependencies:
+      '@possos/barbers':
+        specifier: workspace:*
+        version: link:../barbers
+      '@possos/supabase':
+        specifier: workspace:*
+        version: link:../supabase
+      server-only:
+        specifier: 0.0.1
+        version: 0.0.1
     devDependencies:
       '@possos/config':
         specifier: workspace:*
@@ -296,8 +320,18 @@ importers:
       typescript:
         specifier: 6.0.3
         version: 6.0.3
+      vitest:
+        specifier: 5.1.1
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0))
 
   packages/catalog:
+    dependencies:
+      '@possos/supabase':
+        specifier: workspace:*
+        version: link:../supabase
+      server-only:
+        specifier: 0.0.1
+        version: 0.0.1
     devDependencies:
       '@possos/config':
         specifier: workspace:*
@@ -310,6 +344,13 @@ importers:
         version: 6.0.3
 
   packages/commissions:
+    dependencies:
+      '@possos/supabase':
+        specifier: workspace:*
+        version: link:../supabase
+      server-only:
+        specifier: 0.0.1
+        version: 0.0.1
     devDependencies:
       '@possos/config':
         specifier: workspace:*
@@ -320,6 +361,9 @@ importers:
       typescript:
         specifier: 6.0.3
         version: 6.0.3
+      vitest:
+        specifier: 5.1.1
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0))
 
   packages/config:
     dependencies:
@@ -347,6 +391,10 @@ importers:
         version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0))
 
   packages/customers:
+    dependencies:
+      '@possos/supabase':
+        specifier: workspace:*
+        version: link:../supabase
     devDependencies:
       '@possos/config':
         specifier: workspace:*
@@ -359,6 +407,10 @@ importers:
         version: 6.0.3
 
   packages/notifications:
+    dependencies:
+      '@possos/supabase':
+        specifier: workspace:*
+        version: link:../supabase
     devDependencies:
       '@possos/config':
         specifier: workspace:*

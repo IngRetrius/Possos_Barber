@@ -2,7 +2,7 @@
 
 Sitio web de Possos Barber, una barbería de Ibagué (Colombia): una PWA donde los clientes reservan su corte y una agenda para el barbero. Su objetivo es reemplazar Beunik con recordatorios automáticos por WhatsApp que cuesten mucho menos, para que se pierdan menos citas por olvido.
 
-**Estado:** investigación y diseño terminados (19/11/2026). Construcción en [F0](fases/F0-base.md): el esqueleto del monorepo ya corre en local.
+**Estado:** investigación y diseño terminados (19/11/2026). Construcción en curso: F1 (sistema de diseño) y F2 (base de datos de la agenda y de los cobros) terminadas en código; el estado de cada fase está en [fases/](fases/README.md).
 
 ## Documentos
 
@@ -52,5 +52,7 @@ pnpm dev                   # http://localhost:3000
 | `pnpm db:stop` | Apaga Supabase local |
 
 Con `pnpm dev`, `http://localhost:3000/muestras` muestra todos los componentes de `@possos/ui` y sus estados. Esa página solo existe en desarrollo. Desde un celular en la misma red Wi-Fi se abre con la URL de la línea `Network:` que imprime `pnpm dev` (por ejemplo, `http://192.168.1.67:3000/muestras`).
+
+La semilla (`supabase/seed.sql`) crea dos cuentas para probar en local, ambas con la contraseña `possos-local`: `barbero@ejemplo.test` (administrador y barbero) y `cliente@ejemplo.test` (cliente con perfil). Solo existen en la base local.
 
 Supabase local usa los puertos 55320 a 55329 (API en `http://127.0.0.1:55321`, Studio en `http://127.0.0.1:55323`) para no chocar con otros proyectos.

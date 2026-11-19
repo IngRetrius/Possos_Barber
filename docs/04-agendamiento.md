@@ -75,8 +75,8 @@ Solo los estados que ocupan el horario entran en la restricción de exclusión. 
 ## Inasistencias
 
 1. Pasada la hora de una cita, el barbero la marca como **Vino** o **No vino** desde la agenda. Si no marca nada, la cita queda pendiente en una lista "por cerrar"; no se marca sola como inasistencia.
-2. Cada `no_show` suma 1 a `customers.no_show_count`.
-3. Al llegar a 2, `customers.requires_approval` pasa a `true`. Desde ese momento sus reservas en línea entran como `pending_approval` y el barbero las aprueba o rechaza. El cliente ve el aviso "Tu reserva queda pendiente de que el barbero la apruebe".
+2. Cada `no_show` suma 1 a `customer_booking_status.no_show_count` (tabla del módulo `booking`).
+3. Al llegar a 2 (`booking_settings.no_show_threshold`), `customer_booking_status.requires_approval` pasa a `true`. Desde ese momento sus reservas en línea entran como `pending_approval` y el barbero las aprueba o rechaza. El cliente ve el aviso "Tu reserva queda pendiente de que el barbero la apruebe".
 4. El administrador puede reiniciar el contador o quitar la marca a mano.
 5. Si en el futuro se habilitan anticipos (fase 3), esta regla es el punto donde se exigirían.
 

@@ -1,6 +1,6 @@
 # 09. Modelo de datos inicial en Supabase
 
-Es una propuesta para la primera migración. Los nombres van en inglés y el esquema es `public`. Cada tabla dice qué módulo es su dueño ([08](08-estructura-monorepo.md), regla 5).
+Construido en F2 (19/11/2026): las migraciones están en `supabase/migrations/`, una por módulo, y las pruebas en `supabase/tests/database/`. Si este documento y una migración no coinciden, manda la migración y se corrige este documento. Los nombres van en inglés y el esquema es `public`. Cada tabla dice qué módulo es su dueño ([08](08-estructura-monorepo.md), regla 5).
 
 ## Diagrama
 
@@ -38,7 +38,7 @@ Funciones `security definer` con `set search_path = ''`: `is_admin()` y `has_rol
 
 | Tabla | Columnas principales |
 |---|---|
-| `services` | `id`, `name`, `description`, `duration_min` (> 0, múltiplo de 5), `price_cop` (entero ≥ 0), `active`, `sort_order` |
+| `services` | `id`, `name`, `description`, `duration_min` (> 0, múltiplo de 5), `price_cop` (entero ≥ 0; null mientras el dueño no confirme el precio, **[PENDIENTE]**), `active`, `sort_order` |
 
 ### barbers
 
@@ -50,7 +50,11 @@ Funciones `security definer` con `set search_path = ''`: `is_admin()` y `has_rol
 | `time_off` | `id`, `barber_id`, `period` (`tstzrange`), `reason`. Exclusión entre bloqueos del mismo barbero |
 | `portfolio_items` | `id`, `barber_id`, `image_path` (Storage), `caption`, `sort_order` |
 
-Función `current_barber_id()`: devuelve el `barbers.id` del usuario actual, o null.
+Función `current_barber_id()`: devuelve el `barbers.id` del usuario actual si tiene el rol `barber`, o null. Vive en la migración de `barbers` porque lee su tabla.
+
+Función `create_time_off(barber_id, starts_at, ends_at, reason)`: la única forma de crear bloqueos (ver abajo, en booking).
+
+Un trigger impide que un barbero sin rol de administrador cambie su `user_id`, `active` o `slot_interval_min`.
 
 ### customers
 
@@ -61,7 +65,10 @@ Función `current_barber_id()`: devuelve el `barbers.id` del usuario actual, o n
 | `customer_notes` | `id`, `customer_id`, `barber_id`, `body`, `created_at` |
 
 - El registro del cliente en `customers` se crea al completar el perfil, después del registro: nombre, celular y autorización de datos.
-- `booking` llama a la función pública `link_customer_to_barber(customer_id, barber_id)` al crear cada cita. Así `customers` no necesita conocer `appointments` para aplicar su RLS y no se forma un ciclo.
+- `booking` llama a la función `link_customer_to_barber(customer_id, barber_id)` al crear cada cita. Así `customers` no necesita conocer `appointments` para aplicar su RLS y no se forma un ciclo. Nadie la puede llamar desde la app: un barbero que la llamara podría verse con cualquier cliente.
+- El personal crea clientes sin cuenta con `staff_create_customer(full_name, phone, email, whatsapp_opt_in)`; si quien lo crea es barbero, queda enlazado con él.
+- La restricción `customers_account_has_consent` exige celular, `data_consent_at` y `data_policy_version` a todo perfil con cuenta (Ley 1581). El celular se valida en la base como `+57` y 10 dígitos.
+- El cliente solo puede escribir las columnas de su perfil (nombre, celular, correo, WhatsApp y autorización); `user_id` y `created_by` no se tocan desde la app.
 
 ### booking
 
@@ -73,7 +80,7 @@ Función `current_barber_id()`: devuelve el `barbers.id` del usuario actual, o n
 | `booking_events` | `id` (bigserial), `type`, `version`, `appointment_id`, `payload` (jsonb), `created_at` |
 
 ```sql
-create extension if not exists btree_gist;
+create extension if not exists btree_gist with schema extensions;
 
 create type appointment_status as enum
   ('pending_approval', 'booked', 'confirmed', 'completed', 'no_show', 'cancelled', 'rejected');
@@ -85,11 +92,12 @@ create table appointments (
   service_id       uuid not null references services(id),
   period           tstzrange not null,
   status           appointment_status not null default 'booked',
-  price_cop        integer not null check (price_cop >= 0),   -- precio al momento de reservar
+  price_cop        integer check (price_cop >= 0),            -- precio al reservar; null = [PENDIENTE]
   source           text not null check (source in ('customer', 'staff')),
   auto_assigned    boolean not null default false,             -- "cualquiera disponible"
   created_by       uuid references auth.users(id),
   confirmed_at     timestamptz,
+  confirmed_via    text check (confirmed_via in ('customer', 'staff', 'whatsapp')),
   cancelled_by     text check (cancelled_by in ('customer', 'staff')),
   cancel_reason    text,
   rescheduled_from uuid references appointments(id),
@@ -97,7 +105,8 @@ create table appointments (
   updated_at       timestamptz not null default now(),
 
   constraint period_is_half_open
-    check (not isempty(period) and lower_inc(period) and not upper_inc(period)),
+    check (not isempty(period) and lower_inc(period) and not upper_inc(period)
+           and not lower_inf(period) and not upper_inf(period)),
 
   -- La garantía central: un barbero no puede tener dos citas que se crucen.
   constraint no_double_booking
@@ -114,7 +123,11 @@ create index on appointments using gist (period);
 1. Bloquea la fila del barbero (`select 1 from barbers where id = new.barber_id for update`).
 2. Rechaza la cita si se cruza con un `time_off` de ese barbero.
 
-La función que crea bloqueos toma el mismo candado, así que las dos operaciones no se cruzan en carreras. Un bloqueo nuevo **sí** puede caer encima de citas ya existentes, porque es decisión del barbero; la función le devuelve la lista de esas citas para que las mueva o las cancele.
+`create_time_off` (módulo `barbers`) toma el mismo candado, así que las dos operaciones no se cruzan en carreras. Un bloqueo nuevo **sí** puede caer encima de citas ya existentes, porque es decisión del barbero. Como `barbers` no conoce `appointments`, la lista de esas citas sale de `list_conflicting_appointments` (módulo `booking`): `blockTime()` de `@possos/booking/server` llama a las dos y le devuelve al barbero el bloqueo y las citas que debe mover o cancelar.
+
+**Eventos (`booking_events`).** Un trigger `after insert or update` sobre `appointments` publica `appointment.created`, `appointment.rescheduled` (la cita nueva, con `rescheduled_from`), `appointment.cancelled` y `appointment.status_changed` (con `previous_status`). Al reprogramar, la cita anterior se cancela sin evento propio: el consumidor descarta lo programado para `rescheduled_from`. El payload (versión 1) solo lleva identificadores y fechas; su contrato está en `packages/booking/src/events.ts`.
+
+**Broadcast.** Otro trigger publica `slots_changed` en `slots:<barber_id>:<YYYY-MM-DD>` con `realtime.send(..., private => false)` y tolera que falle.
 
 ### commissions
 
@@ -128,7 +141,9 @@ Reemplaza las "facturas" de Beunik, que según el dueño (19/11/2026) solo repar
 - Un cobro por cita `completed`. El monto llega prellenado con `appointments.price_cop` y se puede cambiar, porque lo cobrado puede diferir de lo reservado.
 - El porcentaje se copia en cada cobro: cambiarlo no altera liquidaciones pasadas.
 - Solo servicios; los productos no entran (los productos son de la fase 3).
-- `booking` no conoce este módulo. `commissions` lee la cita por la API pública de `booking` y no escribe en sus tablas.
+- `booking` no conoce este módulo. `commissions` lee la cita con `private.booking_appointment(id)`, la API de lectura de `booking` para SQL, y no escribe en sus tablas.
+- Para registrar cobros, el barbero necesita su fila en `commission_rates`; si falta, `record_charge` devuelve `NO_COMMISSION_RATE`. No hay valor por omisión en el código: el 50 % lo pone la semilla en local y el script del primer administrador en producción (F3).
+- Las fechas de corrección (mismo día) y de liquidación se calculan en hora de Bogotá.
 
 ### notifications
 
@@ -147,26 +162,38 @@ Reglas del despacho:
 
 ## Funciones de Postgres (API de escritura)
 
-Todas son `security definer`, con `set search_path = ''`. Validan el rol y la política adentro y escriben en `booking_events`. Los clientes y el personal no tienen permiso de `insert`, `update` ni `delete` directo sobre `appointments`.
+Todas son `security definer`, con `set search_path = ''`. Validan el rol y la política adentro; el trigger de `appointments` escribe en `booking_events`. Los clientes y el personal no tienen permiso de `insert`, `update` ni `delete` directo sobre `appointments`. Supabase deja ejecutar cualquier función de `public` a `anon` y `authenticated` por omisión, así que cada migración revoca ese permiso y lo concede solo a quien corresponde.
+
+Las funciones internas van en el esquema `private`, que PostgREST no expone; cada módulo les pone su prefijo (`private.booking_check`, ...).
 
 | Función | Quién | Qué hace |
 |---|---|---|
-| `get_available_slots(service_id, barber_id?, date)` | anon y authenticated | Devuelve solo `start_at` y los barberos libres. Sin datos de clientes |
-| `book_appointment(service_id, barber_id?, start_at)` | cliente | Aplica anticipación y horario, resuelve "cualquiera disponible", pone `pending_approval` si el cliente lo requiere y enlaza el cliente con el barbero |
-| `staff_create_appointment(customer_id, service_id, barber_id, start_at)` | barbero (su agenda) y admin | Igual, sin las reglas de anticipación |
-| `cancel_appointment(id, reason)` | cliente (dentro de la ventana), barbero y admin | |
+| `get_available_slots(service_id, day, barber_id?)` | anon y authenticated | Devuelve solo `start_at` y `barber_ids` (los barberos libres). Sin datos de clientes. Horas alineadas al `slot_interval_min` del barbero desde el inicio de cada rango del horario |
+| `book_appointment(service_id, start_at, barber_id?)` | cliente | Aplica anticipación y horario, resuelve "cualquiera disponible", pone `pending_approval` si el cliente lo requiere y enlaza el cliente con el barbero |
+| `staff_create_appointment(customer_id, service_id, barber_id, start_at)` | barbero (su agenda) y admin | Igual, sin las reglas de anticipación ni la alineación al intervalo; la cita sí debe caber en el horario. El barbero solo agenda a clientes que ya ve |
+| `cancel_appointment(id, reason)` | cliente (dentro de la ventana), barbero y admin | El personal debe dar un motivo |
 | `reschedule_appointment(id, new_start_at, new_barber_id?)` | cliente (dentro de la ventana), barbero y admin | Crea la nueva y cancela la anterior en una sola transacción |
-| `confirm_appointment(id, via)` | cliente, barbero, admin y el servicio de notificaciones | |
+| `confirm_appointment(id, via)` | cliente, barbero, admin y el servicio de notificaciones | `via`: `customer`, `staff` o `whatsapp`. Confirmar dos veces no es error |
 | `decide_pending(id, approve)` | barbero y admin | |
-| `mark_attendance(id, attended)` | barbero y admin | Actualiza `customer_booking_status` |
+| `mark_attendance(id, attended)` | barbero y admin | Solo después de la hora de inicio. Actualiza `customer_booking_status` |
 | `reset_no_shows(customer_id)` | admin | |
+| `list_conflicting_appointments(barber_id, starts_at, ends_at)` | barbero (su agenda) y admin | Citas que ocupan ese periodo, con el nombre del cliente |
 | `get_appointment_for_notification(id)` | solo service role | Contrato público para `notifications`: fecha, servicio, barbero, nombre, celular y opt-in |
 | `record_charge(appointment_id, amount_cop)` | barbero (su agenda) y admin | Módulo `commissions`. Exige la cita en `completed` y sin cobro previo; copia el porcentaje vigente |
 | `update_charge(id, amount_cop)` | barbero (sus cobros del mismo día) y admin | Corrige el monto; el porcentaje copiado no cambia |
 | `void_charge(id, reason)` | admin | Anula un cobro con motivo; no se borra |
-| `get_settlement(barber_id?, from, to)` | barbero (solo el suyo) y admin | Totales del periodo: servicios, cobrado, parte del barbero y parte de la barbería, sin los anulados |
+| `get_settlement(from, to, barber_id?)` | barbero (solo el suyo) y admin | Totales del periodo (fechas de Bogotá, ambas incluidas), una fila por barbero: servicios, cobrado, parte del barbero y parte de la barbería, sin los anulados |
 
-Los errores se devuelven con códigos estables (`SLOT_TAKEN`, `OUTSIDE_HOURS`, `TOO_LATE_TO_CANCEL`, `NEEDS_APPROVAL`…) que la interfaz traduce al español.
+Los errores salen como excepción con el código en el mensaje (SQLSTATE `P0001`). Cada paquete los traduce con `errorCode()` de `@possos/supabase` y su función de textos (`bookingErrorMessage`, ...); los textos están en [11](11-interfaz.md#textos-de-la-interfaz).
+
+| Módulo | Códigos |
+|---|---|
+| booking | `SLOT_TAKEN`, `TOO_LATE_TO_CANCEL`, `OUTSIDE_WORKING_HOURS`, `IN_TIME_OFF`, `TOO_SOON`, `TOO_FAR`, `SERVICE_NOT_AVAILABLE`, `NO_CUSTOMER_PROFILE`, `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `INVALID_STATUS`, `INVALID_INPUT`, `INVALID_PERIOD`, `REASON_REQUIRED`, `NOT_STARTED` |
+| barbers | `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `INVALID_PERIOD`, `TIME_OFF_OVERLAP` |
+| customers | `NOT_AUTHENTICATED`, `FORBIDDEN`, `INVALID_CUSTOMER` |
+| commissions | `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `NOT_COMPLETED`, `ALREADY_CHARGED`, `INVALID_AMOUNT`, `NO_COMMISSION_RATE`, `TOO_LATE_TO_EDIT`, `INVALID_STATUS`, `INVALID_PERIOD`, `REASON_REQUIRED` |
+
+Una reserva de un cliente con 2 inasistencias no es un error: entra como `pending_approval` y la interfaz muestra "Tu reserva queda pendiente de que el barbero la apruebe".
 
 ## Políticas RLS principales
 
@@ -178,7 +205,7 @@ RLS está activado en todas las tablas. Resumen:
 | `barbers` | todos los activos; admin todo; el barbero se ve a sí mismo | admin; el barbero actualiza su perfil |
 | `working_hours`, `time_off` | su barbero y admin | su barbero y admin (los bloqueos, por función) |
 | `staff_roles` | lo propio; admin todo | admin |
-| `customers` | lo propio; el barbero si existe `barber_customers`; admin | lo propio; el personal crea y edita clientes sin cuenta (`user_id is null`) |
+| `customers` | lo propio; el barbero si existe `barber_customers`; admin | lo propio (solo las columnas del perfil); el personal edita clientes sin cuenta (`user_id is null`) que ve y los crea con `staff_create_customer` |
 | `customer_notes` | barbero dueño de la nota y admin | barbero dueño de la nota y admin |
 | `appointments` | cliente: las suyas; barbero: las de su agenda; admin todo | **ninguno** (solo funciones) |
 | `customer_booking_status` | barbero (sus clientes) y admin | ninguno (solo funciones) |
@@ -221,6 +248,8 @@ Envolver `auth.uid()` y las funciones en `(select ...)` hace que Postgres las ev
 - Horas libres para el cliente: un trigger publica un aviso por Broadcast en `slots:<barber_id>:<fecha>` sin datos personales, y la pantalla vuelve a pedir `get_available_slots`. Ver [07](07-stack.md).
 
 ## Pruebas obligatorias (pgTAP)
+
+Están en `supabase/tests/database/` (`02_booking`, `03_rls` y `04_commissions`), con el fixture compartido `supabase/tests/fixtures/setup.psql`. Cada prueba obligatoria lleva su número al inicio de la descripción.
 
 1. Dos `book_appointment` a la misma hora para el mismo barbero: uno pasa y el otro falla con `SLOT_TAKEN`.
 2. Una cita cancelada libera la hora.

@@ -2,4 +2,29 @@
  * API pública de @possos/booking: disponibilidad, reservar, cancelar, reprogramar, estados y eventos.
  * Solo se exporta lo que otros módulos necesitan. Lo interno va en src/internal/ (docs/08).
  */
-export {};
+import type { Database, Enums, Tables } from "@possos/supabase";
+
+/** Una cita. `period` es un tstzrange semiabierto `[inicio, fin)`; ver no_double_booking. */
+export type Appointment = Tables<"appointments">;
+export type AppointmentStatus = Enums<"appointment_status">;
+export type BookingSettings = Tables<"booking_settings">;
+export type CustomerBookingStatus = Tables<"customer_booking_status">;
+
+type Fn = Database["public"]["Functions"];
+/** Una hora libre: inicio en ISO 8601 y los barberos libres a esa hora. Sin datos de clientes. */
+export type AvailableSlot = Fn["get_available_slots"]["Returns"][number];
+export type ConflictingAppointment = Fn["list_conflicting_appointments"]["Returns"][number];
+/** Contrato para notifications: lo único que necesita para enviar un mensaje. */
+export type AppointmentForNotification = Fn["get_appointment_for_notification"]["Returns"][number];
+export type ConfirmVia = "customer" | "staff" | "whatsapp";
+
+/** Estados que ocupan el horario (entran en la restricción de exclusión). */
+export const OCCUPYING_STATUSES = [
+  "pending_approval",
+  "booked",
+  "confirmed",
+  "completed",
+  "no_show",
+] as const satisfies readonly AppointmentStatus[];
+
+export { BOOKING_ERROR_CODES, bookingErrorMessage, type BookingErrorCode } from "./internal/errors";

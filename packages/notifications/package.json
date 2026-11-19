@@ -10,6 +10,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@possos/supabase": "workspace:*"
+  },
   "devDependencies": {
     "@possos/config": "workspace:*",
     "eslint": "9.39.5",

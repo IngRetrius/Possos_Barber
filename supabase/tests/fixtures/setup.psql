@@ -1,0 +1,109 @@
+-- Fixture compartido de las pruebas pgTAP. Cada archivo lo incluye con
+--   \ir ../fixtures/setup.psql
+-- dentro de su begin; ... rollback;, así que nada queda en la base.
+-- La extensión .psql evita que pg_prove lo corra como prueba.
+--
+-- Personas:
+--   owner  (admin y barbero A)        a0000000-...-01
+--   barber (barbero B, sin admin)     b0000000-...-01
+--   cust1  (cliente con cuenta)       c0000000-...-01   customers.id c1000000-...-01
+--   cust2  (cliente con cuenta)       c0000000-...-02   customers.id c2000000-...-01
+--   walkin (cliente sin cuenta)                         customers.id c3000000-...-01
+--   nobody (usuario sin perfil)       d0000000-...-01
+-- Barberos: A aaaaaaaa-...-01 (50 %), B bbbbbbbb-...-01 (40 %).
+-- Servicio de prueba: 5e000000-...-01, 60 min, 30.000. Horario de prueba: todos los días de 6:00 a 22:00.
+
+create schema tests;
+grant usage on schema tests to anon, authenticated, service_role;
+
+-- Inicia sesión como un usuario: rol authenticated y el sub del JWT. Volver con `reset role;`.
+create function tests.login(p_user_id uuid)
+returns void
+language plpgsql
+as $$
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', p_user_id, 'role', 'authenticated')::text, true);
+  perform set_config('role', 'authenticated', true);
+end;
+$$;
+
+create function tests.login_anon()
+returns void
+language plpgsql
+as $$
+begin
+  perform set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
+  perform set_config('role', 'anon', true);
+end;
+$$;
+
+create function tests.login_service()
+returns void
+language plpgsql
+as $$
+begin
+  perform set_config('request.jwt.claims', json_build_object('role', 'service_role')::text, true);
+  perform set_config('role', 'service_role', true);
+end;
+$$;
+
+-- Fecha de Bogotá dentro de n días y una hora local de ese día.
+create function tests.day(p_days integer)
+returns date
+language sql
+stable
+as $$
+  select (now() at time zone 'America/Bogota')::date + p_days;
+$$;
+
+create function tests.at(p_days integer, p_time time)
+returns timestamptz
+language sql
+stable
+as $$
+  select (tests.day(p_days) + p_time) at time zone 'America/Bogota';
+$$;
+
+grant execute on all functions in schema tests to anon, authenticated, service_role;
+
+insert into auth.users (id, email, aud, role, created_at, updated_at) values
+  ('a0000000-0000-0000-0000-000000000001', 'owner@pruebas.test', 'authenticated', 'authenticated', now(), now()),
+  ('b0000000-0000-0000-0000-000000000001', 'barber@pruebas.test', 'authenticated', 'authenticated', now(), now()),
+  ('c0000000-0000-0000-0000-000000000001', 'cust1@pruebas.test', 'authenticated', 'authenticated', now(), now()),
+  ('c0000000-0000-0000-0000-000000000002', 'cust2@pruebas.test', 'authenticated', 'authenticated', now(), now()),
+  ('d0000000-0000-0000-0000-000000000001', 'nobody@pruebas.test', 'authenticated', 'authenticated', now(), now());
+
+insert into public.staff_roles (user_id, role) values
+  ('a0000000-0000-0000-0000-000000000001', 'admin'),
+  ('a0000000-0000-0000-0000-000000000001', 'barber'),
+  ('b0000000-0000-0000-0000-000000000001', 'barber');
+
+insert into public.services (id, name, duration_min, price_cop) values
+  ('5e000000-0000-0000-0000-000000000001', 'Servicio de prueba', 60, 30000);
+
+insert into public.barbers (id, user_id, display_name) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'Barbero A'),
+  ('bbbbbbbb-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', 'Barbero B');
+
+insert into public.barber_services (barber_id, service_id) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', '5e000000-0000-0000-0000-000000000001'),
+  ('bbbbbbbb-0000-0000-0000-000000000001', '5e000000-0000-0000-0000-000000000001');
+
+insert into public.working_hours (barber_id, weekday, start_time, end_time)
+select b, d, '06:00', '22:00'
+from unnest(array['aaaaaaaa-0000-0000-0000-000000000001',
+                  'bbbbbbbb-0000-0000-0000-000000000001']::uuid[]) b,
+     generate_series(1, 7) d;
+
+insert into public.commission_rates (barber_id, barber_pct) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 50),
+  ('bbbbbbbb-0000-0000-0000-000000000001', 40);
+
+insert into public.customers
+  (id, user_id, full_name, phone, whatsapp_opt_in, data_consent_at, data_policy_version) values
+  ('c1000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001',
+   'Cliente Uno', '+573000000001', true, now(), 'prueba'),
+  ('c2000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002',
+   'Cliente Dos', '+573000000002', false, now(), 'prueba'),
+  ('c3000000-0000-0000-0000-000000000001', null, 'Cliente Sin Cuenta', '+573000000003', true, null, null);

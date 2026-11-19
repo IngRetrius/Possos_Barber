@@ -313,6 +313,37 @@ En tuteo y sin emojis. Los botones dicen lo que pasa al tocarlos.
 | Fuera de la ventana de 2 h | Ya no puedes cambiarla desde aquí. Escríbele al barbero |
 | Error de conexión | No pudimos cargar las horas. Revisa tu conexión e intenta de nuevo |
 
+### Errores de la base
+
+Cada código que lanzan las funciones de Postgres ([09](09-modelo-datos.md#funciones-de-postgres-api-de-escritura)) tiene un texto. Viven en `src/internal/errors.ts` de cada paquete y se prueban con Vitest. Los dos primeros son los de la tabla anterior.
+
+| Código | Texto |
+|---|---|
+| `SLOT_TAKEN` | Esa hora se acaba de ocupar, elige otra |
+| `TOO_LATE_TO_CANCEL` | Ya no puedes cambiarla desde aquí. Escríbele al barbero |
+| `OUTSIDE_WORKING_HOURS` | Esa hora está fuera del horario del barbero |
+| `IN_TIME_OFF` | El barbero no atiende a esa hora |
+| `TOO_SOON` | Esa hora ya no se puede reservar. Elige una más tarde |
+| `TOO_FAR` | Esa fecha todavía no está abierta para reservas |
+| `SERVICE_NOT_AVAILABLE` | Ese servicio no está disponible con ese barbero |
+| `NO_CUSTOMER_PROFILE` | Completa tu perfil para reservar |
+| `NOT_AUTHENTICATED` | Ingresa para continuar |
+| `FORBIDDEN` | No tienes permiso para hacer esto |
+| `NOT_FOUND` | No encontramos esa cita (en cobros: No encontramos ese cobro; en barberos: No encontramos ese barbero) |
+| `INVALID_STATUS` | Esa cita ya no se puede cambiar (en cobros: Este cobro está anulado) |
+| `INVALID_INPUT` | Revisa los datos e intenta de nuevo |
+| `INVALID_PERIOD` | Revisa las fechas: el final debe ser después del inicio |
+| `REASON_REQUIRED` | Escribe el motivo |
+| `NOT_STARTED` | Todavía no es la hora de la cita |
+| `TIME_OFF_OVERLAP` | Ya tienes un bloqueo en ese horario |
+| `NOT_COMPLETED` | Primero marca que el cliente vino |
+| `ALREADY_CHARGED` | Esta cita ya tiene un cobro |
+| `INVALID_AMOUNT` | Escribe un valor válido |
+| `NO_COMMISSION_RATE` | Falta definir el porcentaje de este barbero |
+| `TOO_LATE_TO_EDIT` | Solo puedes corregir los cobros del mismo día |
+| `INVALID_CUSTOMER` | Revisa el nombre y el celular (+57 y 10 dígitos) |
+| Cualquier otro | No pudimos completar la acción. Intenta de nuevo |
+
 ## Beunik: lo que muestran las capturas del dueño
 
 El dueño compartió dos capturas del inicio de Beunik PRO desde su cuenta (recibidas el 19/11/2026). No se guardan en el repo porque muestran su correo y un anuncio de terceros; aquí se describen.

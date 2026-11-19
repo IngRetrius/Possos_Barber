@@ -2,7 +2,7 @@
 
 Una PWA de agendamiento para Possos Barber, una barbería de Ibagué (Colombia), @possosbarber en Instagram. Por ahora hay un solo barbero, que también es el dueño y el administrador. El sitio reemplaza a Beunik. El motivo principal es abaratar los recordatorios por WhatsApp, porque se pierden cortes cuando al cliente se le olvida la cita.
 
-- Estado: investigación terminada el 18/11/2026 y diseño de interfaz el 19/11/2026. F0 (esqueleto del monorepo) en curso desde el 19/11/2026; el desarrollo local está en `README.md`. Los documentos están en `docs/`; el índice, en `README.md`. El plan de construcción está en `fases/` (F0 a F10); al cerrar una fase se actualiza su estado en `fases/README.md`.
+- Estado: investigación terminada el 18/11/2026 y diseño de interfaz el 19/11/2026. Construcción desde el 19/11/2026: F1 y F2 terminadas en código, F0 solo espera el trámite con Meta; el desarrollo local está en `README.md`. Los documentos están en `docs/`; el índice, en `README.md`. El plan de construcción está en `fases/` (F0 a F10); al cerrar una fase se actualiza su estado en `fases/README.md`.
 - Interfaz: `docs/11-interfaz.md` manda sobre colores, tipografía y pantallas. Monocromo con el amarillo `#F2F824` como único acento.
 - Proyecto hermano: el editor de videos del barbero, en `../possos-barber`. No comparten código.
 

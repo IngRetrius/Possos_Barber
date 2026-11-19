@@ -4,15 +4,22 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts"
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@possos/supabase": "workspace:*",
+    "server-only": "0.0.1"
   },
   "devDependencies": {
     "@possos/config": "workspace:*",
     "eslint": "9.39.5",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "5.1.1"
   }
 }
