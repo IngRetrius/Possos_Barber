@@ -91,6 +91,11 @@ const viewer = await requireStaff(await createClient());
 - **Después de una navegación del cliente, Next cambia el `<title>` después de pintar.** Antes de correr axe hay que esperar el título; si no, axe a veces marca `document-title`.
 - **El job `e2e` de CI levanta Supabase** sin Realtime, Storage, Studio ni funciones, y pasa la URL, la clave publicable y la URL de Mailpit por `GITHUB_ENV`.
 
+## Despliegue
+
+- Las dos migraciones de F3 se aplicaron a producción el 19/11/2026 con `pnpm db:push`, después del CI en verde. Producción y el repo tienen las mismas 9 migraciones.
+- En `https://possos-web.vercel.app` ya están `/ingresar`, `/registrarse` y `/politica-de-datos`; `/panel` sin sesión manda a ingresar. El botón de Google no aparece hasta configurarlo.
+
 ## Configurar en producción
 
 Los pasos los hace Juan en los paneles; nada de esto va en el repo.
