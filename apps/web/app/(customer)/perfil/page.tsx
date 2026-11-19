@@ -8,6 +8,7 @@ import { ProfileForm } from "@possos/customers/ui";
 import { createClient } from "@possos/supabase/server";
 import { formatDate, formatTime } from "@possos/ui";
 import { requireCustomer } from "../../../lib/session";
+import { SiteHeader } from "../../_components/site-header";
 import { signOutAction } from "../../(auth)/actions";
 import { deleteAccountAction, updateProfileAction } from "../actions";
 
@@ -25,50 +26,53 @@ export default async function ProfilePage() {
     : undefined;
 
   return (
-    <main className="flex flex-1 flex-col">
-      <ProfileForm
-        action={updateProfileAction}
-        heading={
-          <div className="grid gap-2">
-            <h1 className="text-title">Tu perfil</h1>
-            {viewer.email ? (
-              <p className="text-body text-fg-muted">
-                Ingresas con <span className="text-fg">{viewer.email}</span>
-              </p>
-            ) : null}
+    <>
+      <SiteHeader />
+      <main className="flex flex-1 flex-col">
+        <ProfileForm
+          action={updateProfileAction}
+          heading={
+            <div className="grid gap-2">
+              <h1 className="text-title">Tu perfil</h1>
+              {viewer.email ? (
+                <p className="text-body text-fg-muted">
+                  Ingresas con <span className="text-fg">{viewer.email}</span>
+                </p>
+              ) : null}
+            </div>
+          }
+          requireConsent={false}
+          initial={{
+            fullName: profile.full_name,
+            phoneNational: phone?.ok ? phone.national : "",
+            whatsappOptIn: profile.whatsapp_opt_in,
+          }}
+          policyHref="/politica-de-datos"
+          submitLabel="Guardar cambios"
+        >
+          <section aria-labelledby="datos" className="grid gap-2 border-t border-border pt-6">
+            <h2 id="datos" className="text-heading">
+              Tus datos
+            </h2>
+            <p className="text-body text-fg-muted">
+              Autorizaste el tratamiento de tus datos
+              {profile.data_consent_at ? ` el ${formatDate(profile.data_consent_at)}` : ""}.{" "}
+              <Link
+                href="/politica-de-datos"
+                className="text-fg underline underline-offset-4 hover:text-fg-muted"
+              >
+                Ver la política de tratamiento de datos
+              </Link>
+            </p>
+          </section>
+          <section aria-label="Sesión" className="grid gap-3 border-t border-border pt-6">
+            <SignOutButton action={signOutAction} />
+          </section>
+          <div className="border-t border-border pt-6">
+            <DeleteAccount action={deleteAccountAction} blockedReason={blockedReason} />
           </div>
-        }
-        requireConsent={false}
-        initial={{
-          fullName: profile.full_name,
-          phoneNational: phone?.ok ? phone.national : "",
-          whatsappOptIn: profile.whatsapp_opt_in,
-        }}
-        policyHref="/politica-de-datos"
-        submitLabel="Guardar cambios"
-      >
-        <section aria-labelledby="datos" className="grid gap-2 border-t border-border pt-6">
-          <h2 id="datos" className="text-heading">
-            Tus datos
-          </h2>
-          <p className="text-body text-fg-muted">
-            Autorizaste el tratamiento de tus datos
-            {profile.data_consent_at ? ` el ${formatDate(profile.data_consent_at)}` : ""}.{" "}
-            <Link
-              href="/politica-de-datos"
-              className="text-fg underline underline-offset-4 hover:text-fg-muted"
-            >
-              Ver la política de tratamiento de datos
-            </Link>
-          </p>
-        </section>
-        <section aria-label="Sesión" className="grid gap-3 border-t border-border pt-6">
-          <SignOutButton action={signOutAction} />
-        </section>
-        <div className="border-t border-border pt-6">
-          <DeleteAccount action={deleteAccountAction} blockedReason={blockedReason} />
-        </div>
-      </ProfileForm>
-    </main>
+        </ProfileForm>
+      </main>
+    </>
   );
 }

@@ -28,9 +28,17 @@ function dayName(day: DateStripDay) {
   return `${formatDateLong(day.date)}, ${slots}`;
 }
 
+/** Encabezado del mes en escritorio, de lunes a domingo (2026-01-05 fue lunes). */
+const WEEK_HEADER = ["05", "06", "07", "08", "09", "10", "11"].map((d) =>
+  formatWeekdayShort(`2026-01-${d}`),
+);
+
 /**
  * Tira horizontal de días. Es un grupo de radios nativos: Tab entra al día elegido y las flechas
  * cambian de día. Cada día se anuncia completo: "jueves 20 de noviembre, 6 horas libres".
+ *
+ * Desde `md:` los mismos radios se acomodan como un mes de 7 columnas, de lunes a domingo
+ * (docs/11: en escritorio, la tira se vuelve un mes). Solo cambia el CSS; el flujo es el mismo.
  */
 export function DateStrip({ days, value, onChange, label = "Día", className }: DateStripProps) {
   const name = useId();
@@ -48,6 +56,8 @@ export function DateStrip({ days, value, onChange, label = "Día", className }: 
   }, [value]);
 
   const month = value ?? days[0]?.date;
+  // Celdas vacías antes del primer día para que caiga en su columna (0 = lunes).
+  const offset = days[0] ? (bogotaParts(days[0].date).weekday + 6) % 7 : 0;
 
   return (
     <div data-slot="date-strip" className={cn("grid gap-2", className)}>
@@ -57,11 +67,22 @@ export function DateStrip({ days, value, onChange, label = "Día", className }: 
         </p>
       ) : null}
       <div
+        aria-hidden="true"
+        className="hidden grid-cols-7 gap-2 px-gutter text-center text-caption text-fg-muted md:grid"
+      >
+        {WEEK_HEADER.map((name) => (
+          <span key={name}>{name}</span>
+        ))}
+      </div>
+      <div
         ref={scroller}
         role="radiogroup"
         aria-label={label}
-        className="flex snap-x gap-2 overflow-x-auto scroll-px-gutter px-gutter py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x gap-2 overflow-x-auto scroll-px-gutter px-gutter py-1 [scrollbar-width:none] md:grid md:snap-none md:grid-cols-7 md:overflow-visible [&::-webkit-scrollbar]:hidden"
       >
+        {Array.from({ length: offset }, (_, i) => (
+          <span key={`vacio-${i}`} aria-hidden="true" className="hidden md:block" />
+        ))}
         {days.map((day) => {
           const checked = day.date === value;
           const empty = day.slots === 0;
@@ -70,7 +91,7 @@ export function DateStrip({ days, value, onChange, label = "Día", className }: 
               key={day.date}
               data-checked={checked}
               className={cn(
-                "relative flex w-17 shrink-0 snap-start flex-col items-center rounded-pill border py-2 transition-colors",
+                "relative flex w-17 shrink-0 snap-start flex-col items-center rounded-pill border py-2 transition-colors md:w-auto md:rounded-card",
                 "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent",
                 checked
                   ? "border-accent bg-accent text-accent-fg"
@@ -91,7 +112,7 @@ export function DateStrip({ days, value, onChange, label = "Día", className }: 
                 onChange={() => onChange(day.date)}
                 className="peer sr-only"
               />
-              <span aria-hidden="true" className="text-caption">
+              <span aria-hidden="true" className="text-caption md:hidden">
                 {formatWeekdayShort(day.date)}
               </span>
               <span aria-hidden="true" className="text-heading tabular-nums">
@@ -99,7 +120,10 @@ export function DateStrip({ days, value, onChange, label = "Día", className }: 
               </span>
               <span
                 aria-hidden="true"
-                className={cn("text-caption whitespace-nowrap", !empty && "invisible")}
+                className={cn(
+                  "text-caption whitespace-nowrap md:whitespace-normal md:text-center",
+                  !empty && "invisible",
+                )}
               >
                 Sin horas
               </span>

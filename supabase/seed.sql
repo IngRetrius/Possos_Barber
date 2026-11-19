@@ -5,6 +5,8 @@
 -- Cuentas para iniciar sesión en local (contraseña de las dos: possos-local):
 --   barbero@ejemplo.test   administrador y barbero ("Barbero de prueba")
 --   cliente@ejemplo.test   cliente con perfil completo
+--   cliente2@ejemplo.test  otro cliente con perfil completo (pruebas de la hora tomada, F4)
+--   aprobacion@ejemplo.test cliente con 2 inasistencias: sus reservas esperan aprobación
 -- Además hay un cliente sin cuenta, como los que crea el personal.
 
 -- Usuarios de Supabase Auth con correo y contraseña ya confirmados.
@@ -20,7 +22,9 @@ select '00000000-0000-0000-0000-000000000000', u.id, 'authenticated', 'authentic
        '', '', '', '', '', '', '', ''
 from (values
   ('5eed0000-0000-0000-0000-000000000001'::uuid, 'barbero@ejemplo.test'),
-  ('5eed0000-0000-0000-0000-000000000002'::uuid, 'cliente@ejemplo.test')
+  ('5eed0000-0000-0000-0000-000000000002'::uuid, 'cliente@ejemplo.test'),
+  ('5eed0000-0000-0000-0000-000000000003'::uuid, 'cliente2@ejemplo.test'),
+  ('5eed0000-0000-0000-0000-000000000004'::uuid, 'aprobacion@ejemplo.test')
 ) as u (id, email);
 
 insert into auth.identities (id, user_id, provider_id, provider, identity_data, created_at, updated_at, last_sign_in_at)
@@ -28,7 +32,7 @@ select gen_random_uuid(), u.id, u.id::text, 'email',
        jsonb_build_object('sub', u.id::text, 'email', u.email, 'email_verified', true),
        now(), now(), now()
 from auth.users u
-where u.id in ('5eed0000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0000-000000000002');
+where u.email like '%@ejemplo.test';
 
 -- El barbero administrador (hoy el dueño es administrador y barbero, docs/06).
 insert into public.staff_roles (user_id, role) values
@@ -66,7 +70,17 @@ insert into public.customers
    '5eed0000-0000-0000-0000-000000000002'),
   ('5eedc000-0000-0000-0000-000000000002', null,
    'Cliente sin cuenta', '+573000000002', null, true, null, null,
-   '5eed0000-0000-0000-0000-000000000001');
+   '5eed0000-0000-0000-0000-000000000001'),
+  ('5eedc000-0000-0000-0000-000000000003', '5eed0000-0000-0000-0000-000000000003',
+   'Cliente dos de prueba', '+573000000003', 'cliente2@ejemplo.test', false, now(), 'borrador-2026-11-19',
+   '5eed0000-0000-0000-0000-000000000003'),
+  ('5eedc000-0000-0000-0000-000000000004', '5eed0000-0000-0000-0000-000000000004',
+   'Cliente con aprobación', '+573000000004', 'aprobacion@ejemplo.test', true, now(), 'borrador-2026-11-19',
+   '5eed0000-0000-0000-0000-000000000004');
+
+-- Dos inasistencias: sus reservas en línea entran como pending_approval (docs/04).
+insert into public.customer_booking_status (customer_id, no_show_count, requires_approval) values
+  ('5eedc000-0000-0000-0000-000000000004', 2, true);
 
 insert into public.barber_customers (barber_id, customer_id) values
   ('5eedba00-0000-0000-0000-000000000001', '5eedc000-0000-0000-0000-000000000001'),

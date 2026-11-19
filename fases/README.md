@@ -12,7 +12,7 @@ Para no confundirlas con las fases de producto, las de construcción se llaman *
 | [F1](F1-sistema-diseno.md) | `packages/ui`: tokens, tipografía, logo y componentes base | F0 | Terminada en código el 19/11/2026. Falta el visto bueno del dueño (paleta y Geist), el logo en SVG y la prueba con VoiceOver y TalkBack en celulares reales |
 | [F2](F2-datos-agenda.md) | Tablas, restricción de exclusión, RLS y funciones de la agenda y de los cobros, con pgTAP | F0 | Terminada en código el 19/11/2026. Falta el horario real del dueño (la semilla usa uno de ejemplo) |
 | [F3](F3-cuentas.md) | Registro, ingreso, perfil y autorización de datos | F1, F2 | Terminada en código el 19/11/2026. Google activo en producción. Falta el SMTP y las plantillas de correo, crear el primer administrador, el texto de la política (dueño) y la prueba de Google en un iPhone real |
-| [F4](F4-reserva-cliente.md) | Página pública y flujo de reserva | F1, F2, F3 | Sin empezar |
+| [F4](F4-reserva-cliente.md) | Página pública y flujo de reserva | F1, F2, F3 | Terminada en código el 19/11/2026. Faltan servicios, precios, dirección, frase, foto y portafolio (dueño) y probar Google desde "Confirmar" con una cuenta real |
 | [F5](F5-mis-citas.md) | Mis citas: cancelar, cambiar hora, volver a reservar y .ics | F4 | Sin empezar |
 | [F6](F6-panel-barbero.md) | Panel: agenda, citas manuales, asistencia con cobro, liquidación, horario, clientes y administración | F2, F3 | Sin empezar |
 | [F7](F7-whatsapp.md) | Recordatorios por WhatsApp: plantillas, despacho, webhook y botones | F2, F5, trámite de Meta | Sin empezar |
@@ -22,7 +22,7 @@ Para no confundirlas con las fases de producto, las de construcción se llaman *
 
 F1 y F2 pueden avanzar en paralelo. F6 puede empezar apenas termine F3, en paralelo con F4 y F5.
 
-Para empezar F1 o F2, lee primero [F0-entrega.md](F0-entrega.md): qué existe, cómo se trabaja y lo que no es evidente en el código. Para F3 en adelante, lee también [F1-entrega.md](F1-entrega.md): cómo se usan los tokens y componentes de `@possos/ui`, y [F2-entrega.md](F2-entrega.md): tablas, funciones, códigos de error y cómo se prueban. Para F4 en adelante, además, [F3-entrega.md](F3-entrega.md): sesión, guardas, el parámetro `next` y el perfil.
+Para empezar F1 o F2, lee primero [F0-entrega.md](F0-entrega.md): qué existe, cómo se trabaja y lo que no es evidente en el código. Para F3 en adelante, lee también [F1-entrega.md](F1-entrega.md): cómo se usan los tokens y componentes de `@possos/ui`, y [F2-entrega.md](F2-entrega.md): tablas, funciones, códigos de error y cómo se prueban. Para F4 en adelante, además, [F3-entrega.md](F3-entrega.md): sesión, guardas, el parámetro `next` y el perfil. Para F5 en adelante, [F4-entrega.md](F4-entrega.md): el estado del flujo en la URL, las funciones nuevas, Realtime y cómo se prueban las reservas.
 
 ## Pista paralela: trámite con Meta
 

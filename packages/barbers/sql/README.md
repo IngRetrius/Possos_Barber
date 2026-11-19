@@ -1,12 +1,13 @@
 # Tablas y funciones de `barbers`
 
-Migración: `20261119120200_barbers_core.sql`.
+Migraciones: `20261119120200_barbers_core.sql` y `20261119140000_barbers_opening_hours.sql` (F4).
 
 Tablas: `barbers`, `barber_services`, `working_hours`, `time_off` (con exclusión entre bloqueos del mismo barbero) y `portfolio_items`.
 
 Funciones:
 
 - `current_barber_id()`: el `barbers.id` del usuario actual si tiene el rol `barber`; si no, null. La usan las políticas RLS de todos los módulos.
+- `get_opening_hours()`: el horario de la barbería para la página pública, sin sesión. Junta los rangos de los barberos activos (los que se cruzan o se tocan quedan en uno) y no dice de quién es cada uno. `working_hours` sigue cerrada para clientes y visitantes.
 - `create_time_off(barber_id, starts_at, ends_at, reason)`: crea un bloqueo con el candado del barbero (`select ... for update` sobre `barbers`), el mismo que toma el trigger de `appointments`. Para saber qué citas quedaron debajo, `blockTime()` de `@possos/booking/server` llama después a `list_conflicting_appointments`.
 
 Storage: buckets públicos `barber-photos` y `portfolio`. Escriben el administrador o el barbero dueño de la carpeta `<barber_id>/`.

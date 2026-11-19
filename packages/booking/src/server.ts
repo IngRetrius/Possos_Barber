@@ -2,13 +2,14 @@ import "server-only";
 import { createTimeOff } from "@possos/barbers/server";
 import type { TimeOff } from "@possos/barbers";
 import { errorCode, type DbClient, type Result } from "@possos/supabase";
-import { UPCOMING_STATUSES } from "./index";
+import { normalizeInstant, UPCOMING_STATUSES } from "./index";
 import type {
   Appointment,
   AppointmentForNotification,
   AvailableSlot,
   ConfirmVia,
   ConflictingAppointment,
+  DayAvailability,
 } from "./index";
 import { BOOKING_ERROR_CODES, type BookingErrorCode } from "./internal/errors";
 
@@ -34,6 +35,51 @@ export async function getAvailableSlots(
     p_day: input.day,
     p_barber_id: input.barberId,
   });
+  return error ? fail(error) : { ok: true, data };
+}
+
+/**
+ * Inicios de las horas libres de un día, normalizados con `toISOString` para compararlos con el
+ * parámetro `hora` de la URL. Sin `barberId`, las de "cualquiera disponible".
+ */
+export async function getAvailableStarts(
+  db: DbClient,
+  input: { serviceId: string; day: string; barberId?: string },
+): R<string[]> {
+  const result = await getAvailableSlots(db, input);
+  if (!result.ok) return result;
+  return {
+    ok: true,
+    data: result.data.map((s) => normalizeInstant(s.start_at)).filter((s) => s !== null),
+  };
+}
+
+/** Horas libres de cada día de la ventana de reserva (hoy y los `max_days_ahead` siguientes). */
+export async function getAvailableDays(
+  db: DbClient,
+  input: { serviceId: string; barberId?: string },
+): R<DayAvailability[]> {
+  const { data, error } = await db.rpc("get_available_days", {
+    p_service_id: input.serviceId,
+    p_barber_id: input.barberId,
+  });
+  return error
+    ? fail(error)
+    : { ok: true, data: data.map((d) => ({ date: d.day, slots: d.slots })) };
+}
+
+/**
+ * Si la próxima reserva del cliente de la sesión quedará pendiente de aprobación (2 o más
+ * inasistencias). El cliente no ve su contador (docs/06), solo este aviso.
+ */
+export async function requiresApproval(db: DbClient): R<boolean> {
+  const { data, error } = await db.rpc("my_booking_requires_approval");
+  return error ? fail(error) : { ok: true, data: data === true };
+}
+
+/** Una cita que la sesión puede ver (RLS: la suya, o las de su agenda si es personal). */
+export async function getAppointment(db: DbClient, id: string): R<Appointment | null> {
+  const { data, error } = await db.from("appointments").select("*").eq("id", id).maybeSingle();
   return error ? fail(error) : { ok: true, data };
 }
 

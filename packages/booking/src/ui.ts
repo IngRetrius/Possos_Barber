@@ -1,0 +1,12 @@
+/**
+ * API pública de UI de @possos/booking: el flujo de reserva. `TimePicker` y `BookForm` son
+ * componentes de cliente; las acciones (Server Actions) las pasa la app.
+ */
+export {
+  BookForm,
+  type BookAction,
+  type BookFormProps,
+  type BookFormState,
+} from "./internal/book-form";
+export { AppointmentSummary, type AppointmentSummaryProps } from "./internal/summary";
+export { TimePicker, type TimePickerProps } from "./internal/time-picker";

@@ -34,5 +34,24 @@ export const UPCOMING_STATUSES = [
   "confirmed",
 ] as const satisfies readonly AppointmentStatus[];
 
+/** Días de la tira con su número de horas libres (`get_available_days`). */
+export type { DayAvailability } from "./internal/selection";
+
 export { parsePeriod } from "./internal/period";
+export {
+  ANY_BARBER,
+  BOOKING_ROUTES,
+  BOOKING_STEP_NAMES,
+  bookingSteps,
+  nextDayWithSlots,
+  normalizeInstant,
+  parseSelection,
+  pickInitialDay,
+  selectionHref,
+  stepPosition,
+  type BookingSelection,
+  type BookingStep,
+} from "./internal/selection";
+export { appointmentIcs, escapeIcsText, type IcsEvent } from "./internal/ics";
+export { APPOINTMENT_STATUS_DISPLAY, TO_CLOSE_DISPLAY } from "./internal/status";
 export { BOOKING_ERROR_CODES, bookingErrorMessage, type BookingErrorCode } from "./internal/errors";

@@ -12,4 +12,11 @@ export type WorkingHours = Tables<"working_hours">;
 export type TimeOff = Tables<"time_off">;
 export type PortfolioItem = Tables<"portfolio_items">;
 
+export {
+  formatTimeOfDay,
+  groupOpeningHours,
+  WEEKDAY_NAMES,
+  type OpeningHoursGroup,
+  type OpeningRange,
+} from "./internal/hours";
 export { BARBERS_ERROR_CODES, barbersErrorMessage, type BarbersErrorCode } from "./internal/errors";

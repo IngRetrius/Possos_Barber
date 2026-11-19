@@ -54,6 +54,8 @@ Función `current_barber_id()`: devuelve el `barbers.id` del usuario actual si t
 
 Función `create_time_off(barber_id, starts_at, ends_at, reason)`: la única forma de crear bloqueos (ver abajo, en booking).
 
+Función `get_opening_hours()` (F4): el horario de la barbería para la página pública, que también ven anon y authenticated. Junta los rangos de los barberos activos por día de la semana (los que se cruzan o se tocan quedan en uno) y no dice de quién es cada rango. La tabla `working_hours` sigue visible solo para el barbero y el administrador.
+
 Un trigger impide que un barbero sin rol de administrador cambie su `user_id`, `active` o `slot_interval_min`.
 
 ### customers
@@ -172,6 +174,8 @@ Las funciones internas van en el esquema `private`, que PostgREST no expone; cad
 | Función | Quién | Qué hace |
 |---|---|---|
 | `get_available_slots(service_id, day, barber_id?)` | anon y authenticated | Devuelve solo `start_at` y `barber_ids` (los barberos libres). Sin datos de clientes. Horas alineadas al `slot_interval_min` del barbero desde el inicio de cada rango del horario |
+| `get_available_days(service_id, barber_id?)` | anon y authenticated | F4. Cuántas horas libres tiene cada día, de hoy a `max_days_ahead`, para la tira de días. Cuenta lo mismo que `get_available_slots` |
+| `my_booking_requires_approval()` | authenticated | F4. Si la próxima reserva del cliente de la sesión quedará `pending_approval`. El cliente no ve su contador de inasistencias (docs/06), solo este aviso |
 | `book_appointment(service_id, start_at, barber_id?)` | cliente | Aplica anticipación y horario, resuelve "cualquiera disponible", pone `pending_approval` si el cliente lo requiere y enlaza el cliente con el barbero |
 | `staff_create_appointment(customer_id, service_id, barber_id, start_at)` | barbero (su agenda) y admin | Igual, sin las reglas de anticipación ni la alineación al intervalo; la cita sí debe caber en el horario. El barbero solo agenda a clientes que ya ve |
 | `cancel_appointment(id, reason)` | cliente (dentro de la ventana), barbero y admin | El personal debe dar un motivo |

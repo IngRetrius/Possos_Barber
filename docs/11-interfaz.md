@@ -375,6 +375,27 @@ Ingreso, registro y perfil. Los errores de Supabase Auth se agrupan en `src/inte
 | Sin la autorización de datos (`CONSENT_REQUIRED`) | Sin esta autorización no podemos crear tu cuenta |
 | Nombre vacío | Escribe tu nombre |
 
+### Reserva (F4)
+
+Los textos de la tabla de arriba (paso de horario, hora tomada, política, aprobación, éxito) se usan tal cual. Además:
+
+| Lugar | Texto |
+|---|---|
+| Inicio | Nombre, "Barbería en Ibagué" y la frase del dueño (**[PENDIENTE]**). Secciones "Servicios", "El barbero", "Ubicación", "Horario" y "Contacto". Con una cita próxima: "Tu próxima cita" con fecha, hora, servicio y estado |
+| Paso "Servicio" | "¿Qué servicio quieres?". Sin servicios: "Todavía no hay servicios para reservar" |
+| Paso "Barbero" | "¿Con quién?". Primera fila "Cualquiera disponible", con "El que esté libre a la hora que elijas" |
+| Horario sin hora elegida | La barra inferior dice "Elige una hora" y "Continuar" está apagado |
+| Día sin horas | "El viernes 21 de noviembre no tiene horas libres." y "Ver la próxima hora libre". Sin días con horas: "No hay horas libres en los próximos días." |
+| Hoy sin horas | "Hoy no hay horas. Te mostramos el viernes 21 de noviembre" |
+| "Confirmar" sin sesión | "Para reservar, ingresa", "Con tu cuenta te avisamos de tu cita y puedes cambiarla o cancelarla. Vuelves aquí con la misma hora.", "Continuar con Google" (si está activo) y "Usar mi correo" |
+| "Confirmar" con cuenta del personal | "Estás con una cuenta del personal. Las citas de los clientes se crean desde el panel; para reservar como cliente, usa otra cuenta." y "Ir al panel" |
+| "Confirmar" con perfil incompleto | "Completa tu perfil para reservar." y "Completar mi perfil" |
+| Resumen | Servicio, fecha larga, rango de horas, "Con [barbero]" ("Con el barbero que esté libre a esa hora" con "Cualquiera disponible"), "Total en la barbería" y "Dónde" (**[PENDIENTE]** mientras falten precio y dirección) |
+| Botón mientras reserva | "Reservando..." |
+| "Listo" con aprobación | Título "Tu reserva quedó pendiente" y "Tu reserva queda pendiente de que el barbero la apruebe" |
+| "Listo" | "Agregar al calendario", "Instalar la app" (si no está instalada) y "Volver al inicio". El aviso del WhatsApp se activa en F7 |
+| Instalar en iPhone | Hoja "Instala la app en tu iPhone": tocar Compartir, "Agregar a inicio" y "Agregar" |
+
 ## Beunik: lo que muestran las capturas del dueño
 
 El dueño compartió dos capturas del inicio de Beunik PRO desde su cuenta (recibidas el 19/11/2026). No se guardan en el repo porque muestran su correo y un anuncio de terceros; aquí se describen.

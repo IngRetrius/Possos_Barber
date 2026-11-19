@@ -957,11 +957,26 @@ export type Database = {
           whatsapp_opt_in: boolean;
         }[];
       };
+      get_available_days: {
+        Args: { p_barber_id?: string; p_service_id: string };
+        Returns: {
+          day: string;
+          slots: number;
+        }[];
+      };
       get_available_slots: {
         Args: { p_barber_id?: string; p_day: string; p_service_id: string };
         Returns: {
           barber_ids: string[];
           start_at: string;
+        }[];
+      };
+      get_opening_hours: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          end_time: string;
+          start_time: string;
+          weekday: number;
         }[];
       };
       get_settlement: {
@@ -1019,6 +1034,7 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      my_booking_requires_approval: { Args: Record<PropertyKey, never>; Returns: boolean };
       record_charge: {
         Args: { p_amount_cop?: number; p_appointment_id: string };
         Returns: {

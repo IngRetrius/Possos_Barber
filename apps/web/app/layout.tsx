@@ -2,11 +2,15 @@ import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { LOCALE } from "@possos/config/constants";
 import { colors } from "@possos/ui";
+import { siteUrl } from "../lib/business";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: "Possos Barber",
   description: "Reserva tu corte en Possos Barber, Ibagué.",
+  // Los PNG de F1 (public/icons). El manifiesto de la PWA llega en F8.
+  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {

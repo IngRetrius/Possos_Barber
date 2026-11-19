@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./server": "./src/server.ts",
+    "./ui": "./src/ui.ts",
     "./events": "./src/events.ts"
   },
   "scripts": {
@@ -16,12 +17,24 @@
   "dependencies": {
     "@possos/barbers": "workspace:*",
     "@possos/supabase": "workspace:*",
+    "@possos/ui": "workspace:*",
     "server-only": "0.0.1"
   },
   "devDependencies": {
     "@possos/config": "workspace:*",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "eslint": "9.39.5",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "typescript": "6.0.3",
     "vitest": "5.1.1"
+  },
+  "peerDependencies": {
+    "next": "^16",
+    "react": "^19",
+    "react-dom": "^19"
   }
 }

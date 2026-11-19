@@ -1,0 +1,55 @@
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import {
+  ANY_BARBER,
+  BOOKING_ROUTES,
+  parseSelection,
+  selectionHref,
+  stepPosition,
+} from "@possos/booking";
+import { BarberList } from "@possos/barbers/ui";
+import { createClient } from "@possos/supabase/server";
+import { formatDuration, StepHeader } from "@possos/ui";
+import { loadBookingFlow, previousStepHref } from "../../../../lib/booking-flow";
+
+export const metadata: Metadata = { title: "Elige tu barbero · Possos Barber" };
+
+/**
+ * Paso "Barbero": los barberos que hacen el servicio y "Cualquiera disponible". Con un solo
+ * barbero el paso se salta.
+ */
+export default async function BarberStepPage({ searchParams }: PageProps<"/reservar/barbero">) {
+  const selection = parseSelection(await searchParams);
+  const db = await createClient();
+  const flow = await loadBookingFlow(db, { ...selection, barberId: null });
+  if (!flow.service) redirect(BOOKING_ROUTES.service);
+
+  const service = flow.service;
+  if (flow.barbers.length <= 1) {
+    redirect(
+      selectionHref(BOOKING_ROUTES.time, { serviceId: service.id, barberId: flow.barberId }),
+    );
+  }
+
+  const position = stepPosition("barber", flow.steps);
+  const timeHref = (barberId: string) =>
+    selectionHref(BOOKING_ROUTES.time, { serviceId: service.id, barberId, date: selection.date });
+  return (
+    <>
+      <StepHeader {...position} backHref={previousStepHref(flow, "barber", selection)} />
+      <main className="grid flex-1 content-start gap-6 px-gutter pt-2 pb-8">
+        <div className="grid gap-2">
+          <p className="text-body text-fg-muted">
+            {service.name} · {formatDuration(service.duration_min)}
+          </p>
+          <h1 className="text-title">¿Con quién?</h1>
+        </div>
+        <BarberList
+          barbers={flow.barbers}
+          hrefFor={(barber) => timeHref(barber.id)}
+          anyHref={timeHref(ANY_BARBER)}
+        />
+      </main>
+    </>
+  );
+}

@@ -1,6 +1,6 @@
 import "server-only";
 import { errorCode, type DbClient, type Result } from "@possos/supabase";
-import type { Barber, TimeOff, WorkingHours } from "./index";
+import type { Barber, OpeningRange, PortfolioItem, TimeOff, WorkingHours } from "./index";
 import { BARBERS_ERROR_CODES, type BarbersErrorCode } from "./internal/errors";
 
 type R<T> = Promise<Result<T, BarbersErrorCode>>;
@@ -64,4 +64,46 @@ export async function createTimeOff(
 export async function deleteTimeOff(db: DbClient, id: string): R<null> {
   const { error } = await db.from("time_off").delete().eq("id", id);
   return error ? fail(error) : { ok: true, data: null };
+}
+
+/**
+ * Horario de la barbería: los rangos de los barberos activos juntos, sin decir de quién es cada
+ * uno. Lo puede leer cualquiera (`get_opening_hours`); la tabla working_hours no.
+ */
+export async function getOpeningHours(db: DbClient): R<OpeningRange[]> {
+  const { data, error } = await db.rpc("get_opening_hours");
+  return error ? fail(error) : { ok: true, data };
+}
+
+/** Barberos activos que hacen un servicio, por nombre. */
+export async function listBarbersForService(db: DbClient, serviceId: string): R<Barber[]> {
+  const { data, error } = await db
+    .from("barbers")
+    .select("*, barber_services!inner(service_id)")
+    .eq("active", true)
+    .eq("barber_services.service_id", serviceId)
+    .order("display_name");
+  if (error) return fail(error);
+  return { ok: true, data: data.map(({ barber_services: _, ...barber }) => barber) };
+}
+
+/** Trabajos del portafolio de unos barberos, en su orden. Lectura pública. */
+export async function listPortfolio(db: DbClient, barberIds: string[]): R<PortfolioItem[]> {
+  if (barberIds.length === 0) return { ok: true, data: [] };
+  const { data, error } = await db
+    .from("portfolio_items")
+    .select("*")
+    .in("barber_id", barberIds)
+    .order("sort_order")
+    .order("created_at");
+  return error ? fail(error) : { ok: true, data };
+}
+
+/** URL pública de una foto del barbero (`barber-photos`) o del portafolio (`portfolio`). */
+export function publicImageUrl(
+  db: DbClient,
+  bucket: "barber-photos" | "portfolio",
+  path: string,
+): string {
+  return db.storage.from(bucket).getPublicUrl(path).data.publicUrl;
 }

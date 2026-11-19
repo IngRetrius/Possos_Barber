@@ -8,8 +8,18 @@ import { copySessionCookies, updateSession } from "@possos/supabase/proxy";
  * Solo mira si hay sesión: los roles (cliente, barbero, administrador) se deciden en el
  * servidor con is_admin() y current_barber_id() (`@possos/auth/server`), y cada página y cada
  * acción vuelve a verificar. El proxy es una primera barrera, no la única.
+ *
+ * Los pasos de la reserva (`/reservar`, `/reservar/horario`, `/reservar/confirmar`) no exigen
+ * sesión: la cuenta se pide en "Confirmar" (docs/11, decisión 5).
  */
-const NEEDS_SESSION = ["/perfil", "/mis-citas", "/panel", "/completar-perfil", "/nueva-contrasena"];
+const NEEDS_SESSION = [
+  "/perfil",
+  "/mis-citas",
+  "/panel",
+  "/completar-perfil",
+  "/nueva-contrasena",
+  "/reservar/listo",
+];
 
 export async function proxy(request: NextRequest) {
   const { response, userId } = await updateSession(request);

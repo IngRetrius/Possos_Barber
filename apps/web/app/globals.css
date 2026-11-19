@@ -1,3 +1,9 @@
 @import "tailwindcss";
 /* Tokens, tipografía y utilidades de docs/11. También hace que Tailwind escanee packages/ui. */
 @import "@possos/ui/styles.css";
+/*
+ * Los componentes de los paquetes de dominio (formularios de auth y customers, flujo de booking,
+ * listas de catalog y barbers) también usan clases. Tailwind no los ve solo: llegan por
+ * node_modules, que no escanea.
+ */
+@source "../../../packages";
