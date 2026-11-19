@@ -139,6 +139,8 @@ En unos 5 minutos el botón "Continuar con Google" aparece solo en `/ingresar` y
 
 3. El script crea las filas en `staff_roles` (admin y barber), `barbers` y `commission_rates` (50 %), en una transacción. Si el correo no tiene cuenta, se detiene sin cambiar nada; si se corre dos veces, no cambia lo que ya existe. Al volver a ingresar, el dueño entra al panel.
 
+La cuenta de Juan (desarrollador, con Google) es administradora en producción desde el 19/11/2026, sin rol de barbero ni fila en `barbers`, para no aparecer en la agenda ni en "cualquiera disponible". Se dio con un `insert` en `staff_roles`, no con el script, que también la volvería barbero. Como administrador ve los datos de todos los clientes: es encargado del tratamiento (Ley 1581) y la política del dueño debe contemplarlo.
+
 Falta después (F6 o F9): enlazar al barbero con sus servicios (`barber_services`) y cargar su horario, cuando el dueño los dé.
 
 ## Pendiente
