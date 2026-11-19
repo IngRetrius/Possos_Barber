@@ -8,6 +8,8 @@ const isDev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
   pageExtensions: isDev ? ["dev.tsx", "tsx", "ts", "jsx", "js"] : ["tsx", "ts", "jsx", "js"],
+  // Solo para `next dev`: abrir la app desde un celular en la misma red Wi-Fi (http://192.168.x.x:3000).
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*"],
   // Los paquetes del monorepo exponen TypeScript sin compilar (campo `exports` → src/*.ts).
   transpilePackages: [
     "@possos/auth",
