@@ -2,7 +2,7 @@
 
 Sitio web de Possos Barber, una barbería de Ibagué (Colombia): una PWA donde los clientes reservan su corte y una agenda para el barbero. Su objetivo es reemplazar Beunik con recordatorios automáticos por WhatsApp que cuesten mucho menos, para que se pierdan menos citas por olvido.
 
-**Estado:** investigación y diseño terminados (19/11/2026). Todavía no hay código; la construcción empieza por [F0](fases/F0-base.md).
+**Estado:** investigación y diseño terminados (19/11/2026). Construcción en [F0](fases/F0-base.md): el esqueleto del monorepo ya corre en local.
 
 ## Documentos
 
@@ -28,3 +28,26 @@ Para leer en orden: empieza por 00, sigue con 03 (el porqué del proyecto) y lue
 ## Construcción
 
 El plan está en [fases/](fases/README.md): de F0 (base del monorepo) a F9 (lanzamiento y salida de Beunik), más F10 con lo que viene después del MVP.
+
+## Desarrollo local
+
+Requisitos: Node 24 (ver `.nvmrc`), pnpm 12 y Docker (Docker Desktop o Colima) para Supabase.
+
+```sh
+pnpm install
+pnpm db:start              # Supabase local en Docker; imprime las claves
+cp .env.example apps/web/.env.local   # y llena los valores que imprimió db:start
+pnpm dev                   # http://localhost:3000
+```
+
+| Comando | Qué hace |
+|---|---|
+| `pnpm turbo run build lint typecheck test` | Build, lint, tipos y Vitest de todos los paquetes |
+| `pnpm depcruise` | Revisa las reglas de modularidad de [docs/08](docs/08-estructura-monorepo.md#reglas-de-modularidad) |
+| `pnpm format` / `pnpm format:check` | Prettier |
+| `pnpm db:test` | Pruebas pgTAP de `supabase/tests/` |
+| `pnpm db:reset` | Recrea la base local con las migraciones y `supabase/seed.sql` |
+| `pnpm db:types` | Regenera `packages/supabase/src/database.types.ts` desde la base local |
+| `pnpm db:stop` | Apaga Supabase local |
+
+Supabase local usa los puertos 55320 a 55329 (API en `http://127.0.0.1:55321`, Studio en `http://127.0.0.1:55323`) para no chocar con otros proyectos.

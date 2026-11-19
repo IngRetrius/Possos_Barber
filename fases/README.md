@@ -8,7 +8,7 @@ Para no confundirlas con las fases de producto, las de construcción se llaman *
 
 | Fase | Qué entrega | Depende de | Estado |
 |---|---|---|---|
-| [F0](F0-base.md) | Monorepo, CI, Supabase local y despliegue vacío en Vercel | | Sin empezar |
+| [F0](F0-base.md) | Monorepo, CI, Supabase local y despliegue vacío en Vercel | | En curso: falta Vercel, Supabase en la nube y el remoto de GitHub |
 | [F1](F1-sistema-diseno.md) | `packages/ui`: tokens, tipografía, logo y componentes base | F0 | Sin empezar |
 | [F2](F2-datos-agenda.md) | Tablas, restricción de exclusión, RLS y funciones de la agenda y de los cobros, con pgTAP | F0 | Sin empezar |
 | [F3](F3-cuentas.md) | Registro, ingreso, perfil y autorización de datos | F1, F2 | Sin empezar |

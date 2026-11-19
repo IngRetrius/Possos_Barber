@@ -1,0 +1,24 @@
+node_modules/
+.turbo/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Entorno: solo .env.example va al repo (regla 6)
+.env
+.env.*
+!.env.example
+.vercel/
+
+# Supabase CLI
+supabase/.branches/
+supabase/.temp/
+
+# Playwright
+playwright-report/
+test-results/
+
+.DS_Store

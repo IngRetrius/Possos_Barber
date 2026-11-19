@@ -15,8 +15,9 @@ possos-web/
 │       │   │   ├── cron/dispatch/   # Vercel Cron → notifications.dispatchDue()
 │       │   │   └── whatsapp/webhook/# Meta → notifications.handleWebhook()
 │       │   ├── manifest.ts          # manifiesto de la PWA
+│       │   ├── serwist/[path]/      # ruta que compila y sirve el service worker (@serwist/turbopack)
 │       │   └── sw.ts                # service worker (Serwist)
-│       ├── middleware.ts            # refresca la sesión (auth) y protege rutas
+│       ├── proxy.ts                 # refresca la sesión (auth) y protege rutas (antes middleware.ts)
 │       └── vercel.json              # crons
 ├── packages/
 │   ├── ui/                          # sistema de diseño: tokens, componentes shadcn. Sin dominio
@@ -94,4 +95,4 @@ Con `exports` declarado, `import "@possos/booking/src/internal/x"` no resuelve: 
 - Un proyecto de Vercel con *Root Directory* `apps/web` y el comando de build `turbo run build --filter=web...`.
 - Turborepo omite el build cuando los cambios no afectan a `web` ni a sus dependencias.
 - Las migraciones de Supabase no se aplican en el build de Vercel. Se aplican con `supabase db push` en un paso de CI aparte, antes del despliegue.
-- Variables de entorno en Vercel: URL y anon key de Supabase, service role (solo en el servidor), token y phone number ID de WhatsApp, token de verificación del webhook, secreto de la app de Meta (para validar la firma `X-Hub-Signature-256`), claves VAPID y `CRON_SECRET`.
+- Variables de entorno en Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (la clave publicable, antes "anon key"), `SUPABASE_SECRET_KEY` (la clave secreta, antes "service role"; solo en el servidor), token y phone number ID de WhatsApp, token de verificación del webhook, secreto de la app de Meta (para validar la firma `X-Hub-Signature-256`), claves VAPID y `CRON_SECRET`.

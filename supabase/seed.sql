@@ -1,0 +1,1 @@
+-- Datos de desarrollo. Llegan en F2 (servicio "Corte normal 60 min" y un barbero; ver docs/08).

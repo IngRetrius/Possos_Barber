@@ -1,0 +1,37 @@
+{
+  "name": "web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "next typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "@possos/auth": "workspace:*",
+    "@possos/barbers": "workspace:*",
+    "@possos/booking": "workspace:*",
+    "@possos/catalog": "workspace:*",
+    "@possos/commissions": "workspace:*",
+    "@possos/config": "workspace:*",
+    "@possos/customers": "workspace:*",
+    "@possos/notifications": "workspace:*",
+    "@possos/supabase": "workspace:*",
+    "@possos/ui": "workspace:*",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.5",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "tailwindcss": "4.3.5",
+    "typescript": "6.0.3"
+  }
+}

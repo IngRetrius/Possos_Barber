@@ -1,0 +1,33 @@
+{
+  "name": "@possos/supabase",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./server": "./src/server.ts",
+    "./admin": "./src/admin.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "gen:types": "supabase gen types typescript --local --schema public > src/database.types.ts && prettier --write src/database.types.ts"
+  },
+  "dependencies": {
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.119.0",
+    "server-only": "0.0.1"
+  },
+  "peerDependencies": {
+    "next": "^16"
+  },
+  "devDependencies": {
+    "@possos/config": "workspace:*",
+    "eslint": "9.39.5",
+    "next": "16.4.6",
+    "prettier": "3.10.1",
+    "supabase": "3.2.0",
+    "typescript": "6.0.3"
+  }
+}

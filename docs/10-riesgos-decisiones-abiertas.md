@@ -46,8 +46,8 @@ Ordenadas por lo que bloquean. Cada una trae un valor por omisión para no deten
 - [ ] La tabla oficial de tarifas de WhatsApp en COP para Colombia (utilidad y marketing).
 - [ ] Los requisitos actuales de la coexistencia y si exige un Tech Provider, en la documentación de Meta.
 - [ ] El límite de mensajes por día de un negocio sin verificar.
-- [ ] El mecanismo de Broadcast desde la base de datos en Supabase.
-- [ ] Serwist con Turbopack en la versión de Next.js que se use.
+- [x] El mecanismo de Broadcast desde la base de datos en Supabase (19/11/2026: `realtime.send` con canal público; ver [07](07-stack.md#decisiones-y-alternativas-descartadas)).
+- [x] Serwist con Turbopack en la versión de Next.js que se use (19/11/2026: `@serwist/turbopack` 9.5.15 compila con Next 16.4.6; ver [07](07-stack.md)).
 - [ ] El OAuth de Google en una PWA instalada en iOS (en un dispositivo real).
 - [x] Capturas del inicio de Beunik PRO desde la cuenta del barbero (19/11/2026, descritas en [11](11-interfaz.md#beunik-lo-que-muestran-las-capturas-del-dueño)).
 - [ ] Capturas del flujo de reserva del cliente en la app de Beunik.

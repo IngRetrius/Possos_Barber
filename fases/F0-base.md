@@ -10,38 +10,47 @@ Que exista el esqueleto del proyecto, que CI vigile las reglas desde el primer c
 
 ### Monorepo
 
-- [ ] `pnpm-workspace.yaml` con `apps/*` y `packages/*`. Fijar versiones con `pnpm` ([docs/07](../docs/07-stack.md)); confirmar la versión de Next con `npm view next version`.
-- [ ] `turbo.json` con las tareas `build`, `dev`, `lint`, `typecheck`, `test` y `test:e2e`.
-- [ ] `packages/config`: `tsconfig` base en modo `strict` con `moduleResolution: "bundler"`, configuración de ESLint y Prettier, y reglas de dependency-cruiser.
-- [ ] `.dependency-cruiser.cjs` con el grafo permitido de [docs/08](../docs/08-estructura-monorepo.md#reglas-de-modularidad): sin ciclos, sin rutas internas, `booking` no conoce a `notifications`.
-- [ ] Los paquetes de dominio vacíos (`auth`, `catalog`, `barbers`, `customers`, `booking`, `commissions`, `notifications`, `ui`) con su `package.json`, el campo `exports` y un `index.ts`. Cada uno con un `sql/README.md` que diga qué tablas le pertenecen.
+- [x] `pnpm-workspace.yaml` con `apps/*` y `packages/*`. Fijar versiones con `pnpm` ([docs/07](../docs/07-stack.md)); confirmar la versión de Next con `npm view next version`.
+- [x] `turbo.json` con las tareas `build`, `dev`, `lint`, `typecheck`, `test` y `test:e2e`.
+- [x] `packages/config`: `tsconfig` base en modo `strict` con `moduleResolution: "bundler"`, configuración de ESLint y Prettier, y reglas de dependency-cruiser.
+- [x] `.dependency-cruiser.cjs` con el grafo permitido de [docs/08](../docs/08-estructura-monorepo.md#reglas-de-modularidad): sin ciclos, sin rutas internas, `booking` no conoce a `notifications`.
+- [x] Los paquetes de dominio vacíos (`auth`, `catalog`, `barbers`, `customers`, `booking`, `commissions`, `notifications`, `ui`) con su `package.json`, el campo `exports` y un `index.ts`. Cada uno con un `sql/README.md` que diga qué tablas le pertenecen.
 
 ### App
 
-- [ ] `apps/web` con Next.js (App Router), TypeScript y Tailwind v4.
-- [ ] Grupos de rutas vacíos: `(public)`, `(auth)`, `(customer)`, `(staff)/panel`.
-- [ ] `lang="es-CO"` en el `<html>` y la zona horaria `America/Bogota` como constante compartida.
+- [x] `apps/web` con Next.js (App Router), TypeScript y Tailwind v4.
+- [x] Grupos de rutas vacíos: `(public)`, `(auth)`, `(customer)`, `(staff)/panel`.
+- [x] `lang="es-CO"` en el `<html>` y la zona horaria `America/Bogota` como constante compartida.
 
 ### Supabase
 
-- [ ] `supabase init` y `supabase start` en local (Docker).
-- [ ] `packages/supabase`: fábrica de clientes de navegador, servidor y admin con `@supabase/ssr`, y el script que genera `database.types.ts`.
+- [x] `supabase init` y `supabase start` en local (Docker).
+- [x] `packages/supabase`: fábrica de clientes de navegador, servidor y admin con `@supabase/ssr`, y el script que genera `database.types.ts`.
 - [ ] Proyecto de Supabase en la nube para producción. **[PENDIENTE]** si se crea también uno de pruebas.
 
 ### CI y despliegue
 
-- [ ] GitHub Actions: instalar, `lint`, `typecheck`, dependency-cruiser, Vitest y `supabase test db` contra una base local.
+- [ ] GitHub Actions: instalar, `lint`, `typecheck`, dependency-cruiser, Vitest y `supabase test db` contra una base local. El workflow está en `.github/workflows/ci.yml`; falta que corra por primera vez en GitHub (el repo todavía no tiene remoto).
 - [ ] Proyecto en Vercel con *Root Directory* `apps/web` y el build `turbo run build --filter=web...`.
 - [ ] Variables de entorno de Supabase cargadas en Vercel. Ningún secreto en el repo (regla 6). `.env.example` solo con los nombres.
 
 ### Verificaciones de [docs/10](../docs/10-riesgos-decisiones-abiertas.md#verificaciones-pendientes-antes-de-escribir-código)
 
-- [ ] Serwist con Turbopack en la versión de Next que se instaló.
-- [ ] El mecanismo de Broadcast desde la base de datos en la documentación vigente de Supabase.
+- [x] Serwist con Turbopack en la versión de Next que se instaló.
+- [x] El mecanismo de Broadcast desde la base de datos en la documentación vigente de Supabase.
 
 ### Pista paralela
 
 - [ ] Empezar el trámite con Meta: portafolio de negocio con moneda COP y la decisión del número (A o B) con el dueño.
+
+## Notas de la implementación (19/11/2026)
+
+- Versiones fijadas: Next 16.4.6, React 19.3.1, TypeScript 6.0.3, Tailwind 4.3.5, ESLint 9.39.5, Turborepo 2.11.12, Vitest 5.1.1, Supabase CLI 3.2.0 y `@supabase/ssr` 0.12.7. TypeScript 7 todavía no es compatible con typescript-eslint, y ESLint 10 todavía no lo es con los plugins de `eslint-config-next`.
+- pnpm 12 rechaza paquetes publicados hace menos de un día (`minimumReleaseAge`). No se agregan excepciones: se fija una versión anterior.
+- La CLI de Supabase usa los puertos 55320 a 55329 (no los 543xx por omisión) para no chocar con otros proyectos locales. API en `http://127.0.0.1:55321`, Studio en `http://127.0.0.1:55323`.
+- Las variables de Supabase usan las claves nuevas: `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (antes anon key) y `SUPABASE_SECRET_KEY` (antes service role).
+- La constante de zona horaria y el idioma viven en `@possos/config/constants` (`TIMEZONE`, `LOCALE`), que cualquier paquete puede importar.
+- dependency-cruiser se probó con tres casos que fallan (import por nombre a `src/internal/`, ruta relativa a `src/internal/` de otro paquete y `booking` → `notifications`) y uno que pasa (`notifications` → API pública de `booking`).
 
 ## Criterios de aceptación
 
