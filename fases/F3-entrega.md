@@ -89,6 +89,7 @@ const viewer = await requireStaff(await createClient());
 - **Playwright necesita Supabase local con la semilla.** Los correos los lee de Mailpit (`apps/web/e2e/support/mailpit.ts`); cada prueba usa un correo nuevo, así que se pueden repetir sin reiniciar la base.
 - **La espera de `expect` es de 15 s**: `next dev` compila cada ruta la primera vez, y con el servidor en frío (siempre en CI) la primera visita tarda más de 5 s.
 - **Después de una navegación del cliente, Next cambia el `<title>` después de pintar.** Antes de correr axe hay que esperar el título; si no, axe a veces marca `document-title`.
+- **`web#build` espera a `web#typecheck`** (`turbo.json`). Corrían a la vez y el build borraba `.next/types` mientras `tsc` los leía: el CI falló así una vez. También en Vercel el build corre antes los tipos.
 - **El job `e2e` de CI levanta Supabase** sin Realtime, Storage, Studio ni funciones, y pasa la URL, la clave publicable y la URL de Mailpit por `GITHUB_ENV`.
 
 ## Despliegue
