@@ -1,6 +1,6 @@
 # Tablas y funciones de `booking`
 
-Migraciones: `20261119120400_booking_core.sql` y `20261119140100_booking_available_days.sql` (F4).
+Migraciones: `20261119120400_booking_core.sql`, `20261119140100_booking_available_days.sql` (F4) y `20261119160000_booking_realtime.sql` (F6: `appointments` en la publicación `supabase_realtime`, para la agenda en vivo del panel).
 
 Tablas: `booking_settings`, `appointments` (con la restricción de exclusión de la regla 3), `customer_booking_status` y `booking_events`.
 

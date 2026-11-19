@@ -1,8 +1,9 @@
 import "server-only";
 import type { DbClient, Result } from "@possos/supabase";
-import type { Customer } from "./index";
+import type { Customer, CustomerNote } from "./index";
 import { customersErrorCode, type CustomersErrorCode } from "./internal/errors";
 import { DATA_POLICY_VERSION, type ValidProfile } from "./internal/profile";
+import { searchTerm, type ValidStaffCustomer } from "./internal/staff";
 
 /**
  * API de servidor de customers. Recibe el cliente de la sesión de quien actúa; RLS y los
@@ -66,5 +67,68 @@ export async function saveMyProfile(
     .insert({ ...fields, user_id: input.userId, email: input.email })
     .select("*")
     .single();
+  return error ? fail(error) : { ok: true, data };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Panel (F6). RLS decide qué clientes ve cada quien: el barbero, los que tienen
+// barber_customers con él; el administrador, todos (docs/06).
+// ---------------------------------------------------------------------------------------------
+
+/** Lo que el panel muestra de un cliente en listas y búsquedas. */
+export type CustomerSummary = Pick<Customer, "id" | "full_name" | "phone" | "user_id">;
+
+/**
+ * Busca por nombre o celular entre los clientes que la sesión puede ver. Con un texto vacío
+ * devuelve los más recientes.
+ */
+export async function searchCustomers(
+  db: DbClient,
+  input: { query: string; limit?: number },
+): R<CustomerSummary[]> {
+  const term = searchTerm(input.query);
+  let request = db
+    .from("customers")
+    .select("id, full_name, phone, user_id")
+    .neq("full_name", "Cuenta borrada");
+  if (term) {
+    request = /^\d+$/.test(term)
+      ? request.ilike("phone", `%${term}%`)
+      : request.or(`full_name.ilike.%${term}%,phone.ilike.%${term}%`);
+  }
+  const { data, error } = await request
+    .order(term ? "full_name" : "created_at", { ascending: Boolean(term) })
+    .limit(input.limit ?? 8);
+  return error ? fail(error) : { ok: true, data };
+}
+
+/** Un cliente que la sesión puede ver, o null. */
+export async function getCustomer(db: DbClient, id: string): R<Customer | null> {
+  const { data, error } = await db.from("customers").select("*").eq("id", id).maybeSingle();
+  return error ? fail(error) : { ok: true, data };
+}
+
+/**
+ * El personal registra a un cliente sin cuenta. La base guarda la hora de la autorización de
+ * datos que dio de palabra y, si quien lo crea es barbero, lo enlaza con él.
+ */
+export async function staffCreateCustomer(db: DbClient, input: ValidStaffCustomer): R<Customer> {
+  const { data, error } = await db.rpc("staff_create_customer", {
+    p_full_name: input.fullName,
+    p_phone: input.phoneE164,
+    p_whatsapp_opt_in: input.whatsappOptIn,
+    p_data_policy_version: DATA_POLICY_VERSION,
+  });
+  return error ? fail(error) : { ok: true, data };
+}
+
+/** Notas del barbero sobre un cliente, las más nuevas primero. RLS: el barbero ve las suyas. */
+export async function listNotes(
+  db: DbClient,
+  input: { customerId: string; barberId?: string },
+): R<CustomerNote[]> {
+  let request = db.from("customer_notes").select("*").eq("customer_id", input.customerId);
+  if (input.barberId) request = request.eq("barber_id", input.barberId);
+  const { data, error } = await request.order("created_at", { ascending: false });
   return error ? fail(error) : { ok: true, data };
 }

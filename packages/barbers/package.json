@@ -16,10 +16,12 @@
   "dependencies": {
     "@possos/supabase": "workspace:*",
     "@possos/ui": "workspace:*",
+    "lucide-react": "1.75.0",
     "server-only": "0.0.1"
   },
   "devDependencies": {
     "@possos/config": "workspace:*",
+    "@types/node": "26.6.6",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "eslint": "9.39.5",

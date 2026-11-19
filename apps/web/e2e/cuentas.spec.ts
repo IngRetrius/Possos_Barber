@@ -225,8 +225,9 @@ test("el personal entra al panel", async ({ page }) => {
   await page.goto("/ingresar");
   await signIn(page, "barbero@ejemplo.test", SEED_PASSWORD);
   await expect(page).toHaveURL("/panel");
-  await expect(page.getByRole("heading", { name: "Panel" })).toBeVisible();
-  await expect(page.getByText(/Ingresaste como administrador y barbero/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^Hoy · / })).toBeVisible();
+  await page.getByRole("link", { name: "Más" }).click();
+  await expect(page.getByText(/^Administrador y barbero/)).toBeVisible();
   await expectAccessible(page);
 
   // Con sesión, ingresar lleva directo al panel.
@@ -239,10 +240,10 @@ test("un cliente no puede abrir el panel ni por URL directa", async ({ page }) =
   await signIn(page, "cliente@ejemplo.test", SEED_PASSWORD);
   await expect(page).toHaveURL("/perfil");
 
-  for (const path of ["/panel", "/panel/agenda"]) {
+  for (const path of ["/panel", "/panel/agenda", "/panel/servicios", "/panel/cita/nueva"]) {
     const response = await page.goto(path);
     expect(response?.status()).toBe(404);
-    await expect(page.getByRole("heading", { name: "Panel" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: /^Hoy/ })).toHaveCount(0);
   }
 });
 

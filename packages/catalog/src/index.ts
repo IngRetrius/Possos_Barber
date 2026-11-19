@@ -12,3 +12,13 @@ import type { Tables } from "@possos/supabase";
 export type Service = Tables<"services">;
 
 export { PENDING, servicePriceLabel } from "./internal/price";
+export {
+  MAX_SERVICE_DESCRIPTION,
+  MAX_SERVICE_NAME,
+  parsePesos,
+  validateService,
+  type ServiceErrors,
+  type ServiceField,
+  type ServiceFormInput,
+  type ValidService,
+} from "./internal/service-form";

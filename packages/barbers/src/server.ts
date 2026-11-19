@@ -1,6 +1,8 @@
 import "server-only";
-import { errorCode, type DbClient, type Result } from "@possos/supabase";
+import { errorCode, type DbClient, type Json, type Result } from "@possos/supabase";
 import type { Barber, OpeningRange, PortfolioItem, TimeOff, WorkingHours } from "./index";
+import { isOwnImagePath, type ImageBucket } from "./internal/images";
+import type { WeeklyRange } from "./internal/weekly-hours";
 import { BARBERS_ERROR_CODES, type BarbersErrorCode } from "./internal/errors";
 
 type R<T> = Promise<Result<T, BarbersErrorCode>>;
@@ -106,4 +108,188 @@ export function publicImageUrl(
   path: string,
 ): string {
   return db.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Panel (F6). RLS decide: el administrador escribe todo; el barbero, su horario, sus bloqueos,
+// su perfil (sin activarse ni cambiar su intervalo) y su portafolio.
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Barberos que la sesión puede ver, activos primero y por nombre. El administrador también ve
+ * los inactivos; un barbero inactivo se ve a sí mismo.
+ */
+export async function listBarbers(db: DbClient): R<Barber[]> {
+  const { data, error } = await db
+    .from("barbers")
+    .select("*")
+    .order("active", { ascending: false })
+    .order("display_name");
+  return error ? fail(error) : { ok: true, data };
+}
+
+/** Un barbero que la sesión puede ver, o null. */
+export async function getBarber(db: DbClient, id: string): R<Barber | null> {
+  const { data, error } = await db.from("barbers").select("*").eq("id", id).maybeSingle();
+  return error ? fail(error) : { ok: true, data };
+}
+
+/** Crea un barbero sin cuenta (la cuenta se enlaza al asignarle el rol). Solo el administrador. */
+export async function createBarber(db: DbClient, input: { displayName: string }): R<Barber> {
+  const { data, error } = await db
+    .from("barbers")
+    .insert({ display_name: input.displayName })
+    .select("*")
+    .single();
+  return error ? fail(error) : { ok: true, data };
+}
+
+export type BarberPatch = Partial<
+  Pick<
+    Barber,
+    "display_name" | "bio" | "whatsapp_url" | "slot_interval_min" | "active" | "photo_path"
+  >
+>;
+
+/** Cambia el perfil. `active` y `slot_interval_min` solo los cambia el administrador (trigger). */
+export async function updateBarber(db: DbClient, id: string, patch: BarberPatch): R<Barber> {
+  const { data, error } = await db
+    .from("barbers")
+    .update(patch)
+    .eq("id", id)
+    .select("*")
+    .maybeSingle();
+  if (error) return fail(error);
+  return data ? { ok: true, data } : { ok: false, error: "NOT_FOUND" };
+}
+
+/** Reemplaza el horario semanal completo en una transacción (`set_working_hours`). */
+export async function setWorkingHours(
+  db: DbClient,
+  barberId: string,
+  ranges: WeeklyRange[],
+): R<WorkingHours[]> {
+  const { data, error } = await db.rpc("set_working_hours", {
+    p_barber_id: barberId,
+    p_ranges: ranges as unknown as Json,
+  });
+  return error ? fail(error) : { ok: true, data };
+}
+
+/** Ids de los servicios que hace el barbero. */
+export async function listBarberServiceIds(db: DbClient, barberId: string): R<string[]> {
+  const { data, error } = await db
+    .from("barber_services")
+    .select("service_id")
+    .eq("barber_id", barberId);
+  return error ? fail(error) : { ok: true, data: data.map((r) => r.service_id) };
+}
+
+/**
+ * Deja al barbero con exactamente esos servicios. Conserva el precio y la duración propios de
+ * los que ya tenía. Solo el administrador.
+ */
+export async function setBarberServices(
+  db: DbClient,
+  barberId: string,
+  serviceIds: string[],
+): R<null> {
+  const current = await listBarberServiceIds(db, barberId);
+  if (!current.ok) return current;
+  const remove = current.data.filter((id) => !serviceIds.includes(id));
+  const add = serviceIds.filter((id) => !current.data.includes(id));
+  if (remove.length) {
+    const { error } = await db
+      .from("barber_services")
+      .delete()
+      .eq("barber_id", barberId)
+      .in("service_id", remove);
+    if (error) return fail(error);
+  }
+  if (add.length) {
+    const { error } = await db
+      .from("barber_services")
+      .insert(add.map((service_id) => ({ barber_id: barberId, service_id })));
+    if (error) return fail(error);
+  }
+  return { ok: true, data: null };
+}
+
+/** Un servicio nuevo lo hacen estos barberos. Solo el administrador. */
+export async function addServiceToBarbers(
+  db: DbClient,
+  serviceId: string,
+  barberIds: string[],
+): R<null> {
+  if (barberIds.length === 0) return { ok: true, data: null };
+  const { error } = await db.from("barber_services").upsert(
+    barberIds.map((barber_id) => ({ barber_id, service_id: serviceId })),
+    { ignoreDuplicates: true },
+  );
+  return error ? fail(error) : { ok: true, data: null };
+}
+
+/** Agrega un trabajo al final del portafolio. La imagen ya está en `portfolio/<barber_id>/`. */
+export async function addPortfolioItem(
+  db: DbClient,
+  input: { barberId: string; imagePath: string; caption?: string | null },
+): R<PortfolioItem> {
+  if (!isOwnImagePath(input.barberId, input.imagePath)) return { ok: false, error: "FORBIDDEN" };
+  const last = await db
+    .from("portfolio_items")
+    .select("sort_order")
+    .eq("barber_id", input.barberId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (last.error) return fail(last.error);
+  const { data, error } = await db
+    .from("portfolio_items")
+    .insert({
+      barber_id: input.barberId,
+      image_path: input.imagePath,
+      caption: input.caption?.trim() || null,
+      sort_order: (last.data?.sort_order ?? 0) + 1,
+    })
+    .select("*")
+    .single();
+  return error ? fail(error) : { ok: true, data };
+}
+
+/** Borra un trabajo del portafolio y su imagen. */
+export async function deletePortfolioItem(db: DbClient, id: string): R<null> {
+  const { data, error } = await db
+    .from("portfolio_items")
+    .delete()
+    .eq("id", id)
+    .select("image_path")
+    .maybeSingle();
+  if (error) return fail(error);
+  if (!data) return { ok: false, error: "NOT_FOUND" };
+  await removeImage(db, "portfolio", data.image_path);
+  return { ok: true, data: null };
+}
+
+/**
+ * Cambia la foto del barbero por una que ya está en `barber-photos/<barber_id>/` y borra la
+ * anterior.
+ */
+export async function setBarberPhoto(
+  db: DbClient,
+  input: { barberId: string; photoPath: string },
+): R<Barber> {
+  if (!isOwnImagePath(input.barberId, input.photoPath)) return { ok: false, error: "FORBIDDEN" };
+  const before = await getBarber(db, input.barberId);
+  if (!before.ok) return before;
+  if (!before.data) return { ok: false, error: "NOT_FOUND" };
+  const updated = await updateBarber(db, input.barberId, { photo_path: input.photoPath });
+  if (updated.ok && before.data.photo_path && before.data.photo_path !== input.photoPath) {
+    await removeImage(db, "barber-photos", before.data.photo_path);
+  }
+  return updated;
+}
+
+/** Borra una imagen de Storage. Si falla, queda un archivo huérfano; no es crítico. */
+async function removeImage(db: DbClient, bucket: ImageBucket, path: string): Promise<void> {
+  await db.storage.from(bucket).remove([path]);
 }

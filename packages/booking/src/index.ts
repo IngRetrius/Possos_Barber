@@ -39,6 +39,21 @@ export type { DayAvailability } from "./internal/selection";
 
 export { parsePeriod } from "./internal/period";
 export {
+  addDays,
+  bogotaInstant,
+  buildDayAgenda,
+  dayBounds,
+  dayOccupancy,
+  isoWeekday,
+  isToClose,
+  weekStart,
+  type AgendaAppointment,
+  type AgendaBlock,
+  type AgendaItem,
+  type AgendaRange,
+  type DayAgendaInput,
+} from "./internal/agenda";
+export {
   ANY_BARBER,
   BOOKING_ROUTES,
   BOOKING_STEP_NAMES,

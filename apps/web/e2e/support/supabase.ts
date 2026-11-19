@@ -41,7 +41,13 @@ export const SEED = {
   customer: "cliente@ejemplo.test",
   customer2: "cliente2@ejemplo.test",
   approval: "aprobacion@ejemplo.test",
+  /** Barbero sin rol de administrador e inactivo (F6). */
+  barber2: "barbero2@ejemplo.test",
+  barber2Id: "5eedba00-0000-0000-0000-000000000002",
 } as const;
+
+/** Prefijo de lo que crean las pruebas del panel (clientes, servicios, bloqueos). */
+export const E2E_PREFIX = "E2E";
 
 const tokens = new Map<string, string>();
 
@@ -136,15 +142,48 @@ export async function appointmentStatus(email: string, id: string): Promise<stri
 export async function cancelTestAppointments(): Promise<void> {
   const token = await signInApi(SEED.admin);
   const now = new Date().toISOString();
-  const rows = await rest<{ id: string; customers: { email: string | null } | null }[]>(
-    `appointments?select=id,customers(email)&status=in.(pending_approval,booked,confirmed)` +
+  const rows = await rest<
+    { id: string; customers: { email: string | null; full_name: string } | null }[]
+  >(
+    `appointments?select=id,customers(email,full_name)&status=in.(pending_approval,booked,confirmed)` +
       `&period=not.sl.${encodeURIComponent(`[${now},${now}]`)}`,
     { token },
   );
   const testEmails = new Set<string>([SEED.customer, SEED.customer2, SEED.approval]);
   for (const row of rows) {
     const email = row.customers?.email ?? "";
-    if (!testEmails.has(email) && !email.startsWith("e2e-")) continue;
+    const name = row.customers?.full_name ?? "";
+    if (!testEmails.has(email) && !email.startsWith("e2e-") && !name.startsWith(E2E_PREFIX)) {
+      continue;
+    }
     await rpc("cancel_appointment", { p_id: row.id, p_reason: "Limpieza de pruebas e2e" }, token);
   }
+}
+
+/**
+ * Deja la base local como estaba después de las pruebas del panel: borra los bloqueos con motivo
+ * `E2E...` y desactiva los servicios `E2E...` (si quedaran activos, el flujo de reserva dejaría
+ * de saltarse el paso del servicio).
+ */
+export async function cleanPanelTestData(): Promise<void> {
+  const token = await signInApi(SEED.admin);
+  await rest(`time_off?reason=like.${E2E_PREFIX}*`, { method: "DELETE", token });
+  await rest(`services?name=like.${E2E_PREFIX}*`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify({ active: false }),
+  });
+}
+
+/** Reserva del cliente con un día y hora libres; devuelve la cita. */
+export async function bookFreeSlot(
+  email: string,
+  day: string,
+  index = 0,
+): Promise<{ id: string; startAt: string }> {
+  const starts = await availableStarts(day);
+  const startAt = starts[index];
+  if (!startAt) throw new Error(`No hay hora libre número ${index} el ${day}`);
+  const { id } = await bookAs(email, startAt);
+  return { id, startAt };
 }

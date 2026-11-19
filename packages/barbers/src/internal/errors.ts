@@ -5,6 +5,8 @@ export const BARBERS_ERROR_CODES = [
   "NOT_FOUND",
   "INVALID_PERIOD",
   "TIME_OFF_OVERLAP",
+  "HOURS_OVERLAP",
+  "INVALID_INPUT",
 ] as const;
 
 export type BarbersErrorCode = (typeof BARBERS_ERROR_CODES)[number] | "UNKNOWN";
@@ -15,6 +17,8 @@ const MESSAGES: Record<BarbersErrorCode, string> = {
   NOT_FOUND: "No encontramos ese barbero",
   INVALID_PERIOD: "Revisa las fechas: el final debe ser después del inicio",
   TIME_OFF_OVERLAP: "Ya tienes un bloqueo en ese horario",
+  HOURS_OVERLAP: "Dos rangos del mismo día se cruzan. Revisa las horas",
+  INVALID_INPUT: "Revisa los datos e intenta de nuevo",
   UNKNOWN: "No pudimos completar la acción. Intenta de nuevo",
 };
 

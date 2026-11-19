@@ -336,6 +336,7 @@ Cada código que lanzan las funciones de Postgres ([09](09-modelo-datos.md#funci
 | `REASON_REQUIRED` | Escribe el motivo |
 | `NOT_STARTED` | Todavía no es la hora de la cita |
 | `TIME_OFF_OVERLAP` | Ya tienes un bloqueo en ese horario |
+| `HOURS_OVERLAP` | Dos rangos del mismo día se cruzan. Revisa las horas |
 | `NOT_COMPLETED` | Primero marca que el cliente vino |
 | `ALREADY_CHARGED` | Esta cita ya tiene un cobro |
 | `INVALID_AMOUNT` | Escribe un valor válido |
@@ -395,6 +396,30 @@ Los textos de la tabla de arriba (paso de horario, hora tomada, política, aprob
 | "Listo" con aprobación | Título "Tu reserva quedó pendiente" y "Tu reserva queda pendiente de que el barbero la apruebe" |
 | "Listo" | "Agregar al calendario", "Instalar la app" (si no está instalada) y "Volver al inicio". El aviso del WhatsApp se activa en F7 |
 | Instalar en iPhone | Hoja "Instala la app en tu iPhone": tocar Compartir, "Agregar a inicio" y "Agregar" |
+
+### Panel (F6)
+
+Pantallas del barbero y del administrador. Los avisos de éxito salen arriba (`toast`); los errores, junto a la acción o en la barra inferior.
+
+| Lugar | Texto |
+|---|---|
+| Pestañas | "Hoy", "Semana", "Clientes" y "Más". Solo en esas cuatro pantallas; las de una tarea tienen atrás y su barra con la acción |
+| Hoy | "Hoy · jue 20 nov" (otro día: "vie 21 nov" y "Hoy" para volver), botón "Cita", resumen "6 citas · 1 sin confirmar · 1 por cerrar · 1 por aprobar". Filas "Libre" (crea una cita a esa hora), "Bloqueado" con el motivo o "Todo el día", y la línea amarilla "Ahora". Sin horario ni citas: "Este día no tiene horario de atención ni citas. Puedes cambiar el horario en Más." |
+| Administrador con varios barberos o sin agenda | Selector "Agenda de" con los barberos ("(inactivo)" si lo está). Sin barberos: "Todavía no hay barberos" y "Crear un barbero" |
+| Por cerrar y pendientes | "Por cerrar (n)" con "Ver" y "No vino"; "Pendientes de aprobar (n)" con "Aprobar" y "Rechazar" |
+| Hoja de la cita | Nombre del cliente, servicio, fecha y hora; "WhatsApp" (o "Este cliente no tiene celular registrado."), "Fecha y hora", "Servicio", "Estado", "Valor de la reserva", "Origen" ("La reservó el cliente" o "La creó el personal"), "Notas sobre el cliente" ("Sin notas."). Acciones "Aprobar", "Rechazar", "No vino", "Mover" y "Cancelar" según el estado |
+| Cancelar desde la hoja | "¿Cancelar esta cita? La hora queda libre para otros clientes.", campo "Motivo", "Sí, cancelar la cita" (rojo) y "No, volver" |
+| Avisos | "Creaste la cita", "Moviste la cita", "Cancelaste la cita", "Aprobaste la reserva", "Rechazaste la reserva", "Marcaste que no vino" |
+| Nueva cita | Título "Nueva cita" ("Con [barbero]" si hay varios). "Cliente": "Buscar" o "Cliente nuevo"; "Buscar por nombre o celular"; sin resultados "No encontramos clientes con ese nombre o celular. Créalo como cliente nuevo." Cliente nuevo: "Nombre", "Celular" (ayuda "Para los recordatorios por WhatsApp. Ningún otro cliente lo ve."), "El cliente autorizó de palabra el tratamiento de sus datos para agendar sus citas, según la política de tratamiento de datos." (obligatoria) y "Quiere recibir por WhatsApp la confirmación y los recordatorios de sus citas." "Servicio". "Fecha y hora": "Fecha", "Horas libres", "Hora" (ayuda "Elige una hora libre o escribe otra."). Botón "Crear cita" ("Creando...") |
+| Errores de Nueva cita | "Elige un cliente o crea uno nuevo", "Escribe el nombre del cliente", "Escribe el celular del cliente", "Sin la autorización del cliente no podemos guardar sus datos", "Elige el servicio", "Elige la fecha y la hora" |
+| Mover | Título "Mover cita", el cliente con "ahora el ...", la misma elección de fecha y hora y "Mover la cita" ("Moviendo...") |
+| Semana | "Semana", "lun 16 nov a dom 22 nov", por día "3 citas · 5 libres", "Sin horario" o "Bloqueado", y la barra de ocupación |
+| Clientes | "Buscar por nombre o celular", "1 inasistencia" o "2 inasistencias", "Necesita aprobación", "Todavía no tienes clientes." |
+| Más | Secciones "Agenda" ("Horario semanal", "Bloqueos") y, solo para el administrador, "Administración" ("Servicios", "Barberos"). "Cerrar sesión" |
+| Horario semanal | "Las horas que ven los clientes salen de aquí. Para el almuerzo, usa dos rangos. Las citas que ya existen no cambian." Por día: "Cerrado", "Agregar rango", "Igual que el [día anterior]". Errores junto al día: "Cada rango debe terminar después de empezar", "Dos rangos de este día se cruzan". Botón "Guardar horario"; después, "Guardaste el horario" |
+| Bloqueos | "Nuevo bloqueo": "Desde", "Hasta", "Todo el día", "Hora de inicio", "Hora de fin", "Motivo" (ayuda "Opcional. Solo lo ve el personal."), "Bloquear". Con citas debajo: "Bloqueaste ese horario, pero hay 1 cita debajo. Muévelas o cancélalas:" y un enlace por cita; sin citas: "Bloqueaste ese horario. No había citas." "Próximos bloqueos" con "Borrar" ("No tienes bloqueos."). "Festivos": "Festivos de Colombia de los próximos meses. Bloquea los que no vas a atender." con "Bloquear" o "Bloqueado"; el motivo queda "Festivo: [nombre]" |
+| Servicios (administrador) | "Los clientes los ven en este orden. Un servicio sin precio dice [PENDIENTE]." Filas con duración, precio o [PENDIENTE] e "Inactivo"; "Subir" y "Bajar". Formulario: "Nombre", "Duración en minutos" ("En múltiplos de 5."), "Precio en pesos" ("Déjalo vacío si todavía no está definido: los clientes verán [PENDIENTE]."), "Descripción", "Activo" ("Si lo desactivas, los clientes ya no lo pueden reservar. Las citas que existen no cambian."), "Crear servicio" o "Guardar" |
+| Barberos (administrador) | Lista con "Activo" o "Inactivo" y "con cuenta" o "sin cuenta". Nuevo: "Nombre visible" y "Porcentaje para el barbero" ("Del valor de cada servicio. El resto es para la barbería."). Perfil: "Foto" ("Subir una foto" o "Cambiar la foto"), "Portafolio" ("Agregar una foto", "Quitar"), "Presentación", "WhatsApp", "Intervalo de las horas", "Servicios que hace", "Activo". Error de imagen: "No pudimos leer esa imagen. Usa una foto JPG o PNG." |
 
 ## Beunik: lo que muestran las capturas del dueño
 

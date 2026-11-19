@@ -1088,6 +1088,22 @@ export type Database = {
         };
       };
       reset_no_shows: { Args: { p_customer_id: string }; Returns: undefined };
+      set_working_hours: {
+        Args: { p_barber_id: string; p_ranges: Json };
+        Returns: {
+          barber_id: string;
+          end_time: string;
+          id: string;
+          start_time: string;
+          weekday: number;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "working_hours";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
       staff_create_appointment: {
         Args: {
           p_barber_id: string;
@@ -1123,6 +1139,7 @@ export type Database = {
       };
       staff_create_customer: {
         Args: {
+          p_data_policy_version?: string;
           p_email?: string;
           p_full_name: string;
           p_phone?: string;

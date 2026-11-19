@@ -9,6 +9,9 @@ const PORT = 3000;
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
+  // Un solo worker: reserva.spec y panel.spec reservan horas reales y crean servicios en la misma
+  // semilla; en paralelo se pisarían (un servicio de más cambia el flujo de reserva).
+  workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["list"]] : "list",

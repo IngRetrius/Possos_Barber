@@ -2,8 +2,10 @@
 -- No se aplican en producción: allá los datos reales llegan en F9 y el primer administrador
 -- se crea con el script de F3.
 --
--- Cuentas para iniciar sesión en local (contraseña de las dos: possos-local):
+-- Cuentas para iniciar sesión en local (contraseña de todas: possos-local):
 --   barbero@ejemplo.test   administrador y barbero ("Barbero de prueba")
+--   barbero2@ejemplo.test  barbero sin rol de administrador e inactivo (matriz de docs/06, F6).
+--                          Inactivo para que el flujo de reserva siga con un solo barbero
 --   cliente@ejemplo.test   cliente con perfil completo
 --   cliente2@ejemplo.test  otro cliente con perfil completo (pruebas de la hora tomada, F4)
 --   aprobacion@ejemplo.test cliente con 2 inasistencias: sus reservas esperan aprobación
@@ -24,7 +26,8 @@ from (values
   ('5eed0000-0000-0000-0000-000000000001'::uuid, 'barbero@ejemplo.test'),
   ('5eed0000-0000-0000-0000-000000000002'::uuid, 'cliente@ejemplo.test'),
   ('5eed0000-0000-0000-0000-000000000003'::uuid, 'cliente2@ejemplo.test'),
-  ('5eed0000-0000-0000-0000-000000000004'::uuid, 'aprobacion@ejemplo.test')
+  ('5eed0000-0000-0000-0000-000000000004'::uuid, 'aprobacion@ejemplo.test'),
+  ('5eed0000-0000-0000-0000-000000000005'::uuid, 'barbero2@ejemplo.test')
 ) as u (id, email);
 
 insert into auth.identities (id, user_id, provider_id, provider, identity_data, created_at, updated_at, last_sign_in_at)
@@ -42,6 +45,14 @@ insert into public.staff_roles (user_id, role) values
 insert into public.barbers (id, user_id, display_name) values
   ('5eedba00-0000-0000-0000-000000000001', '5eed0000-0000-0000-0000-000000000001', 'Barbero de prueba');
 
+-- Segundo barbero, sin rol de administrador. Inactivo: no aparece en la reserva del cliente ni
+-- en "cualquiera disponible", pero entra al panel y ve solo lo suyo (docs/06).
+insert into public.staff_roles (user_id, role) values
+  ('5eed0000-0000-0000-0000-000000000005', 'barber');
+
+insert into public.barbers (id, user_id, display_name, active) values
+  ('5eedba00-0000-0000-0000-000000000002', '5eed0000-0000-0000-0000-000000000005', 'Barbero dos de prueba', false);
+
 -- Servicio confirmado por el dueño: corte normal de 60 min. Precio [PENDIENTE]: null.
 insert into public.services (id, name, duration_min, price_cop, sort_order) values
   ('5eed5e00-0000-0000-0000-000000000001', 'Corte normal', 60, null, 1);
@@ -51,7 +62,8 @@ insert into public.barber_services (barber_id, service_id) values
 
 -- Porcentaje del barbero: 50 % (dueño, 19/11/2026).
 insert into public.commission_rates (barber_id, barber_pct) values
-  ('5eedba00-0000-0000-0000-000000000001', 50);
+  ('5eedba00-0000-0000-0000-000000000001', 50),
+  ('5eedba00-0000-0000-0000-000000000002', 50);
 
 -- HORARIO DE EJEMPLO, no es el real: el horario de atención sigue [PENDIENTE] (decisión 3 de
 -- docs/10). Lunes a sábado de 9:00 a 12:00 y de 14:00 a 19:00, como el ejemplo de docs/04.

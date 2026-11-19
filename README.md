@@ -55,7 +55,7 @@ pnpm dev                   # http://localhost:3000
 
 Con `pnpm dev`, `http://localhost:3000/muestras` muestra todos los componentes de `@possos/ui` y sus estados. Esa página solo existe en desarrollo. Desde un celular en la misma red Wi-Fi se abre con la URL de la línea `Network:` que imprime `pnpm dev` (por ejemplo, `http://192.168.1.67:3000/muestras`).
 
-La semilla (`supabase/seed.sql`) crea cuatro cuentas para probar en local, todas con la contraseña `possos-local`: `barbero@ejemplo.test` (administrador y barbero), `cliente@ejemplo.test` y `cliente2@ejemplo.test` (clientes con perfil) y `aprobacion@ejemplo.test` (cliente con 2 inasistencias: sus reservas esperan aprobación). Solo existen en la base local.
+La semilla (`supabase/seed.sql`) crea cinco cuentas para probar en local, todas con la contraseña `possos-local`: `barbero@ejemplo.test` (administrador y barbero), `barbero2@ejemplo.test` (barbero sin rol de administrador, inactivo para que la reserva siga con un solo barbero), `cliente@ejemplo.test` y `cliente2@ejemplo.test` (clientes con perfil) y `aprobacion@ejemplo.test` (cliente con 2 inasistencias: sus reservas esperan aprobación). Solo existen en la base local.
 
 Los correos de Supabase Auth en local (activar la cuenta, cambiar la contraseña) no salen a internet: llegan a Mailpit, en `http://127.0.0.1:55324`. Google está apagado en local, así que el botón "Continuar con Google" no aparece.
 

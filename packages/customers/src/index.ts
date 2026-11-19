@@ -48,3 +48,12 @@ export {
   customersErrorMessage,
   type CustomersErrorCode,
 } from "./internal/errors";
+export {
+  searchTerm,
+  validateStaffCustomer,
+  whatsappChatUrl,
+  type StaffCustomerErrors,
+  type StaffCustomerField,
+  type StaffCustomerInput,
+  type ValidStaffCustomer,
+} from "./internal/staff";

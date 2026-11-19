@@ -68,7 +68,7 @@ Un trigger impide que un barbero sin rol de administrador cambie su `user_id`, `
 
 - El registro del cliente en `customers` se crea al completar el perfil, después del registro: nombre, celular y autorización de datos.
 - `booking` llama a la función `link_customer_to_barber(customer_id, barber_id)` al crear cada cita. Así `customers` no necesita conocer `appointments` para aplicar su RLS y no se forma un ciclo. Nadie la puede llamar desde la app: un barbero que la llamara podría verse con cualquier cliente.
-- El personal crea clientes sin cuenta con `staff_create_customer(full_name, phone, email, whatsapp_opt_in)`; si quien lo crea es barbero, queda enlazado con él.
+- El personal crea clientes sin cuenta con `staff_create_customer(full_name, phone, email, whatsapp_opt_in, data_policy_version)`; si quien lo crea es barbero, queda enlazado con él. Desde F6, con `data_policy_version` la base guarda `data_consent_at = now()`: es la autorización que el cliente dio de palabra (Ley 1581). Sin versión, queda sin autorización registrada.
 - La restricción `customers_account_has_consent` exige celular, `data_consent_at` y `data_policy_version` a todo perfil con cuenta (Ley 1581). El celular se valida en la base como `+57` y 10 dígitos.
 - El cliente solo puede escribir las columnas de su perfil (nombre, celular, correo, WhatsApp y autorización); `user_id` y `created_by` no se tocan desde la app.
 - La hora de la autorización la pone la base (F3): cuando el cliente crea su perfil o cambia `data_policy_version`, el trigger `customers_stamp_consent` fija `data_consent_at = now()`, sin importar lo que mande la app. Lo que escribe el personal (clientes sin cuenta) no se toca.
@@ -185,6 +185,8 @@ Las funciones internas van en el esquema `private`, que PostgREST no expone; cad
 | `mark_attendance(id, attended)` | barbero y admin | Solo después de la hora de inicio. Actualiza `customer_booking_status` |
 | `reset_no_shows(customer_id)` | admin | |
 | `list_conflicting_appointments(barber_id, starts_at, ends_at)` | barbero (su agenda) y admin | Citas que ocupan ese periodo, con el nombre del cliente |
+| `set_working_hours(barber_id, ranges)` | barbero (el suyo) y admin | F6. Módulo `barbers`. Reemplaza el horario semanal completo en una transacción |
+| `staff_create_customer(full_name, phone, email, whatsapp_opt_in, data_policy_version)` | barbero y admin | Módulo `customers`. Cliente sin cuenta; con la versión de la política guarda la hora de la autorización de palabra (F6) |
 | `get_appointment_for_notification(id)` | solo service role | Contrato público para `notifications`: fecha, servicio, barbero, nombre, celular y opt-in |
 | `record_charge(appointment_id, amount_cop)` | barbero (su agenda) y admin | Módulo `commissions`. Exige la cita en `completed` y sin cobro previo; copia el porcentaje vigente |
 | `update_charge(id, amount_cop)` | barbero (sus cobros del mismo día) y admin | Corrige el monto; el porcentaje copiado no cambia |
@@ -197,7 +199,7 @@ Los errores salen como excepción con el código en el mensaje (SQLSTATE `P0001`
 | Módulo | Códigos |
 |---|---|
 | booking | `SLOT_TAKEN`, `TOO_LATE_TO_CANCEL`, `OUTSIDE_WORKING_HOURS`, `IN_TIME_OFF`, `TOO_SOON`, `TOO_FAR`, `SERVICE_NOT_AVAILABLE`, `NO_CUSTOMER_PROFILE`, `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `INVALID_STATUS`, `INVALID_INPUT`, `INVALID_PERIOD`, `REASON_REQUIRED`, `NOT_STARTED` |
-| barbers | `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `INVALID_PERIOD`, `TIME_OFF_OVERLAP` |
+| barbers | `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `INVALID_PERIOD`, `TIME_OFF_OVERLAP`, `HOURS_OVERLAP`, `INVALID_INPUT` |
 | auth | `NOT_AUTHENTICATED`, `FORBIDDEN` (`delete_my_account`). Los errores de Supabase Auth (ingreso, registro, contraseña) los traduce `authErrorCode` de `@possos/auth` |
 | customers | `NOT_AUTHENTICATED`, `FORBIDDEN`, `INVALID_CUSTOMER`. En la app, además, `CONSENT_REQUIRED` |
 | commissions | `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `NOT_COMPLETED`, `ALREADY_CHARGED`, `INVALID_AMOUNT`, `NO_COMMISSION_RATE`, `TOO_LATE_TO_EDIT`, `INVALID_STATUS`, `INVALID_PERIOD`, `REASON_REQUIRED` |
@@ -253,12 +255,12 @@ Envolver `auth.uid()` y las funciones en `(select ...)` hace que Postgres las ev
 
 ## Realtime
 
-- Agenda del barbero: Postgres Changes sobre `appointments`, filtrado por `barber_id`. RLS solo le deja ver la suya.
+- Agenda del barbero: Postgres Changes sobre `appointments`, filtrado por `barber_id`. RLS solo le deja ver la suya. La tabla entra en la publicación `supabase_realtime` con la migración `20261119160000_booking_realtime.sql` (F6). El panel no usa la fila que llega (no trae nombres): vuelve a pedir la agenda al servidor.
 - Horas libres para el cliente: un trigger publica un aviso por Broadcast en `slots:<barber_id>:<fecha>` sin datos personales, y la pantalla vuelve a pedir `get_available_slots`. Ver [07](07-stack.md).
 
 ## Pruebas obligatorias (pgTAP)
 
-Están en `supabase/tests/database/` (`02_booking`, `03_rls`, `04_commissions` y, desde F3, `05_accounts`: perfil, autorización y borrar la cuenta), con el fixture compartido `supabase/tests/fixtures/setup.psql`. Cada prueba obligatoria lleva su número al inicio de la descripción.
+Están en `supabase/tests/database/` (`02_booking`, `03_rls`, `04_commissions` y, desde F3, `05_accounts`: perfil, autorización y borrar la cuenta; F4 agregó `06_reserva` y F6 `07_panel`: Realtime, horario semanal, cliente creado por el personal y la matriz de docs/06 del barbero frente al administrador), con el fixture compartido `supabase/tests/fixtures/setup.psql`. Cada prueba obligatoria lleva su número al inicio de la descripción.
 
 1. Dos `book_appointment` a la misma hora para el mismo barbero: uno pasa y el otro falla con `SLOT_TAKEN`.
 2. Una cita cancelada libera la hora.

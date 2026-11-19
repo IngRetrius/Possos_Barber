@@ -56,11 +56,12 @@ jobs:
       - uses: supabase/setup-cli@v3
         with:
           version: 3.2.0
-      # F3 y F4: cuentas y reserva contra Supabase local con la semilla. Postgres, Auth,
-      # PostgREST, Kong, Mailpit (correos de activación y de contraseña) y Realtime (F4: la hora
-      # que toma otro desaparece sin recargar, por Broadcast).
+      # F3, F4 y F6: cuentas, reserva y panel contra Supabase local con la semilla. Postgres,
+      # Auth, PostgREST, Kong, Mailpit (correos de activación y de contraseña), Realtime (F4: la
+      # hora que toma otro desaparece sin recargar; F6: la agenda en vivo) y Storage (F6: foto y
+      # portafolio del barbero).
       - name: Supabase local
-        run: supabase start -x storage-api,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+        run: supabase start -x imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - name: Variables de Supabase local
         run: |
           eval "$(supabase status -o env)"

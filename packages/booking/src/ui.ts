@@ -10,3 +10,6 @@ export {
 } from "./internal/book-form";
 export { AppointmentSummary, type AppointmentSummaryProps } from "./internal/summary";
 export { TimePicker, type TimePickerProps } from "./internal/time-picker";
+export { AgendaList, type AgendaListProps } from "./internal/agenda-list";
+export { AppointmentDetail, type AppointmentDetailProps } from "./internal/appointment-detail";
+export { useLiveAgenda } from "./internal/live-agenda";
