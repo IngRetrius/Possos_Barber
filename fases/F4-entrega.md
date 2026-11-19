@@ -91,7 +91,8 @@ const { label, tone } = APPOINTMENT_STATUS_DISPLAY[appointment.status];
 
 ## Despliegue
 
-- Las dos migraciones de F4 se aplican a producción con `pnpm db:push` después del CI en verde (ver el cierre en [fases/README.md](README.md)). Mientras no estén, la página pública muestra el horario como [PENDIENTE] y el horario de reserva, el error de carga; con producción sin servicios no se llega a ese paso.
+- Las dos migraciones de F4 se aplicaron a producción el 19/11/2026 con `pnpm db:push`, después del CI en verde. Producción y el repo tienen las mismas 11 migraciones.
+- En `https://possos-web.vercel.app` el inicio dice **[PENDIENTE]** en servicios, barbero y horario, y "Reservar" lleva a "Todavía no hay servicios para reservar": producción todavía no tiene los datos del dueño.
 
 ## Pendiente
 
