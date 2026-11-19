@@ -43,11 +43,14 @@ pnpm dev                   # http://localhost:3000
 | Comando | Qué hace |
 |---|---|
 | `pnpm turbo run build lint typecheck test` | Build, lint, tipos y Vitest de todos los paquetes |
+| `pnpm --filter web test:e2e` | Playwright a 390 px. Usa el `pnpm dev` que esté corriendo o levanta uno. La primera vez: `pnpm --filter web exec playwright install chromium` |
 | `pnpm depcruise` | Revisa las reglas de modularidad de [docs/08](docs/08-estructura-monorepo.md#reglas-de-modularidad) |
 | `pnpm format` / `pnpm format:check` | Prettier |
 | `pnpm db:test` | Pruebas pgTAP de `supabase/tests/` |
 | `pnpm db:reset` | Recrea la base local con las migraciones y `supabase/seed.sql` |
 | `pnpm db:types` | Regenera `packages/supabase/src/database.types.ts` desde la base local |
 | `pnpm db:stop` | Apaga Supabase local |
+
+Con `pnpm dev`, `http://localhost:3000/muestras` muestra todos los componentes de `@possos/ui` y sus estados. Esa página solo existe en desarrollo.
 
 Supabase local usa los puertos 55320 a 55329 (API en `http://127.0.0.1:55321`, Studio en `http://127.0.0.1:55323`) para no chocar con otros proyectos.

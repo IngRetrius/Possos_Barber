@@ -9,7 +9,7 @@ Para no confundirlas con las fases de producto, las de construcción se llaman *
 | Fase | Qué entrega | Depende de | Estado |
 |---|---|---|---|
 | [F0](F0-base.md) | Monorepo, CI, Supabase local y despliegue vacío en Vercel | | En curso: solo falta el trámite con Meta (pista paralela) |
-| [F1](F1-sistema-diseno.md) | `packages/ui`: tokens, tipografía, logo y componentes base | F0 | Sin empezar |
+| [F1](F1-sistema-diseno.md) | `packages/ui`: tokens, tipografía, logo y componentes base | F0 | Terminada en código el 19/11/2026. Falta el visto bueno del dueño (paleta y Geist), el logo en SVG y la prueba con VoiceOver y TalkBack en celulares reales |
 | [F2](F2-datos-agenda.md) | Tablas, restricción de exclusión, RLS y funciones de la agenda y de los cobros, con pgTAP | F0 | Sin empezar |
 | [F3](F3-cuentas.md) | Registro, ingreso, perfil y autorización de datos | F1, F2 | Sin empezar |
 | [F4](F4-reserva-cliente.md) | Página pública y flujo de reserva | F1, F2, F3 | Sin empezar |

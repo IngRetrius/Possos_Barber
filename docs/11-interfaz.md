@@ -50,7 +50,7 @@ Son reglas que se pueden revisar en cada pantalla:
 
 ### Color
 
-Decisión del 19/11/2026: monocromo más un acento. El gris del logo, medido en el archivo, es `#BCBCBC` sobre `#000000`. Contrastes calculados con la fórmula de WCAG 2.2.
+Decisión del 19/11/2026: monocromo más un acento. El gris del logo, medido en el archivo, es `#BCBCBC` sobre `#000000`. Contrastes calculados con la fórmula de WCAG 2.2 y medidos con culori en F1 (coinciden). Los valores viven en `packages/ui/src/styles.css`; una prueba verifica que sean los de esta tabla.
 
 | Token | Valor | Contraste sobre `--bg` | Uso |
 |---|---|---|---|
@@ -103,7 +103,7 @@ Reglas:
 ### Logo
 
 - Archivo actual: [marca/logo-possos-negro.png](marca/logo-possos-negro.png), 1490 × 1600 px, gris `#BCBCBC` sobre negro puro. Es un PNG; hace falta el **vector (SVG)** para que se vea nítido en cualquier tamaño ([10](10-riesgos-decisiones-abiertas.md), decisión 11).
-- Mientras llega el SVG, se recorta el monograma, se quita el fondo y se exporta a 2x y 3x.
+- Mientras llega el SVG, se recorta el monograma, se quita el fondo y se exporta a 1x, 2x y 3x (hecho en F1: `packages/ui/src/assets/`; íconos de la PWA en `apps/web/public/icons/`).
 - Usos: encabezado de la página pública (28 px de alto), ícono de la PWA (monograma centrado sobre `#0B0B0B`, con margen para la versión *maskable*) y pantalla de inicio de la PWA.
 
 ## Pantallas del cliente
@@ -351,9 +351,11 @@ Sigue pendiente ver el flujo de reserva del lado del cliente en la app de Beunik
 
 ## Verificar al implementar
 
-- [ ] Contraste de cada combinación de tokens con una herramienta (los valores de arriba están calculados, no medidos en pantalla).
-- [ ] Que Geist tenga cifras tabulares activables con `tabular-nums` en la versión que se instale.
-- [ ] Formato de hora de `Intl` en `es-CO` en Safari de iOS y en Chrome de Android ("3:00 p. m." con espacio fino).
-- [ ] La tira de días con lector de pantalla (VoiceOver y TalkBack): cada día se anuncia completo, "jueves 20 de noviembre, 6 horas libres".
-- [ ] El componente de hoja inferior de shadcn/ui (Drawer, sobre vaul) cierra con el gesto atrás de Android.
-- [ ] La barra inferior fija con el teclado abierto en iOS.
+Revisado en F1 el 19/11/2026 ([fases/F1](../fases/F1-sistema-diseno.md#cierre-19112026)).
+
+- [x] Contraste de cada combinación de tokens con una herramienta. Medido con culori en `packages/ui/src/internal/tokens.test.ts`; los valores coinciden con la tabla. axe-core revisa además el texto pintado en la página de muestras.
+- [x] Que Geist tenga cifras tabulares activables con `tabular-nums` en la versión que se instale. Geist 1.9.2 trae `tnum`: todas las cifras pasan a medir 600 unidades.
+- [x] Formato de hora en Safari de iOS y en Chrome de Android. Resuelto sin depender del motor: `Intl` solo convierte a la hora de Bogotá, y los nombres de días y meses y el "a. m." o "p. m." se escriben en el código, con espacio que no se parte ("3:00 p. m.").
+- [ ] La tira de días con lector de pantalla (VoiceOver y TalkBack): cada día se anuncia completo, "jueves 20 de noviembre, 6 horas libres". El nombre accesible ya se prueba con Playwright; falta oírlo en celulares reales.
+- [ ] El componente de hoja inferior de shadcn/ui (Drawer, sobre vaul) cierra con el gesto atrás de Android. Implementado con una entrada en el historial y probado con el botón atrás en Chromium; falta el gesto en un Android real.
+- [ ] La barra inferior fija con el teclado abierto en iOS. Falta probarla en un iPhone.

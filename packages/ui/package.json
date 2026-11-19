@@ -4,15 +4,40 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles.css"
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@possos/config": "workspace:*",
+    "@radix-ui/react-slot": "1.5.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "1.75.0",
+    "sonner": "2.0.8",
+    "tailwind-merge": "3.7.0",
+    "vaul": "1.1.2"
+  },
+  "peerDependencies": {
+    "next": "^16",
+    "react": "^19",
+    "react-dom": "^19"
   },
   "devDependencies": {
-    "@possos/config": "workspace:*",
+    "@types/culori": "4.0.1",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "culori": "4.0.2",
     "eslint": "9.39.5",
-    "typescript": "6.0.3"
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "6.0.3",
+    "vitest": "5.1.1"
   }
 }

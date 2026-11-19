@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@possos/auth": "workspace:*",
@@ -21,11 +22,15 @@
     "@possos/notifications": "workspace:*",
     "@possos/supabase": "workspace:*",
     "@possos/ui": "workspace:*",
+    "geist": "1.9.2",
+    "lucide-react": "1.75.0",
     "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.1",
     "@tailwindcss/postcss": "4.3.5",
     "@types/node": "26.6.6",
     "@types/react": "19.3.0",

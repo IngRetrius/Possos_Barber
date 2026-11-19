@@ -39,3 +39,27 @@ jobs:
           version: 3.2.0
       - run: supabase db start
       - run: supabase test db
+
+  e2e:
+    name: Playwright a 390 px
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter web exec playwright install --with-deps chromium
+      - run: pnpm --filter web test:e2e
+        env:
+          # Las pruebas de F1 no llaman a Supabase; los valores solo deben existir.
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:55321
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/test-results/
+          retention-days: 7
