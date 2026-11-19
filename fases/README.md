@@ -11,7 +11,7 @@ Para no confundirlas con las fases de producto, las de construcción se llaman *
 | [F0](F0-base.md) | Monorepo, CI, Supabase local y despliegue vacío en Vercel | | En curso: solo falta el trámite con Meta (pista paralela) |
 | [F1](F1-sistema-diseno.md) | `packages/ui`: tokens, tipografía, logo y componentes base | F0 | Terminada en código el 19/11/2026. Falta el visto bueno del dueño (paleta y Geist), el logo en SVG y la prueba con VoiceOver y TalkBack en celulares reales |
 | [F2](F2-datos-agenda.md) | Tablas, restricción de exclusión, RLS y funciones de la agenda y de los cobros, con pgTAP | F0 | Terminada en código el 19/11/2026. Falta el horario real del dueño (la semilla usa uno de ejemplo) |
-| [F3](F3-cuentas.md) | Registro, ingreso, perfil y autorización de datos | F1, F2 | Terminada en código el 19/11/2026. Falta configurar Google y los correos en producción, crear el primer administrador, el texto de la política (dueño) y la prueba de Google en un iPhone real |
+| [F3](F3-cuentas.md) | Registro, ingreso, perfil y autorización de datos | F1, F2 | Terminada en código el 19/11/2026. Google activo en producción. Falta el SMTP y las plantillas de correo, crear el primer administrador, el texto de la política (dueño) y la prueba de Google en un iPhone real |
 | [F4](F4-reserva-cliente.md) | Página pública y flujo de reserva | F1, F2, F3 | Sin empezar |
 | [F5](F5-mis-citas.md) | Mis citas: cancelar, cambiar hora, volver a reservar y .ics | F4 | Sin empezar |
 | [F6](F6-panel-barbero.md) | Panel: agenda, citas manuales, asistencia con cobro, liquidación, horario, clientes y administración | F2, F3 | Sin empezar |

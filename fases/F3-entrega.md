@@ -98,7 +98,7 @@ const viewer = await requireStaff(await createClient());
 ## Despliegue
 
 - Las dos migraciones de F3 se aplicaron a producción el 19/11/2026 con `pnpm db:push`, después del CI en verde. Producción y el repo tienen las mismas 9 migraciones.
-- En `https://possos-web.vercel.app` ya están `/ingresar`, `/registrarse` y `/politica-de-datos`; `/panel` sin sesión manda a ingresar. El botón de Google no aparece hasta configurarlo.
+- En `https://possos-web.vercel.app` ya están `/ingresar`, `/registrarse` y `/politica-de-datos`; `/panel` sin sesión manda a ingresar. Google está activo desde el 19/11/2026 y ya hubo un ingreso de punta a punta (Google, completar perfil con las dos autorizaciones).
 
 ## Configurar en producción
 
@@ -117,6 +117,8 @@ Pendiente:
 4. **Con el SMTP, las plantillas** de `supabase/templates/` en *Authentication > Emails > Templates* (asuntos "Confirma tu correo en Possos Barber" y "Cambia tu contraseña de Possos Barber"). Antes de eso, Supabase no deja cambiarlas.
 
 ### Google en producción
+
+Hecho el 19/11/2026. El cliente de Google es del proyecto de Google Cloud de la barbería; el proveedor se activó con `supabase config push` desde una carpeta temporal con un `config.toml` que solo declaraba `[auth.external.google]` y el *Client ID* y el secreto por variables de entorno. El JSON que descarga Google (`client_secret_*.json`) está en `.gitignore`: no se guarda dentro del repo. En *Branding*, la página de inicio es `https://possos-web.vercel.app` y la política de privacidad `/politica-de-datos`.
 
 1. En Google Cloud Console, un proyecto para Possos Barber. En *Google Auth Platform*: *Branding* con el nombre "Possos Barber" y un correo de soporte; *Audience* externo y **publicado** (si queda en prueba, solo entran los usuarios de prueba); *Data access* con `openid`, `userinfo.email` y `userinfo.profile` (no piden verificación de Google).
 2. *Clients > Create client > Web application*. *Authorized JavaScript origins*: `https://possos-web.vercel.app`. *Authorized redirect URIs*: la URL de callback que muestra Supabase en *Authentication > Sign In / Providers > Google* (`https://<ref del proyecto>.supabase.co/auth/v1/callback`).
@@ -142,6 +144,6 @@ Falta después (F6 o F9): enlazar al barbero con sus servicios (`barber_services
 ## Pendiente
 
 - **Del dueño:** el texto de la política de tratamiento de datos, con razón social, NIT, dirección, contacto y el canal de consultas y reclamos (hoy **[PENDIENTE]** en `/politica-de-datos`), revisado por un abogado si se puede, incluido si hay que registrar la base en el RNBD ([riesgo 8](../docs/10-riesgos-decisiones-abiertas.md)). El dominio, para la URL de Google ([decisión 9](../docs/10-riesgos-decisiones-abiertas.md)).
-- **De Juan:** configurar Google ([arriba](#google-en-producción)), crear el primer administrador y, antes de F9, el SMTP propio y las plantillas de correo.
+- **De Juan:** crear el primer administrador y, antes de F9, el SMTP propio y las plantillas de correo.
 - **En un iPhone real** ([riesgo 6](../docs/10-riesgos-decisiones-abiertas.md)): instalar la PWA (F8) o, mientras tanto, abrir el sitio desde la pantalla de inicio, y probar "Continuar con Google". Si vuelve a Safari en vez de a la app, el ingreso falla con el aviso de arriba; la mitigación es abrir el OAuth en una ventana emergente o recomendar el correo en iOS. Probar también que el enlace del correo abierto desde la app Mail active la cuenta. Se repite en F8 con la PWA completa.
 - **"Menos de 4 toques desde Confirmar"** se mide en F4, con Google activo (ver el [cierre de F3](F3-cuentas.md#cierre-19112026)).

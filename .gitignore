@@ -22,3 +22,6 @@ playwright-report/
 test-results/
 
 .DS_Store
+
+# Credenciales de Google OAuth descargadas de Google Cloud
+client_secret_*.json
