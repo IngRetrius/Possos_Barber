@@ -30,7 +30,7 @@ Que exista el esqueleto del proyecto, que CI vigile las reglas desde el primer c
 
 ### CI y despliegue
 
-- [ ] GitHub Actions: instalar, `lint`, `typecheck`, dependency-cruiser, Vitest y `supabase test db` contra una base local. El workflow está en `.github/workflows/ci.yml`; falta que corra por primera vez en GitHub (el repo todavía no tiene remoto).
+- [x] GitHub Actions: instalar, `lint`, `typecheck`, dependency-cruiser, Vitest y `supabase test db` contra una base local. Workflow en `.github/workflows/ci.yml`; primera corrida en verde el 19/11/2026.
 - [ ] Proyecto en Vercel con *Root Directory* `apps/web` y el build `turbo run build --filter=web...`.
 - [ ] Variables de entorno de Supabase cargadas en Vercel. Ningún secreto en el repo (regla 6). `.env.example` solo con los nombres.
 
