@@ -45,3 +45,19 @@ export async function countEmails(to: string, subject: RegExp): Promise<number> 
   const { messages } = (await search.json()) as { messages: Summary[] };
   return messages.filter((m) => subject.test(m.Subject)).length;
 }
+
+const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:55321";
+
+/**
+ * El mismo enlace como lo arma la plantilla por omisión de Supabase (la que usa producción en el
+ * plan gratuito): `/auth/v1/verify?token=...&type=...&redirect_to=...`. Supabase verifica y
+ * vuelve a `redirect_to` con `?code=`.
+ */
+export function asSupabaseDefaultLink(ownLink: string, type: "signup" | "recovery"): string {
+  const own = new URL(ownLink);
+  const verify = new URL(`${SUPABASE}/auth/v1/verify`);
+  verify.searchParams.set("token", own.searchParams.get("token_hash") ?? "");
+  verify.searchParams.set("type", type);
+  verify.searchParams.set("redirect_to", own.searchParams.get("next") ?? "");
+  return verify.toString();
+}

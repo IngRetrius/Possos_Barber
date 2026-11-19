@@ -26,14 +26,20 @@ import { CUSTOMER_HOME, destinationAfterSignIn, siteOrigin } from "../../lib/ses
 
 /*
  * Acciones de ingreso. Cada una verifica la sesión por su cuenta (no confía en el proxy).
- * Los enlaces del correo vuelven a `next` (o al inicio del cliente) pasando por
- * /auth/confirmar, que decide si falta completar el perfil.
+ *
+ * Los correos vuelven a `/auth/callback?via=correo&next=...`. Con las plantillas de Supabase
+ * (producción en el plan gratuito, que no deja cambiarlas) llegan ahí con `?code=`; con las
+ * propias (supabase/templates, en local) pasan antes por /auth/confirmar, que saca el `next`
+ * de esa URL. En los dos casos, después se decide si falta completar el perfil.
  */
+
+const EMAIL_CALLBACK = `${AUTH_ROUTES.oauthCallback}?via=correo`;
 
 const text = (value: FormDataEntryValue | null) => (typeof value === "string" ? value : "");
 
+/** URL a la que vuelve un enlace del correo (lista de redirecciones permitidas de Supabase). */
 async function emailReturnUrl(next: string | null): Promise<string> {
-  return `${await siteOrigin()}${next ?? CUSTOMER_HOME}`;
+  return `${await siteOrigin()}${withNext(EMAIL_CALLBACK, next ?? CUSTOMER_HOME)}`;
 }
 
 /** Reenvía el correo de activación. Supabase limita los reenvíos (60 s en producción). */
@@ -122,7 +128,7 @@ export async function resetPasswordAction(
   if (emailError) return { email, fieldErrors: { email: emailError } };
 
   const db = await createClient();
-  const redirectTo = `${await siteOrigin()}${withNext(AUTH_ROUTES.newPassword, next)}`;
+  const redirectTo = await emailReturnUrl(withNext(AUTH_ROUTES.newPassword, next));
   const result = await sendPasswordReset(db, { email, redirectTo });
   // Igual exista o no la cuenta, para no revelar qué correos están registrados.
   if (!result.ok && result.error === "RATE_LIMITED") {

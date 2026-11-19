@@ -356,6 +356,7 @@ Ingreso, registro y perfil. Los errores de Supabase Auth se agrupan en `src/inte
 | Completar perfil | "Completa tu perfil" ("Actualizamos la política de datos" si cambió la versión), campos "Nombre" y "Celular" (ayuda "Para avisarte de tus citas. Nadie más lo ve."), botón "Guardar y continuar" |
 | Casilla de datos (obligatoria) | "Autorizo a Possos Barber a tratar mis datos personales para agendar mis citas, según su política de tratamiento de datos." con el enlace "Leer la política de tratamiento de datos" |
 | Casilla de WhatsApp (opcional) | "Quiero recibir por WhatsApp la confirmación y los recordatorios de mis citas." Ayuda: "Opcional. Sin esta autorización no te llegan los recordatorios." |
+| Enlace de activación abierto en otro navegador | "Tu correo quedó confirmado. Ingresa con tu contraseña para seguir." (cambio de contraseña: "Abre el enlace en el mismo navegador donde pediste el cambio, o pide uno nuevo desde aquí.") |
 | Borrar la cuenta | Hoja "¿Borrar tu cuenta?" con "Sí, borrar mi cuenta" (rojo) y "No". Con una cita próxima: "Tienes una cita el ... a las .... Cancélala antes de borrar tu cuenta." Después: "Borramos tu cuenta y tus datos." |
 
 | Código o caso | Texto |

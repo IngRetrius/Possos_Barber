@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { countEmails, linkFromEmail } from "./support/mailpit";
+import { asSupabaseDefaultLink, countEmails, linkFromEmail } from "./support/mailpit";
 
 /*
  * F3: cuentas y datos personales, a 390 px. Necesita Supabase local (`pnpm db:start`) con la
@@ -267,4 +267,62 @@ test("la política de datos es pública, versionada y marca lo pendiente", async
   await expect(page.getByText(/^Versión /)).toBeVisible();
   await expect(page.getByText(/\[PENDIENTE\]/).first()).toBeVisible();
   await expectAccessible(page);
+});
+
+/*
+ * Producción usa las plantillas de correo de Supabase (el plan gratuito no deja cambiarlas sin
+ * SMTP propio). Sus enlaces pasan por /auth/v1/verify y vuelven a /auth/callback con ?code=.
+ */
+test.describe("con las plantillas de correo de Supabase", () => {
+  async function signUp(page: Page, email: string, next: string) {
+    await page.goto(`/registrarse?next=${encodeURIComponent(next)}`);
+    await page.getByLabel("Correo").fill(email);
+    await page.getByLabel("Contraseña").fill(PASSWORD);
+    await bottomBar(page).getByRole("button", { name: "Crear cuenta" }).click();
+    await expect(page.getByRole("heading", { name: "Revisa tu correo" })).toBeVisible();
+    return asSupabaseDefaultLink(await linkFromEmail(email, CONFIRM_SUBJECT), "signup");
+  }
+
+  test("activar en el mismo navegador abre la sesión y sigue a next", async ({ page }) => {
+    const next = "/perfil?servicio=corte";
+    const link = await signUp(page, newEmail("plantilla"), next);
+    await page.goto(link);
+    await expect(page).toHaveURL(`/completar-perfil?next=${encodeURIComponent(next)}`);
+  });
+
+  test("activar en otro navegador deja la cuenta activa y pide ingresar", async ({
+    page,
+    browser,
+  }) => {
+    const email = newEmail("otro-navegador");
+    const link = await signUp(page, email, "/perfil");
+
+    const other = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const otherPage = await other.newPage();
+    await otherPage.goto(link);
+    await expect(otherPage).toHaveURL(/\/ingresar\?aviso=cuenta-activada/);
+    await expect(
+      otherPage.getByText("Tu correo quedó confirmado. Ingresa con tu contraseña para seguir."),
+    ).toBeVisible();
+    await signIn(otherPage, email, PASSWORD);
+    await expect(otherPage).toHaveURL(/\/completar-perfil/);
+    await other.close();
+  });
+
+  test("cambiar la contraseña con el enlace", async ({ page }) => {
+    const email = newEmail("plantilla-clave");
+    await registerCustomer(page, email);
+    await expect(page).toHaveURL("/perfil");
+    await page.getByRole("button", { name: "Cerrar sesión" }).click();
+    await page.goto("/recuperar-contrasena");
+    await page.getByLabel("Correo").fill(email);
+    await bottomBar(page).getByRole("button", { name: "Enviar el enlace" }).click();
+    await expect(page.getByRole("heading", { name: "Revisa tu correo" })).toBeVisible();
+
+    await page.goto(asSupabaseDefaultLink(await linkFromEmail(email, RESET_SUBJECT), "recovery"));
+    await expect(page).toHaveURL("/nueva-contrasena");
+    await page.getByLabel("Contraseña nueva").fill("otra-clave-segura-3");
+    await bottomBar(page).getByRole("button", { name: "Guardar contraseña" }).click();
+    await expect(page).toHaveURL("/perfil");
+  });
 });

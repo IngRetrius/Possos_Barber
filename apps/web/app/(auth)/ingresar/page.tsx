@@ -11,6 +11,8 @@ export const metadata: Metadata = { title: "Ingresa · Possos Barber" };
 
 const NOTICES: Record<string, string> = {
   "cuenta-borrada": "Borramos tu cuenta y tus datos.",
+  // El enlace se abrió en otro navegador: la cuenta quedó activada, pero sin sesión aquí.
+  "cuenta-activada": "Tu correo quedó confirmado. Ingresa con tu contraseña para seguir.",
 };
 
 const ERRORS: Record<string, string> = {

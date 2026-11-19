@@ -61,8 +61,11 @@ const viewer = await requireStaff(await createClient());
 
 ### Correos y Google
 
-- **Los enlaces de los correos van a `/auth/confirmar?token_hash=...`** y no dependen de una cookie: funcionan aunque el correo se abra en otro navegador o en otro celular. Con `@supabase/ssr` (PKCE) el token empieza por `pkce_`, y `verifyOtp` lo acepta igual.
-- **Si en producción no se copian las plantillas**, los correos usan la de Supabase, que lleva a la página con `?code=`: la cuenta queda activada, pero sin sesión, y la persona tiene que ingresar a mano.
+- **Hay dos clases de enlace de correo, y la app acepta las dos.** Los correos vuelven a `/auth/callback?via=correo&next=...`:
+  - **Plantillas de Supabase** (producción hoy): el enlace va a `/auth/v1/verify` de Supabase, que activa la cuenta y vuelve al callback con `?code=`. El código PKCE solo se cambia en el navegador donde se pidió. En otro navegador la cuenta queda activada y la app pide ingresar ("Tu correo quedó confirmado. Ingresa con tu contraseña para seguir."); el cambio de contraseña pide abrir el enlace en el mismo navegador.
+  - **Plantillas propias** (`supabase/templates`, en local): el enlace va a `/auth/confirmar?token_hash=...`, que no depende de una cookie y funciona en cualquier navegador. `next` llega como la URL del callback (`{{ .RedirectTo }}`) y la ruta saca de ahí el destino. Con PKCE el token empieza por `pkce_`, y `verifyOtp` lo acepta igual.
+  - Playwright prueba las dos: las de Supabase, armando el enlace `/auth/v1/verify` con el mismo token del correo de Mailpit.
+- **El plan gratuito de Supabase no deja cambiar las plantillas** sin SMTP propio (la API responde "Email template modification is not available for free tier projects"). Cuando haya SMTP, se suben las de `supabase/templates` y los enlaces pasan a funcionar en cualquier navegador.
 - **Google con PKCE guarda el verificador en una cookie** del navegador que empezó el ingreso. Si Google vuelve a otro navegador (la PWA de iOS que abre Safari, [riesgo 6](../docs/10-riesgos-decisiones-abiertas.md)), el cambio del código falla y la persona vuelve a "Ingresa" con "No pudimos ingresar con Google. Intenta de nuevo o usa tu correo".
 - **El botón de Google solo aparece si Supabase lo tiene activo** (`isGoogleEnabled`, que lee `/auth/v1/settings` y lo guarda 5 minutos). Con el proveedor apagado, `signInWithOAuth` igual arma la URL y el navegador terminaría en un JSON de error de Supabase.
 - **Supabase limita los reenvíos** del correo de activación: uno por segundo en local (`max_frequency`), 60 s en producción. La pantalla muestra "Hiciste muchos intentos seguidos...".
@@ -99,16 +102,19 @@ const viewer = await requireStaff(await createClient());
 
 ## Configurar en producción
 
-Los pasos los hace Juan en los paneles; nada de esto va en el repo.
+Nada de esto va en el repo.
 
 ### Supabase: URL y correos
 
-En el panel del proyecto Possos_Barber:
+Hecho el 19/11/2026 con `supabase config push --workdir <carpeta temporal> --remote=<ref>`, con un `config.toml` que solo declara estas propiedades (la CLI no toca lo que el archivo no declara; un `config push` desde `supabase/` subiría los valores locales, como la Site URL `localhost`):
 
-1. **Authentication > URL Configuration**: *Site URL* `https://possos-web.vercel.app`; *Redirect URLs* `https://possos-web.vercel.app/**`. Cuando haya dominio ([decisión 9](../docs/10-riesgos-decisiones-abiertas.md)), se agrega y pasa a ser el *Site URL*.
-2. **Authentication > Sign In / Providers > Email**: *Confirm email* activado y contraseña mínima de 8 caracteres.
-3. **Authentication > Emails > Templates**: en *Confirm signup*, asunto "Confirma tu correo en Possos Barber" y el cuerpo de `supabase/templates/confirmar-correo.html`; en *Reset password*, asunto "Cambia tu contraseña de Possos Barber" y el de `recuperar-contrasena.html`.
-4. **Antes de abrir el registro al público (F9): SMTP propio** en *Authentication > SMTP Settings*. El correo por omisión de Supabase es de prueba, con un límite muy bajo por hora ([riesgo 13](../docs/10-riesgos-decisiones-abiertas.md)).
+1. *Site URL* `https://possos-web.vercel.app`. Antes era `possos-web-juan-pereas-projects.vercel.app`, que pide iniciar sesión en Vercel: los enlaces de los correos habrían llevado a los clientes a ese inicio de sesión. Las *Redirect URLs* ya incluían `https://possos-web.vercel.app/**` y no se tocaron. Cuando haya dominio ([decisión 9](../docs/10-riesgos-decisiones-abiertas.md)), se agrega y pasa a ser la *Site URL*.
+2. Contraseña mínima de 8 caracteres (era 6). La confirmación por correo ya estaba activa.
+
+Pendiente:
+
+3. **SMTP propio** en *Authentication > SMTP Settings*, antes de abrir el registro al público (F9). El correo por omisión de Supabase es de prueba, con un límite muy bajo por hora ([riesgo 13](../docs/10-riesgos-decisiones-abiertas.md)).
+4. **Con el SMTP, las plantillas** de `supabase/templates/` en *Authentication > Emails > Templates* (asuntos "Confirma tu correo en Possos Barber" y "Cambia tu contraseña de Possos Barber"). Antes de eso, Supabase no deja cambiarlas.
 
 ### Google en producción
 
@@ -136,6 +142,6 @@ Falta después (F6 o F9): enlazar al barbero con sus servicios (`barber_services
 ## Pendiente
 
 - **Del dueño:** el texto de la política de tratamiento de datos, con razón social, NIT, dirección, contacto y el canal de consultas y reclamos (hoy **[PENDIENTE]** en `/politica-de-datos`), revisado por un abogado si se puede, incluido si hay que registrar la base en el RNBD ([riesgo 8](../docs/10-riesgos-decisiones-abiertas.md)). El dominio, para la URL de Google ([decisión 9](../docs/10-riesgos-decisiones-abiertas.md)).
-- **De Juan:** configurar Supabase y Google en producción ([arriba](#configurar-en-producción)), crear el primer administrador y, antes de F9, el SMTP propio.
+- **De Juan:** configurar Google ([arriba](#google-en-producción)), crear el primer administrador y, antes de F9, el SMTP propio y las plantillas de correo.
 - **En un iPhone real** ([riesgo 6](../docs/10-riesgos-decisiones-abiertas.md)): instalar la PWA (F8) o, mientras tanto, abrir el sitio desde la pantalla de inicio, y probar "Continuar con Google". Si vuelve a Safari en vez de a la app, el ingreso falla con el aviso de arriba; la mitigación es abrir el OAuth en una ventana emergente o recomendar el correo en iOS. Probar también que el enlace del correo abierto desde la app Mail active la cuenta. Se repite en F8 con la PWA completa.
 - **"Menos de 4 toques desde Confirmar"** se mide en F4, con Google activo (ver el [cierre de F3](F3-cuentas.md#cierre-19112026)).
