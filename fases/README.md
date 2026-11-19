@@ -8,7 +8,7 @@ Para no confundirlas con las fases de producto, las de construcción se llaman *
 
 | Fase | Qué entrega | Depende de | Estado |
 |---|---|---|---|
-| [F0](F0-base.md) | Monorepo, CI, Supabase local y despliegue vacío en Vercel | | En curso: falta Vercel y Supabase en la nube |
+| [F0](F0-base.md) | Monorepo, CI, Supabase local y despliegue vacío en Vercel | | En curso: solo falta el trámite con Meta (pista paralela) |
 | [F1](F1-sistema-diseno.md) | `packages/ui`: tokens, tipografía, logo y componentes base | F0 | Sin empezar |
 | [F2](F2-datos-agenda.md) | Tablas, restricción de exclusión, RLS y funciones de la agenda y de los cobros, con pgTAP | F0 | Sin empezar |
 | [F3](F3-cuentas.md) | Registro, ingreso, perfil y autorización de datos | F1, F2 | Sin empezar |
@@ -21,6 +21,8 @@ Para no confundirlas con las fases de producto, las de construcción se llaman *
 | [F10](F10-despues-del-mvp.md) | Fases de producto 2 y 3 | F9 | Sin empezar |
 
 F1 y F2 pueden avanzar en paralelo. F6 puede empezar apenas termine F3, en paralelo con F4 y F5.
+
+Para empezar F1 o F2, lee primero [F0-entrega.md](F0-entrega.md): qué existe, cómo se trabaja y lo que no es evidente en el código.
 
 ## Pista paralela: trámite con Meta
 

@@ -26,13 +26,13 @@ Que exista el esqueleto del proyecto, que CI vigile las reglas desde el primer c
 
 - [x] `supabase init` y `supabase start` en local (Docker).
 - [x] `packages/supabase`: fábrica de clientes de navegador, servidor y admin con `@supabase/ssr`, y el script que genera `database.types.ts`.
-- [ ] Proyecto de Supabase en la nube para producción. **[PENDIENTE]** si se crea también uno de pruebas.
+- [x] Proyecto de Supabase en la nube para producción, conectado a GitHub con la integración de Supabase (19/11/2026). **[PENDIENTE]** si se crea también uno de pruebas.
 
 ### CI y despliegue
 
 - [x] GitHub Actions: instalar, `lint`, `typecheck`, dependency-cruiser, Vitest y `supabase test db` contra una base local. Workflow en `.github/workflows/ci.yml`; primera corrida en verde el 19/11/2026.
-- [ ] Proyecto en Vercel con *Root Directory* `apps/web` y el build `turbo run build --filter=web...`.
-- [ ] Variables de entorno de Supabase cargadas en Vercel. Ningún secreto en el repo (regla 6). `.env.example` solo con los nombres.
+- [x] Proyecto en Vercel con *Root Directory* `apps/web` y el build `turbo run build --filter=web...` (19/11/2026): `possos-web` en el equipo juan-pereas-projects, Node 24.x, conectado a GitHub y publicado en https://possos-web.vercel.app. `ENABLE_EXPERIMENTAL_COREPACK=1` hace que Vercel use el pnpm 12.6.0 de `packageManager`.
+- [x] Variables de entorno de Supabase cargadas en Vercel. Ningún secreto en el repo (regla 6). `.env.example` solo con los nombres. Las carga la integración de Vercel en el panel de Supabase (19/11/2026), solo en Production; también agrega `POSTGRES_*`, `SUPABASE_JWT_SECRET` y las claves antiguas, que el código no usa.
 
 ### Verificaciones de [docs/10](../docs/10-riesgos-decisiones-abiertas.md#verificaciones-pendientes-antes-de-escribir-código)
 
@@ -41,7 +41,7 @@ Que exista el esqueleto del proyecto, que CI vigile las reglas desde el primer c
 
 ### Pista paralela
 
-- [ ] Empezar el trámite con Meta: portafolio de negocio con moneda COP y la decisión del número (A o B) con el dueño.
+- [ ] Empezar el trámite con Meta: portafolio de negocio con moneda COP y la decisión del número (A o B) con el dueño. Decisión tomada el 19/11/2026: A, con un número nuevo; falta que el dueño saque la SIM y crear el portafolio.
 
 ## Notas de la implementación (19/11/2026)
 

@@ -38,7 +38,9 @@ Meta revisa cada plantilla y la puede reclasificar como marketing si trae promoc
 
 ## Qué número envía los mensajes
 
-Esta decisión está abierta y es del dueño. Ver [10](10-riesgos-decisiones-abiertas.md).
+**Decisión del dueño (19/11/2026): opción A.** Su número actual está en su cuenta personal y sigue siendo el contacto del barbero (el enlace `barbers.whatsapp_url`). Va a sacar un número nuevo solo para la API. El número personal no se escribe en el repo, que es público: se carga en el panel de administración.
+
+Requisitos de la SIM nueva para la Cloud API: que pueda recibir el código de verificación por SMS o llamada, y que no esté registrada en ninguna app de WhatsApp (ni personal ni Business). Si se instala WhatsApp con ella, hay que borrar esa cuenta antes de registrarla en Meta.
 
 | | **A. Número nuevo solo para la API** (recomendada para el MVP) | **B. Coexistencia con su número actual de WhatsApp Business** |
 |---|---|---|

@@ -22,4 +22,6 @@ Una PWA de agendamiento para Possos Barber, una barbería de Ibagué (Colombia),
 
 Detalle en `docs/00-contexto.md`. No se vuelven a discutir sin que él lo pida: un solo barbero por ahora; el personal puede crear citas para clientes sin cuenta; el corte normal dura 1 hora; se puede cancelar o reprogramar hasta 2 horas antes; después de 2 inasistencias, la reserva necesita aprobación; "cualquiera disponible" asigna al barbero con menos citas ese día; registro con Google o con correo y contraseña; el dueño es administrador y barbero; sin anticipos ni pagos en línea; WhatsApp Business ya existe y se acepta pagar por mensaje si sale más barato que la competencia; repo propio con entregables en `.md`.
 
+19/11/2026: los recordatorios salen de un número nuevo solo para la Cloud API (opción A de `docs/03-recordatorios-whatsapp.md`). El número actual del dueño sigue siendo su contacto y no va en el repo.
+
 19/11/2026: las "facturas" de Beunik solo reparten el valor de cada servicio entre barbero y barbería con un porcentaje que fija el administrador (hoy, 50 % para todos los servicios). Entran en el MVP como cobros y liquidación (módulo `commissions`, ver `docs/09-modelo-datos.md`). En la interfaz no se llaman "factura", porque no son factura electrónica de la DIAN.

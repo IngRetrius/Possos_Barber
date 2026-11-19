@@ -8,7 +8,7 @@ Ordenadas por lo que bloquean. Cada una trae un valor por omisión para no deten
 
 | # | Decisión | Quién decide | Valor por omisión | Bloquea |
 |---|---|---|---|---|
-| 1 | **Número que envía los WhatsApp:** uno nuevo solo para la API (A) o coexistencia con el actual de WhatsApp Business (B). Ver [03](03-recordatorios-whatsapp.md) | Dueño | A | Alta en Meta y plantillas |
+| 1 | **Resuelta el 19/11/2026: A.** El número actual del dueño está en su cuenta personal y sigue siendo su contacto; va a sacar un número nuevo solo para la API. Falta la SIM nueva. Ver [03](03-recordatorios-whatsapp.md#qué-número-envía-los-mensajes) | Dueño | | Alta en Meta y plantillas, hasta que exista la SIM |
 | 2 | **Servicios, precios y duraciones** además del corte normal (barba, cejas, combos…) | Dueño | Solo "Corte normal, 60 min, precio [PENDIENTE]" | Catálogo y semillas |
 | 3 | **Horario de atención** por día, descansos y si trabaja festivos | Dueño | [PENDIENTE] | Disponibilidad |
 | 4 | **Dirección** de la barbería para la página y el recordatorio de 2 h | Dueño | [PENDIENTE] | Plantilla `recordatorio_2h` |
