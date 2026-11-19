@@ -43,6 +43,7 @@ jobs:
   e2e:
     name: Playwright a 390 px
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -57,6 +58,7 @@ jobs:
           # Las pruebas de F1 no llaman a Supabase; los valores solo deben existir.
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:55321
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
+          NEXT_TELEMETRY_DISABLED: 1
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

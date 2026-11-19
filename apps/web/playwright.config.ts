@@ -29,9 +29,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `pnpm exec next dev --port ${PORT}`,
+    command: `next dev --port ${PORT}`,
     url: `http://localhost:${PORT}/muestras`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    // Sin esto, el servidor de desarrollo de Next no se apaga al terminar y el job de CI se cuelga.
+    gracefulShutdown: { signal: "SIGTERM", timeout: 5_000 },
   },
 });
