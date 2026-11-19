@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="es-CO">
+  <body style="font-family: Arial, sans-serif; font-size: 16px; line-height: 24px">
+    <h1 style="font-size: 20px">Confirma tu correo</h1>
+    <p>Creaste una cuenta en Possos Barber con este correo. Toca el enlace para activarla:</p>
+    <p>
+      <a
+        href="{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=email&next={{ .RedirectTo }}"
+        >Activar mi cuenta</a
+      >
+    </p>
+    <p>El enlace vence en una hora. Si no fuiste tú, ignora este correo.</p>
+  </body>
+</html>

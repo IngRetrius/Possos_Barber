@@ -57,10 +57,12 @@ from generate_series(1, 6) d
 cross join (values ('09:00'::time, '12:00'::time), ('14:00'::time, '19:00'::time)) as r (start_time, end_time);
 
 -- Clientes de prueba: uno con cuenta y uno sin cuenta, creado por el personal.
+-- La versión de la política es DATA_POLICY_VERSION de @possos/customers; si no coincide, la app
+-- le pide al cliente que vuelva a autorizar el tratamiento de datos al ingresar.
 insert into public.customers
   (id, user_id, full_name, phone, email, whatsapp_opt_in, data_consent_at, data_policy_version, created_by) values
   ('5eedc000-0000-0000-0000-000000000001', '5eed0000-0000-0000-0000-000000000002',
-   'Cliente de prueba', '+573000000001', 'cliente@ejemplo.test', true, now(), 'borrador',
+   'Cliente de prueba', '+573000000001', 'cliente@ejemplo.test', true, now(), 'borrador-2026-11-19',
    '5eed0000-0000-0000-0000-000000000002'),
   ('5eedc000-0000-0000-0000-000000000002', null,
    'Cliente sin cuenta', '+573000000002', null, true, null, null,

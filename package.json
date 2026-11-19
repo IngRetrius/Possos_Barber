@@ -20,7 +20,8 @@
     "db:reset": "supabase db reset",
     "db:push": "supabase db push --remote",
     "db:test": "supabase test db",
-    "db:types": "pnpm --filter @possos/supabase gen:types"
+    "db:types": "pnpm --filter @possos/supabase gen:types",
+    "db:primer-admin": "psql \"$DATABASE_URL\" -v email=\"$ADMIN_EMAIL\" -v nombre=\"$ADMIN_NAME\" -f supabase/scripts/primer-administrador.sql"
   },
   "devDependencies": {
     "@possos/config": "workspace:*",

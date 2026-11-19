@@ -1,10 +1,12 @@
 # Tablas y funciones de `auth`
 
-Migración: `20261119120000_auth_staff_roles.sql`.
+Migraciones: `20261119120000_auth_staff_roles.sql` y `20261119130000_auth_delete_account.sql` (F3).
 
 Tablas: `staff_roles` (rol `admin` o `barber` de cada usuario). Los usuarios viven en `auth.users`, que administra Supabase Auth.
 
-Funciones: `is_admin()` y `has_role(role)`, `security definer`, para las políticas RLS de todos los módulos.
+Funciones: `is_admin()` y `has_role(role)`, `security definer`, para las políticas RLS de todos los módulos. `delete_my_account()` (F3): el cliente borra su usuario de `auth.users`; el personal recibe `FORBIDDEN`. Lo que cuelga del usuario se resuelve con las claves foráneas, y `customers` anonimiza el perfil con su propio trigger.
+
+El primer administrador no se crea con una migración (su correo no va en el repo) sino con `supabase/scripts/primer-administrador.sql`.
 
 Esta migración también crea el esquema `private`, donde cada módulo pone sus funciones internas con su prefijo (`private.booking_*`, ...). PostgREST no lo expone.
 

@@ -40,7 +40,7 @@ Estado del proyecto al cerrar la parte técnica de [F0](F0-base.md), el 19/11/20
 
 ### Modularidad
 
-- Las reglas viven en `packages/config/dependency-cruiser.cjs`. La regla `only-public-api` acepta como entradas públicas solo `src/{index,server,ui,client,events,admin,constants}.ts(x)`. **Si un paquete declara otra entrada en `exports`** (por ejemplo, un CSS de `ui`), hay que agregarla a `PUBLIC_ENTRY` en ese archivo o dependency-cruiser fallará.
+- Las reglas viven en `packages/config/dependency-cruiser.cjs`. La regla `only-public-api` acepta como entradas públicas solo `src/{index,server,ui,client,events,admin,constants,proxy}.ts(x)` (`proxy` llegó en F3). **Si un paquete declara otra entrada en `exports`** (por ejemplo, un CSS de `ui`), hay que agregarla a `PUBLIC_ENTRY` en ese archivo o dependency-cruiser fallará.
 - Para importar otro paquete del monorepo, este se declara en `dependencies` con `"workspace:*"`. Si no se declara, el import no resuelve y dependency-cruiser lo marca como `no-unresolvable`.
 
 ### Supabase

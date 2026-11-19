@@ -17,11 +17,12 @@ possos-web/
 │       │   ├── manifest.ts          # manifiesto de la PWA
 │       │   ├── serwist/[path]/      # ruta que compila y sirve el service worker (@serwist/turbopack)
 │       │   └── sw.ts                # service worker (Serwist)
+│       ├── lib/session.ts           # destino después de ingresar (compone auth y customers)
 │       ├── proxy.ts                 # refresca la sesión (auth) y protege rutas (antes middleware.ts)
 │       └── vercel.json              # crons
 ├── packages/
 │   ├── ui/                          # sistema de diseño: tokens, componentes shadcn. Sin dominio
-│   ├── supabase/                    # fábrica de clientes (navegador, servidor, admin) y tipos generados
+│   ├── supabase/                    # fábrica de clientes (navegador, servidor, admin, proxy) y tipos generados
 │   ├── auth/                        # sesión, roles, guardas, formularios de ingreso
 │   ├── catalog/                     # servicios: consultas, acciones y componentes
 │   ├── barbers/                     # barberos, horario, bloqueos y portafolio

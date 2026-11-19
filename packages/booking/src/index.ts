@@ -27,4 +27,12 @@ export const OCCUPYING_STATUSES = [
   "no_show",
 ] as const satisfies readonly AppointmentStatus[];
 
+/** Estados de una cita que todavía va a pasar (la del cliente que espera su turno). */
+export const UPCOMING_STATUSES = [
+  "pending_approval",
+  "booked",
+  "confirmed",
+] as const satisfies readonly AppointmentStatus[];
+
+export { parsePeriod } from "./internal/period";
 export { BOOKING_ERROR_CODES, bookingErrorMessage, type BookingErrorCode } from "./internal/errors";

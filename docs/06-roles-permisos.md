@@ -38,3 +38,7 @@
 - **"Solo el barbero puede ver sus propios clientes"** (decisión del dueño) se cumple con RLS: un barbero lee un registro de `customers` solo si existe la relación en `barber_customers`. Esa relación se crea cuando el cliente tiene su primera cita con él o cuando el barbero lo registra a mano ([09](09-modelo-datos.md)). El administrador, que hoy es el mismo barbero, ve todos.
 - Un cliente **nunca** ve el nombre ni el celular de otro. Las horas libres salen de `get_available_slots`, que solo devuelve horas de inicio.
 - Las operaciones sensibles (reservar, cancelar, reprogramar, aprobar, marcar asistencia) se hacen con funciones de Postgres que validan el rol y la política adentro. El cliente no puede hacer `UPDATE` directo sobre `appointments`.
+- **En la app (F3)**, las guardas de servidor de `@possos/auth/server` (`requireViewer`, `requireStaff`, `requireAdmin`) leen el rol con `is_admin()` y `current_barber_id()`. Un cliente que abre `/panel` recibe 404. El proxy de Next solo revisa que haya sesión; cada página y cada acción vuelve a verificar.
+- Después de ingresar, el personal va al panel y el cliente a completar su perfil (si le falta) o a donde iba (`next`, solo rutas internas).
+- **Borrar la cuenta** (Ley 1581): el cliente la borra desde su perfil con `delete_my_account()`, salvo que tenga una cita próxima. El personal no puede borrar su cuenta desde la app.
+- **El primer administrador** se crea con `supabase/scripts/primer-administrador.sql` (`pnpm db:primer-admin`), sobre una cuenta que ya existe. Ver [F3-entrega](../fases/F3-entrega.md).

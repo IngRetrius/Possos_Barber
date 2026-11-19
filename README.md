@@ -43,17 +43,20 @@ pnpm dev                   # http://localhost:3000
 | Comando | Qué hace |
 |---|---|
 | `pnpm turbo run build lint typecheck test` | Build, lint, tipos y Vitest de todos los paquetes |
-| `pnpm --filter web test:e2e` | Playwright a 390 px. Usa el `pnpm dev` que esté corriendo o levanta uno. La primera vez: `pnpm --filter web exec playwright install chromium` |
+| `pnpm --filter web test:e2e` | Playwright a 390 px. Necesita Supabase local con la semilla (`pnpm db:start`). Usa el `pnpm dev` que esté corriendo o levanta uno. La primera vez: `pnpm --filter web exec playwright install chromium` |
 | `pnpm depcruise` | Revisa las reglas de modularidad de [docs/08](docs/08-estructura-monorepo.md#reglas-de-modularidad) |
 | `pnpm format` / `pnpm format:check` | Prettier |
 | `pnpm db:test` | Pruebas pgTAP de `supabase/tests/` |
 | `pnpm db:reset` | Recrea la base local con las migraciones y `supabase/seed.sql` |
 | `pnpm db:push` | Aplica las migraciones nuevas a producción (proyecto enlazado; ver [F2-entrega](fases/F2-entrega.md#despliegue)). Solo con el CI en verde, y nunca con `--include-seed` |
+| `pnpm db:primer-admin` | Da los roles de administrador y barbero, su fila de barbero y el 50 % a una cuenta que ya existe. Lee `DATABASE_URL`, `ADMIN_EMAIL` y `ADMIN_NAME` del entorno (ver [F3-entrega](fases/F3-entrega.md#primer-administrador)) |
 | `pnpm db:types` | Regenera `packages/supabase/src/database.types.ts` desde la base local |
 | `pnpm db:stop` | Apaga Supabase local |
 
 Con `pnpm dev`, `http://localhost:3000/muestras` muestra todos los componentes de `@possos/ui` y sus estados. Esa página solo existe en desarrollo. Desde un celular en la misma red Wi-Fi se abre con la URL de la línea `Network:` que imprime `pnpm dev` (por ejemplo, `http://192.168.1.67:3000/muestras`).
 
 La semilla (`supabase/seed.sql`) crea dos cuentas para probar en local, ambas con la contraseña `possos-local`: `barbero@ejemplo.test` (administrador y barbero) y `cliente@ejemplo.test` (cliente con perfil). Solo existen en la base local.
+
+Los correos de Supabase Auth en local (activar la cuenta, cambiar la contraseña) no salen a internet: llegan a Mailpit, en `http://127.0.0.1:55324`. Google está apagado en local, así que el botón "Continuar con Google" no aparece.
 
 Supabase local usa los puertos 55320 a 55329 (API en `http://127.0.0.1:55321`, Studio en `http://127.0.0.1:55323`) para no chocar con otros proyectos.

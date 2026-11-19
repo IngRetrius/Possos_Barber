@@ -344,6 +344,36 @@ Cada código que lanzan las funciones de Postgres ([09](09-modelo-datos.md#funci
 | `INVALID_CUSTOMER` | Revisa el nombre y el celular (+57 y 10 dígitos) |
 | Cualquier otro | No pudimos completar la acción. Intenta de nuevo |
 
+### Cuentas (F3)
+
+Ingreso, registro y perfil. Los errores de Supabase Auth se agrupan en `src/internal/errors.ts` de `@possos/auth`; los del celular y el perfil, en `@possos/customers`. Todos se prueban con Vitest.
+
+| Lugar | Texto |
+|---|---|
+| Ingresar | Título "Ingresa", "Para reservar y ver tus citas.", "Continuar con Google" (solo si Google está activo en Supabase), "o con tu correo", "Olvidé mi contraseña", "¿No tienes cuenta? Crea una", botón "Ingresar" |
+| Registrarse | "Crea tu cuenta", "Con tu cuenta reservas, cambias y cancelas tus citas.", ayuda "Mínimo 8 caracteres.", botón "Crear cuenta" |
+| Después de registrarse | "Revisa tu correo", "Te enviamos un enlace a ... Ábrelo para activar tu cuenta y seguir donde ibas.", "Reenviar el enlace", "Usar otro correo" |
+| Completar perfil | "Completa tu perfil" ("Actualizamos la política de datos" si cambió la versión), campos "Nombre" y "Celular" (ayuda "Para avisarte de tus citas. Nadie más lo ve."), botón "Guardar y continuar" |
+| Casilla de datos (obligatoria) | "Autorizo a Possos Barber a tratar mis datos personales para agendar mis citas, según su política de tratamiento de datos." con el enlace "Leer la política de tratamiento de datos" |
+| Casilla de WhatsApp (opcional) | "Quiero recibir por WhatsApp la confirmación y los recordatorios de mis citas." Ayuda: "Opcional. Sin esta autorización no te llegan los recordatorios." |
+| Borrar la cuenta | Hoja "¿Borrar tu cuenta?" con "Sí, borrar mi cuenta" (rojo) y "No". Con una cita próxima: "Tienes una cita el ... a las .... Cancélala antes de borrar tu cuenta." Después: "Borramos tu cuenta y tus datos." |
+
+| Código o caso | Texto |
+|---|---|
+| `INVALID_CREDENTIALS` | El correo o la contraseña no coinciden |
+| `EMAIL_NOT_CONFIRMED` | Primero activa tu cuenta con el enlace que te enviamos al correo |
+| `INVALID_EMAIL` | Escribe un correo válido |
+| `WEAK_PASSWORD` | La contraseña debe tener al menos 8 caracteres |
+| `SAME_PASSWORD` | La contraseña nueva debe ser distinta de la anterior |
+| `LINK_EXPIRED` | El enlace venció o ya se usó. Pide uno nuevo |
+| `GOOGLE_FAILED` | No pudimos ingresar con Google. Intenta de nuevo o usa tu correo |
+| `RATE_LIMITED` | Hiciste muchos intentos seguidos. Espera unos minutos e intenta de nuevo |
+| Celular vacío | Escribe tu celular |
+| Celular sin 10 dígitos | El celular debe tener 10 dígitos, sin el +57 |
+| Celular que no empieza por 3 | Escribe un número de celular: en Colombia empiezan por 3 |
+| Sin la autorización de datos (`CONSENT_REQUIRED`) | Sin esta autorización no podemos crear tu cuenta |
+| Nombre vacío | Escribe tu nombre |
+
 ## Beunik: lo que muestran las capturas del dueño
 
 El dueño compartió dos capturas del inicio de Beunik PRO desde su cuenta (recibidas el 19/11/2026). No se guardan en el repo porque muestran su correo y un anuncio de terceros; aquí se describen.

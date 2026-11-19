@@ -12,6 +12,9 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["list"]] : "list",
+  // `next dev` compila cada ruta la primera vez que se abre: con el servidor en frío (siempre en
+  // CI) la primera visita a /registrarse o /perfil tarda más que los 5 s por omisión.
+  expect: { timeout: 15_000 },
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",

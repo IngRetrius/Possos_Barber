@@ -2,6 +2,7 @@ import "server-only";
 import { createTimeOff } from "@possos/barbers/server";
 import type { TimeOff } from "@possos/barbers";
 import { errorCode, type DbClient, type Result } from "@possos/supabase";
+import { UPCOMING_STATUSES } from "./index";
 import type {
   Appointment,
   AppointmentForNotification,
@@ -174,4 +175,23 @@ export async function getAppointmentForNotification(
 ): R<AppointmentForNotification | null> {
   const { data, error } = await db.rpc("get_appointment_for_notification", { p_id: appointmentId });
   return error ? fail(error) : { ok: true, data: data[0] ?? null };
+}
+
+/**
+ * La próxima cita de un cliente que todavía no pasa (pendiente, reservada o confirmada), o null.
+ * La usa F3 para no borrar una cuenta con una cita pendiente, y F5 para "Mis citas".
+ */
+export async function getNextAppointment(db: DbClient, customerId: string): R<Appointment | null> {
+  const now = new Date().toISOString();
+  const { data, error } = await db
+    .from("appointments")
+    .select("*")
+    .eq("customer_id", customerId)
+    .in("status", UPCOMING_STATUSES)
+    // Que no termine antes de ahora: el rango no queda estrictamente a la izquierda de `now`.
+    .not("period", "sl", `[${now},${now}]`)
+    .order("period", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return error ? fail(error) : { ok: true, data };
 }

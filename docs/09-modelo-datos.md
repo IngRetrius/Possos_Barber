@@ -32,7 +32,7 @@ inbound_messages, event_cursors                               [notifications]
 |---|---|
 | `staff_roles` | `user_id` → auth.users, `role` (`admin` \| `barber`), PK (`user_id`, `role`) |
 
-Funciones `security definer` con `set search_path = ''`: `is_admin()` y `has_role(role)`.
+Funciones `security definer` con `set search_path = ''`: `is_admin()` y `has_role(role)`, y `delete_my_account()` (F3): el cliente borra su usuario de Auth; el personal recibe `FORBIDDEN`.
 
 ### catalog
 
@@ -69,6 +69,9 @@ Un trigger impide que un barbero sin rol de administrador cambie su `user_id`, `
 - El personal crea clientes sin cuenta con `staff_create_customer(full_name, phone, email, whatsapp_opt_in)`; si quien lo crea es barbero, queda enlazado con él.
 - La restricción `customers_account_has_consent` exige celular, `data_consent_at` y `data_policy_version` a todo perfil con cuenta (Ley 1581). El celular se valida en la base como `+57` y 10 dígitos.
 - El cliente solo puede escribir las columnas de su perfil (nombre, celular, correo, WhatsApp y autorización); `user_id` y `created_by` no se tocan desde la app.
+- La hora de la autorización la pone la base (F3): cuando el cliente crea su perfil o cambia `data_policy_version`, el trigger `customers_stamp_consent` fija `data_consent_at = now()`, sin importar lo que mande la app. Lo que escribe el personal (clientes sin cuenta) no se toca.
+- Cuenta borrada (F3): cuando `user_id` pasa a null porque se borró el usuario de Auth, el perfil queda como "Cuenta borrada", sin celular, correo ni autorizaciones, y se borran las notas del barbero sobre esa persona. La fila se conserva porque las citas y los cobros pasados la referencian.
+- La versión vigente de la política es `DATA_POLICY_VERSION` de `@possos/customers`. Si el perfil tiene otra, la app vuelve a pedir la autorización al ingresar.
 
 ### booking
 
@@ -182,6 +185,7 @@ Las funciones internas van en el esquema `private`, que PostgREST no expone; cad
 | `record_charge(appointment_id, amount_cop)` | barbero (su agenda) y admin | Módulo `commissions`. Exige la cita en `completed` y sin cobro previo; copia el porcentaje vigente |
 | `update_charge(id, amount_cop)` | barbero (sus cobros del mismo día) y admin | Corrige el monto; el porcentaje copiado no cambia |
 | `void_charge(id, reason)` | admin | Anula un cobro con motivo; no se borra |
+| `delete_my_account()` | cliente | Módulo `auth`. Borra su usuario de Auth; `customers` anonimiza el perfil. El personal recibe `FORBIDDEN`. La app no la llama si el cliente tiene una cita próxima |
 | `get_settlement(from, to, barber_id?)` | barbero (solo el suyo) y admin | Totales del periodo (fechas de Bogotá, ambas incluidas), una fila por barbero: servicios, cobrado, parte del barbero y parte de la barbería, sin los anulados |
 
 Los errores salen como excepción con el código en el mensaje (SQLSTATE `P0001`). Cada paquete los traduce con `errorCode()` de `@possos/supabase` y su función de textos (`bookingErrorMessage`, ...); los textos están en [11](11-interfaz.md#textos-de-la-interfaz).
@@ -190,7 +194,8 @@ Los errores salen como excepción con el código en el mensaje (SQLSTATE `P0001`
 |---|---|
 | booking | `SLOT_TAKEN`, `TOO_LATE_TO_CANCEL`, `OUTSIDE_WORKING_HOURS`, `IN_TIME_OFF`, `TOO_SOON`, `TOO_FAR`, `SERVICE_NOT_AVAILABLE`, `NO_CUSTOMER_PROFILE`, `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `INVALID_STATUS`, `INVALID_INPUT`, `INVALID_PERIOD`, `REASON_REQUIRED`, `NOT_STARTED` |
 | barbers | `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `INVALID_PERIOD`, `TIME_OFF_OVERLAP` |
-| customers | `NOT_AUTHENTICATED`, `FORBIDDEN`, `INVALID_CUSTOMER` |
+| auth | `NOT_AUTHENTICATED`, `FORBIDDEN` (`delete_my_account`). Los errores de Supabase Auth (ingreso, registro, contraseña) los traduce `authErrorCode` de `@possos/auth` |
+| customers | `NOT_AUTHENTICATED`, `FORBIDDEN`, `INVALID_CUSTOMER`. En la app, además, `CONSENT_REQUIRED` |
 | commissions | `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `NOT_COMPLETED`, `ALREADY_CHARGED`, `INVALID_AMOUNT`, `NO_COMMISSION_RATE`, `TOO_LATE_TO_EDIT`, `INVALID_STATUS`, `INVALID_PERIOD`, `REASON_REQUIRED` |
 
 Una reserva de un cliente con 2 inasistencias no es un error: entra como `pending_approval` y la interfaz muestra "Tu reserva queda pendiente de que el barbero la apruebe".
@@ -249,7 +254,7 @@ Envolver `auth.uid()` y las funciones en `(select ...)` hace que Postgres las ev
 
 ## Pruebas obligatorias (pgTAP)
 
-Están en `supabase/tests/database/` (`02_booking`, `03_rls` y `04_commissions`), con el fixture compartido `supabase/tests/fixtures/setup.psql`. Cada prueba obligatoria lleva su número al inicio de la descripción.
+Están en `supabase/tests/database/` (`02_booking`, `03_rls`, `04_commissions` y, desde F3, `05_accounts`: perfil, autorización y borrar la cuenta), con el fixture compartido `supabase/tests/fixtures/setup.psql`. Cada prueba obligatoria lleva su número al inicio de la descripción.
 
 1. Dos `book_appointment` a la misma hora para el mismo barbero: uno pasa y el otro falla con `SLOT_TAKEN`.
 2. Una cita cancelada libera la hora.

@@ -1,4 +1,5 @@
 {
   "extends": "@possos/config/tsconfig/library.json",
-  "include": ["src"]
+  // logo.tsx de @possos/ui importa PNG; su declaración vive en ui (en apps/web la pone Next).
+  "include": ["src", "../ui/src/internal/assets.d.ts"]
 }

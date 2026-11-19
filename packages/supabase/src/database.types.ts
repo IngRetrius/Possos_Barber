@@ -940,6 +940,7 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      delete_my_account: { Args: Record<PropertyKey, never>; Returns: undefined };
       get_appointment_for_notification: {
         Args: { p_id: string };
         Returns: {
