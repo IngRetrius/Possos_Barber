@@ -20,7 +20,8 @@ Estado del proyecto al cerrar la parte técnica de [F0](F0-base.md), el 19/11/20
 ## Cómo se trabaja
 
 - Comandos: ver la sección "Desarrollo local" del [README](../README.md).
-- Una rama por fase (`f1-sistema-diseno`, `f2-datos-agenda`, …) y un PR a `main`. CI corre en cada PR y Vercel crea una vista previa.
+- Todo se trabaja directamente en `main`, sin ramas ni PR, mientras Juan sea el único desarrollador (decisión del 19/11/2026). Cada push corre CI y despliega a producción en Vercel; por eso se hace push solo con todo en verde en local.
+- Si dos chats trabajan en paralelo, cada uno hace commit solo de sus archivos y `git pull --rebase` antes de cada push.
 - Al cerrar una fase: marcar sus tareas en su archivo, actualizar la columna "Estado" de [README.md](README.md) y los documentos de `docs/` que cambiaron.
 
 ## Lo que no es evidente
