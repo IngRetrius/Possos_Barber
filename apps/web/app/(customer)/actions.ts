@@ -59,15 +59,15 @@ export async function completeProfileAction(
   redirect(safeNext(form.get("next")) ?? CUSTOMER_HOME);
 }
 
-/** Editar el perfil desde /perfil. */
+/** Editar el perfil desde /perfil. Al guardar, vuelve al inicio con la sesión abierta. */
 export async function updateProfileAction(
   _prev: ProfileFormState,
   form: FormData,
 ): Promise<ProfileFormState> {
   const { done, ...state } = await save(form);
   if (!done) return state;
-  revalidatePath("/perfil");
-  return { saved: true };
+  revalidatePath("/", "layout");
+  redirect(`${CUSTOMER_HOME}?aviso=perfil-guardado`);
 }
 
 /**

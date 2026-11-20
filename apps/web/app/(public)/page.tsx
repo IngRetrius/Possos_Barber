@@ -24,7 +24,7 @@ import { createClient } from "@possos/supabase/server";
 import { BottomBar, Button, formatDate, formatTime, Logo, StatusBadge } from "@possos/ui";
 import { BUSINESS, mapsEmbedUrl, mapsUrl, PENDING, siteUrl } from "../../lib/business";
 import { loadBookingFlow, timeStepHref } from "../../lib/booking-flow";
-import { CUSTOMER_HOME, STAFF_HOME } from "../../lib/session";
+import { PROFILE_PATH, STAFF_HOME } from "../../lib/session";
 
 export const metadata: Metadata = {
   title: `${BUSINESS.name} · ${BUSINESS.kind}`,
@@ -57,7 +57,8 @@ const linkClass = "text-fg underline underline-offset-4 hover:text-fg-muted";
  * servidor (búsquedas locales, docs/05) y legible sin JavaScript. Lo que el dueño no ha dado
  * dice [PENDIENTE]. Si el cliente tiene una cita próxima, va primero.
  */
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: PageProps<"/">) {
+  const params = await searchParams;
   const db = await createClient();
   const [flow, barbers, hours, viewer] = await Promise.all([
     loadBookingFlow(db, parseSelection({})),
@@ -136,13 +137,18 @@ export default async function HomePage() {
       <header className="flex min-h-14 items-center justify-between gap-2 px-gutter pt-safe">
         <Logo label="" />
         <Button asChild variant="ghost">
-          <Link href={viewer ? (viewer.isStaff ? STAFF_HOME : CUSTOMER_HOME) : AUTH_ROUTES.signIn}>
+          <Link href={viewer ? (viewer.isStaff ? STAFF_HOME : PROFILE_PATH) : AUTH_ROUTES.signIn}>
             {viewer ? (viewer.isStaff ? "Panel" : "Tu perfil") : "Ingresar"}
           </Link>
         </Button>
       </header>
 
       <main className="grid flex-1 content-start gap-10 px-gutter pt-4 pb-10 md:mx-auto md:w-full md:max-w-2xl">
+        {viewer && params.aviso === "perfil-guardado" ? (
+          <p role="status" className="rounded-card border border-border bg-surface p-4 text-body">
+            Guardamos tus cambios.
+          </p>
+        ) : null}
         <section className="grid gap-2">
           <h1 className="text-title text-brand">{BUSINESS.name}</h1>
           <p className="text-body text-fg">{BUSINESS.kind}</p>

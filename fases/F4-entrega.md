@@ -45,7 +45,7 @@ const { label, tone } = APPOINTMENT_STATUS_DISPLAY[appointment.status];
 <a href={`/mis-citas/${id}/calendario.ics`} download>Agregar al calendario</a>
 ```
 
-- `CUSTOMER_HOME` sigue en `/perfil`. Cuando F5 cree `/mis-citas`, la cita próxima del inicio puede llevar ahí.
+- `CUSTOMER_HOME` es `/` desde el 19/11/2026 (ver [F3-entrega](F3-entrega.md)). Cuando F5 cree `/mis-citas`, la cita próxima del inicio puede llevar ahí.
 
 ## Lo que no es evidente
 

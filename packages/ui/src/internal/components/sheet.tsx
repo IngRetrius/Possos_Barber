@@ -18,17 +18,44 @@ const HISTORY_KEY = "possosSheet";
 function useCloseOnBack(open: boolean, setOpen: (open: boolean) => void, enabled: boolean) {
   const id = useId();
   const closedByBack = useRef(false);
+  // `setOpen` cambia en cada render si quien usa la hoja pasa `onOpenChange` en línea. Si el
+  // efecto dependiera de él, cada render haría `history.back()` y `pushState` otra vez, y el
+  // `popstate` tardío de ese `back()` cerraba la hoja como si fuera el gesto atrás (F6).
+  const setOpenRef = useRef(setOpen);
+  useEffect(() => {
+    setOpenRef.current = setOpen;
+  });
+
+  // La entrada que agregó la hoja (URL y largo del historial al agregarla) y qué instancia del
+  // efecto la tiene. Viven en refs porque el efecto se puede desmontar y volver a montar con la
+  // hoja abierta (en desarrollo, React lo hace siempre al montar: StrictMode).
+  const pushedRef = useRef<{ url: string; length: number } | null>(null);
+  const instanceRef = useRef(0);
 
   useEffect(() => {
     if (!enabled || !open) return;
+    const instance = ++instanceRef.current;
     const ours = () => window.history.state?.[HISTORY_KEY] === id;
-    if (!ours()) {
+    // `router.refresh()` de Next reemplaza `history.state` y quita la marca. La entrada sigue
+    // siendo la de la hoja si la URL y el largo del historial no cambiaron (una navegación sí
+    // los cambia, y entonces no hay que volver atrás).
+    const stillOurs = () => {
+      const pushed = pushedRef.current;
+      return (
+        ours() ||
+        (pushed !== null &&
+          window.location.href === pushed.url &&
+          window.history.length === pushed.length)
+      );
+    };
+    if (!stillOurs()) {
       window.history.pushState({ ...window.history.state, [HISTORY_KEY]: id }, "");
+      pushedRef.current = { url: window.location.href, length: window.history.length };
     }
     const onPop = () => {
       if (!ours()) {
         closedByBack.current = true;
-        setOpen(false);
+        setOpenRef.current(false);
       }
     };
     window.addEventListener("popstate", onPop);
@@ -36,11 +63,19 @@ function useCloseOnBack(open: boolean, setOpen: (open: boolean) => void, enabled
       window.removeEventListener("popstate", onPop);
       if (closedByBack.current) {
         closedByBack.current = false;
-      } else if (ours()) {
-        window.history.back();
+        pushedRef.current = null;
+        return;
       }
+      // Se espera un instante: si el efecto se volvió a montar con la hoja abierta, la entrada
+      // sigue siendo suya y no se toca. Un `history.back()` inmediato llegaba como `popstate` a
+      // la instancia nueva, que cerraba la hoja como si fuera el gesto atrás.
+      setTimeout(() => {
+        if (instanceRef.current !== instance) return;
+        if (stillOurs()) window.history.back();
+        pushedRef.current = null;
+      }, 0);
     };
-  }, [enabled, open, id, setOpen]);
+  }, [enabled, open, id]);
 }
 
 export interface SheetProps {

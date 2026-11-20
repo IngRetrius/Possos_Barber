@@ -32,7 +32,12 @@ const agenda = (page: Page) => page.getByRole("list", { name: "Agenda del día" 
 const sheet = (page: Page) => page.getByRole("dialog");
 
 async function expectAccessible(page: Page) {
-  const results = await new AxeBuilder({ page }).withTags(WCAG).analyze();
+  // Sin el aviso flotante (Sonner): entra con una animación de opacidad y axe lo mide a medio
+  // camino. Su contraste en reposo lo prueba muestras.spec.
+  const results = await new AxeBuilder({ page })
+    .withTags(WCAG)
+    .exclude("[data-sonner-toaster]")
+    .analyze();
   expect(
     results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`),
   ).toEqual([]);

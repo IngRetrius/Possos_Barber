@@ -21,7 +21,7 @@ Estado del panel del barbero y del administrador al cerrar [F6](F6-panel-barbero
 | `@possos/notifications` | `.`: `validateReminderSettings`, `offsetToHours`. `/server` (nueva): `getNotificationSettings`, `updateNotificationSettings` | El despacho sigue siendo de F7 |
 | `@possos/auth` | `/server`: `listStaff`, `grantRole`, `revokeRole` | Roles desde el panel |
 | `@possos/catalog` | `.`: `validateService`, `parsePesos`. `/server`: `listServices`, `getService`, `createService`, `updateService`, `moveService`. `/ui`: `ServiceForm` | |
-| `@possos/ui` | `submitKeepingValues` (nuevo) | Único cambio en `ui`; ver abajo |
+| `@possos/ui` | `submitKeepingValues` (nuevo) y un arreglo de `Sheet` | Los únicos cambios en `ui`; ver abajo |
 | Migraciones | `20261119160000_booking_realtime.sql`, `20261119160100_customers_staff_consent.sql`, `20261119160200_barbers_working_hours.sql`, `20261119160300_auth_role_admin.sql` | `appointments` en `supabase_realtime`; `staff_create_customer` con la versión de la política; `set_working_hours`; `list_staff`, `grant_role` y `revoke_role`. Cada función con su `revoke` y su `grant` |
 | Semilla | `supabase/seed.sql` | `barbero2@ejemplo.test`: barbero sin administrador, **inactivo**, con 50 % |
 | Pruebas | `supabase/tests/database/07_panel.test.sql` (52), Vitest en booking (`agenda`, `settings`), barbers (`holidays`, `panel`), customers (`staff`), catalog (`service-form`), commissions (`split`) y notifications (`settings`), `apps/web/e2e/panel.spec.ts` (13) | |
@@ -95,6 +95,12 @@ Estado del panel del barbero y del administrador al cerrar [F6](F6-panel-barbero
 - **Roles por correo**: `grant_role` busca la cuenta en `auth.users`, que el administrador no puede leer. La persona primero se registra en la app. El rol de barbero además enlaza la cuenta con un perfil de `barbers` sin cuenta (`user_id`); si no se elige perfil, la acción quita el rol que acababa de dar. Quitar el rol de barbero no borra el enlace: la cuenta deja de ver la agenda porque `current_barber_id()` exige el rol.
 - **Nadie se quita a sí mismo el rol de administrador** (`CANNOT_REVOKE_SELF`). Como solo un administrador quita roles, siempre queda uno; no hace falta otra protección.
 - La prueba de roles le da y le quita a `cliente2@ejemplo.test` el rol de administrador; `cleanPanelTestData` se lo quita si quedó a mitad.
+
+### `@possos/ui`: arreglo de `Sheet`
+
+- **La hoja se cerraba sola a veces** (Playwright falló 1 de cada 4 o 5 veces al tocar "Cancelar" en la hoja de la cita). Su efecto del gesto atrás dependía de `setOpen`, que cambia en cada render cuando `onOpenChange` se pasa en línea: cada render hacía `history.back()` y `pushState`, y el `popstate` tardío del `back()` la cerraba como si fuera el gesto atrás. Ahora el efecto lee `setOpen` de una ref.
+- **`router.refresh()` de Next reemplaza `history.state`** y le quita la marca de la hoja (`possosSheet`). En el panel pasa con cada aviso de la agenda en vivo. La hoja ahora reconoce su entrada aunque no tenga la marca (misma URL y mismo largo del historial), y al cerrarse la quita. Antes quedaban entradas de más.
+- **Una hoja que se monta ya abierta** (`/panel?cita=...` desde un enlace) pasa en desarrollo por montar, desmontar y montar (StrictMode). El desmontaje hacía `history.back()` y su `popstate` tardío cerraba la hoja. Ahora la limpieza espera un instante y no toca el historial si otra instancia del efecto ya tomó la hoja. El aviso de F1 sigue valiendo: si una acción de la hoja navega, se cierra primero y se navega después del `popstate`.
 
 ### `@possos/ui`: `submitKeepingValues`
 

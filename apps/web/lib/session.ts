@@ -12,8 +12,13 @@ import type { DbClient } from "@possos/supabase";
  * porque auth no conoce a customers (docs/08).
  */
 
-/** Inicio del cliente con sesión. Pasa a "Mis citas" en F5. */
-export const CUSTOMER_HOME = "/perfil";
+/**
+ * Inicio del cliente con sesión: la página principal, que muestra su próxima cita y "Reservar".
+ * Antes era el perfil, que es otro formulario y hacía creer que faltaba un paso. F5 puede
+ * cambiarlo a "Mis citas".
+ */
+export const CUSTOMER_HOME = "/";
+export const PROFILE_PATH = "/perfil";
 export const STAFF_HOME = "/panel";
 export const COMPLETE_PROFILE = "/completar-perfil";
 

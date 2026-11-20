@@ -133,8 +133,10 @@ test("registro con correo, completar perfil, cerrar sesión e ingresar de nuevo"
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
   await expect(page).toHaveURL("/ingresar");
 
+  // Al ingresar, el cliente va al inicio con la sesión abierta.
   await signIn(page, email, PASSWORD);
-  await expect(page).toHaveURL("/perfil");
+  await expect(page).toHaveURL("/");
+  await page.getByRole("link", { name: "Tu perfil" }).click();
   await expect(page.getByLabel("Nombre")).toHaveValue("Cliente de Playwright");
 });
 
@@ -173,10 +175,13 @@ test("editar el perfil, cambiar la autorización de WhatsApp y borrar la cuenta"
 
   await page.getByLabel("Nombre").fill("Nombre Cambiado");
   await page.locator("label", { hasText: "Quiero recibir por WhatsApp" }).tap();
+  // Guardar lleva al inicio, con la sesión abierta.
   await bottomBar(page).getByRole("button", { name: "Guardar cambios" }).click();
+  await expect(page).toHaveURL("/?aviso=perfil-guardado");
   await expect(page.getByText("Guardamos tus cambios.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Tu perfil" })).toBeVisible();
 
-  await page.reload();
+  await page.goto("/perfil");
   await expect(page.getByLabel("Nombre")).toHaveValue("Nombre Cambiado");
   await expect(whatsapp).toBeChecked();
 
@@ -212,13 +217,14 @@ test("recuperar la contraseña con el enlace del correo", async ({ page }) => {
   const nueva = "otra-clave-segura-2";
   await page.getByLabel("Contraseña nueva").fill(nueva);
   await bottomBar(page).getByRole("button", { name: "Guardar contraseña" }).click();
-  await expect(page).toHaveURL("/perfil");
+  await expect(page).toHaveURL("/");
 
+  await page.goto("/perfil");
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
   await signIn(page, email, PASSWORD);
   await expect(page.getByText("El correo o la contraseña no coinciden")).toBeVisible();
   await signIn(page, email, nueva);
-  await expect(page).toHaveURL("/perfil");
+  await expect(page).toHaveURL("/");
 });
 
 test("el personal entra al panel", async ({ page }) => {
@@ -241,7 +247,7 @@ test("el personal entra al panel", async ({ page }) => {
 test("un cliente no puede abrir el panel ni por URL directa", async ({ page }) => {
   await page.goto("/ingresar");
   await signIn(page, "cliente@ejemplo.test", SEED_PASSWORD);
-  await expect(page).toHaveURL("/perfil");
+  await expect(page).toHaveURL("/");
 
   for (const path of ["/panel", "/panel/agenda", "/panel/servicios", "/panel/cita/nueva"]) {
     const response = await page.goto(path);
@@ -260,7 +266,7 @@ test("sin sesión, una ruta protegida manda a ingresar y vuelve a ella", async (
 test("next solo acepta rutas internas", async ({ page }) => {
   await page.goto(`/ingresar?next=${encodeURIComponent("//ejemplo.com/robar")}`);
   await signIn(page, "cliente@ejemplo.test", SEED_PASSWORD);
-  await expect(page).toHaveURL("/perfil");
+  await expect(page).toHaveURL("/");
 });
 
 test("la política de datos es pública, versionada y marca lo pendiente", async ({ page }) => {
@@ -327,6 +333,6 @@ test.describe("con las plantillas de correo de Supabase", () => {
     await expect(page).toHaveURL("/nueva-contrasena");
     await page.getByLabel("Contraseña nueva").fill("otra-clave-segura-3");
     await bottomBar(page).getByRole("button", { name: "Guardar contraseña" }).click();
-    await expect(page).toHaveURL("/perfil");
+    await expect(page).toHaveURL("/");
   });
 });
