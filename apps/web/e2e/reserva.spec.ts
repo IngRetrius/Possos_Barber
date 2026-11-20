@@ -13,6 +13,7 @@ import {
   E2E_PREFIX,
   SEED,
 } from "./support/supabase";
+import { settleAnimations } from "./support/animations";
 
 /*
  * F4: página pública y flujo de reserva, a 390 px. Necesita Supabase local con la semilla y
@@ -45,6 +46,7 @@ const slotLabel = (page: Page, startAt: string) =>
   });
 
 async function expectAccessible(page: Page) {
+  await settleAnimations(page);
   const results = await new AxeBuilder({ page }).withTags(WCAG).analyze();
   expect(
     results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`),

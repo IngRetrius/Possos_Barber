@@ -8,6 +8,7 @@ import {
   E2E_PREFIX,
   SEED,
 } from "./support/supabase";
+import { settleAnimations } from "./support/animations";
 
 /*
  * Adicionales del corte (20/11/2026): barba, cejas y diseño se marcan como chips dentro de
@@ -33,6 +34,7 @@ async function mark(page: Page, name: string) {
 }
 
 async function expectAccessible(page: Page) {
+  await settleAnimations(page);
   const results = await new AxeBuilder({ page }).withTags(WCAG).analyze();
   expect(
     results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`),

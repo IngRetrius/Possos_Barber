@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { SEED } from "./support/supabase";
+import { settleAnimations } from "./support/animations";
 
 /*
  * Idiomas (docs/11, "Idiomas"): sin cookie, el idioma del dispositivo (español si no es ni español
@@ -12,6 +13,7 @@ import { SEED } from "./support/supabase";
 const WCAG = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 async function expectAccessible(page: Page) {
+  await settleAnimations(page);
   const results = await new AxeBuilder({ page }).withTags(WCAG).analyze();
   expect(
     results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`),

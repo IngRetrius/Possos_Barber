@@ -14,6 +14,7 @@ import {
   whatsappEnv,
   type SentMessage,
 } from "./support/whatsapp";
+import { settleAnimations } from "./support/animations";
 
 /*
  * F7: recordatorios por WhatsApp sin Meta, a 390 px. La app manda a una Graph API falsa
@@ -45,6 +46,7 @@ test.afterAll(async () => {
 });
 
 async function expectAccessible(page: Page) {
+  await settleAnimations(page);
   const results = await new AxeBuilder({ page }).withTags(WCAG).analyze();
   expect(
     results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`),

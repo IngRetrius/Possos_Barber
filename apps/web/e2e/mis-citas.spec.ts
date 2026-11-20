@@ -16,6 +16,7 @@ import {
   setCancelWindow,
   signInApi,
 } from "./support/supabase";
+import { settleAnimations } from "./support/animations";
 
 /*
  * F5: "Mis citas", a 390 px. Necesita Supabase local con la semilla y Realtime. Las pruebas
@@ -39,6 +40,7 @@ const nextCard = (page: Page) =>
   page.locator("section", { has: page.getByRole("heading", { name: "Próxima cita" }) });
 
 async function expectAccessible(page: Page) {
+  await settleAnimations(page);
   const results = await new AxeBuilder({ page }).withTags(WCAG).analyze();
   expect(
     results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`),

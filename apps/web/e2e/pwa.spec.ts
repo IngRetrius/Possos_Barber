@@ -7,6 +7,7 @@ import {
   dispatchSecret,
   SEED,
 } from "./support/supabase";
+import { settleAnimations } from "./support/animations";
 
 /*
  * F8: la PWA a 390 px. Manifiesto, service worker, "Mis citas" sin conexión, lo guardado se borra
@@ -25,6 +26,7 @@ const WCAG = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const PRIVATE_CACHE = "possos-privado";
 
 async function expectAccessible(page: Page) {
+  await settleAnimations(page);
   const results = await new AxeBuilder({ page }).withTags(WCAG).analyze();
   expect(
     results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`),

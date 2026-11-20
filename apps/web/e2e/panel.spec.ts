@@ -14,6 +14,7 @@ import {
   SEED,
   todaySettlement,
 } from "./support/supabase";
+import { settleAnimations } from "./support/animations";
 
 /*
  * F6: panel del barbero y del administrador, a 390 px. Necesita Supabase local con la semilla,
@@ -32,6 +33,7 @@ const agenda = (page: Page) => page.getByRole("list", { name: "Agenda del día" 
 const sheet = (page: Page) => page.getByRole("dialog");
 
 async function expectAccessible(page: Page) {
+  await settleAnimations(page);
   // Sin el aviso flotante (Sonner): entra con una animación de opacidad y axe lo mide a medio
   // camino. Su contraste en reposo lo prueba muestras.spec.
   const results = await new AxeBuilder({ page })

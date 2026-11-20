@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { asSupabaseDefaultLink, countEmails, linkFromEmail } from "./support/mailpit";
+import { settleAnimations } from "./support/animations";
 
 /*
  * F3: cuentas y datos personales, a 390 px. Necesita Supabase local (`pnpm db:start`) con la
@@ -20,6 +21,7 @@ function newEmail(label: string) {
 }
 
 async function expectAccessible(page: Page) {
+  await settleAnimations(page);
   const results = await new AxeBuilder({ page }).withTags(WCAG).analyze();
   expect(
     results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`),
