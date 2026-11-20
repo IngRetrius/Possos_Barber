@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { addDays, type AgendaAppointment } from "@possos/booking";
 import {
   getAgendaAppointment,
@@ -9,7 +10,9 @@ import {
   listToClose,
 } from "@possos/booking/server";
 import { listChargesForAppointments, listCommissionRates } from "@possos/commissions/server";
-import { Button, EmptyState, formatDate } from "@possos/ui";
+import { Button, EmptyState } from "@possos/ui";
+import { currentFormatters } from "../../../lib/i18n";
+import { LocaleSwitch } from "../../_components/locale-switch";
 import { loadPanel } from "../../../lib/panel";
 import { isoDaysAgo, parseDay, todayKey } from "../../../lib/panel-dates";
 import { param } from "../../../lib/session";
@@ -17,7 +20,9 @@ import { AgendaView } from "./_components/agenda-view";
 import { BarberSwitcher } from "./_components/barber-switcher";
 import { loadDayAgenda } from "./_lib/free-starts";
 
-export const metadata: Metadata = { title: "Hoy · Panel · Possos Barber" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("web.staff.meta"))("today") };
+}
 
 /**
  * "Hoy" (docs/11): la agenda del día como lista por hora, con "Por cerrar" y "Pendientes de
@@ -26,6 +31,8 @@ export const metadata: Metadata = { title: "Hoy · Panel · Possos Barber" };
 export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
   const params = await searchParams;
   const ctx = await loadPanel("/panel");
+  const t = await getTranslations("web.staff.today");
+  const f = await currentFormatters();
   const today = todayKey();
   const day = parseDay(param(params.dia)) ?? today;
   const isToday = day === today;
@@ -33,13 +40,16 @@ export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
   if (!ctx.barber) {
     return (
       <main className="grid gap-6 px-gutter pt-safe pb-8">
-        <h1 className="pt-4 text-title">Hoy</h1>
+        <div className="flex items-center justify-between gap-3 pt-4">
+          <h1 className="text-title">{t("title")}</h1>
+          <LocaleSwitch />
+        </div>
         <EmptyState
-          title="Todavía no hay barberos"
-          description="Crea el primero para tener agenda."
+          title={t("noBarbersTitle")}
+          description={t("noBarbersBody")}
           action={
             <Button asChild variant="secondary">
-              <Link href="/panel/barberos/nuevo">Crear un barbero</Link>
+              <Link href="/panel/barberos/nuevo">{t("createBarber")}</Link>
             </Button>
           }
         />
@@ -85,10 +95,10 @@ export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
   const closing = (toClose?.ok ? toClose.data.length : 0) + uncharged.length;
   const approving = pending?.ok ? pending.data.length : 0;
   const summary = [
-    count === 1 ? "1 cita" : `${count} citas`,
-    unconfirmed ? `${unconfirmed} sin confirmar` : null,
-    closing ? `${closing} por cerrar` : null,
-    approving ? `${approving} por aprobar` : null,
+    t("count", { count }),
+    unconfirmed ? t("unconfirmed", { count: unconfirmed }) : null,
+    closing ? t("toClose", { count: closing }) : null,
+    approving ? t("toApprove", { count: approving }) : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -101,32 +111,35 @@ export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
       <header className="grid gap-1 px-gutter pt-safe">
         <div className="flex items-center justify-between gap-3 pt-4">
           <h1 className="text-title tabular-nums">
-            {isToday ? `Hoy · ${formatDate(day)}` : formatDate(day)}
+            {isToday ? t("titleWithDate", { date: f.date(day) }) : f.date(day)}
           </h1>
-          <Button asChild className="shrink-0 px-4">
-            <Link href="/panel/cita/nueva">
-              <Plus aria-hidden="true" strokeWidth={1.5} />
-              Cita
-            </Link>
-          </Button>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button asChild className="shrink-0 px-4">
+              <Link href="/panel/cita/nueva">
+                <Plus aria-hidden="true" strokeWidth={1.5} />
+                {t("newAppointment")}
+              </Link>
+            </Button>
+            <LocaleSwitch />
+          </div>
         </div>
         <div className="flex items-center justify-between gap-2">
           <p role="status" aria-atomic="true" className="text-body text-fg-muted tabular-nums">
             {summary}
           </p>
-          <nav aria-label="Cambiar de día" className="flex shrink-0 items-center">
+          <nav aria-label={t("changeDay")} className="flex shrink-0 items-center">
             {isToday ? null : (
               <Button asChild variant="ghost" className="px-3">
-                <Link href="/panel">Hoy</Link>
+                <Link href="/panel">{t("goToday")}</Link>
               </Button>
             )}
             <Button asChild variant="ghost" size="icon">
-              <Link href={dayHref(addDays(day, -1))} aria-label="Día anterior">
+              <Link href={dayHref(addDays(day, -1))} aria-label={t("previousDay")}>
                 <ChevronLeft strokeWidth={1.5} aria-hidden="true" />
               </Link>
             </Button>
             <Button asChild variant="ghost" size="icon">
-              <Link href={dayHref(addDays(day, 1))} aria-label="Día siguiente">
+              <Link href={dayHref(addDays(day, 1))} aria-label={t("nextDay")}>
                 <ChevronRight strokeWidth={1.5} aria-hidden="true" />
               </Link>
             </Button>
@@ -141,7 +154,7 @@ export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
       ) : null}
       {loadError ? (
         <p role="alert" className="px-gutter text-body text-danger">
-          No pudimos cargar la agenda. Revisa tu conexión e intenta de nuevo
+          {t("loadError")}
         </p>
       ) : null}
       <AgendaView

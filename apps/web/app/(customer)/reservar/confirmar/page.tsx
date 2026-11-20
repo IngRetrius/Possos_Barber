@@ -142,7 +142,7 @@ export default async function ConfirmStepPage({ searchParams }: PageProps<"/rese
     }
   }
 
-  const position = stepPosition("confirm", flow.steps);
+  const position = stepPosition("confirm", flow.steps, f.locale);
   return (
     <>
       <StepHeader

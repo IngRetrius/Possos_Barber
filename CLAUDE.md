@@ -8,7 +8,7 @@ Una PWA de agendamiento para Possos Barber, una barbería de Girardot, Cundinama
 
 ## Reglas
 
-1. **Idioma.** Documentación y textos de la interfaz en español de Colombia, con tuteo y sin emojis. Identificadores de código, nombres de tablas y columnas en inglés.
+1. **Idioma.** Documentación y textos de la interfaz en español de Colombia, con tuteo y sin emojis. Identificadores de código, nombres de tablas y columnas en inglés. Desde el 20/11/2026 la interfaz también está en inglés, con el botón ES/EN (docs/11, "Idiomas"): el español es el original y cada texto nuevo va en los dos idiomas del `messages.ts` de su paquete o de `apps/web/i18n/web/`.
 2. **Modularidad.** Cada dominio (auth, catalog, barbers, customers, booking, commissions, notifications, ui) es un paquete en `packages/` con una API pública declarada en el campo `exports` de su `package.json`. Ningún paquete importa archivos internos de otro. `apps/web` es la raíz de composición: el único lugar donde se juntan los módulos. Las reglas completas están en `docs/08-estructura-monorepo.md`.
 3. **Una cita por barbero a la vez.** La base de datos lo garantiza con una restricción de exclusión sobre `appointments`; la interfaz solo es una ayuda. Ningún cambio puede quitar o debilitar esa restricción, y se prueba con pgTAP.
 4. **RLS en todas las tablas.** Ninguna tabla de `public` queda sin RLS. El cliente lee la disponibilidad a través de funciones que no exponen datos de otros clientes. Un barbero solo ve a sus propios clientes; el administrador ve todo.

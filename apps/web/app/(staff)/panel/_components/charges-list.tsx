@@ -1,20 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import type { Charge } from "@possos/commissions";
 import { formatPercent } from "@possos/commissions";
 import { ChargeForm } from "@possos/commissions/ui";
-import {
-  Button,
-  cn,
-  formatDate,
-  formatPrice,
-  formatTime,
-  Sheet,
-  toast,
-  toDateKey,
-} from "@possos/ui";
+import { Button, cn, Sheet, toast, toDateKey, useFormat } from "@possos/ui";
 import { updateChargeAction, voidChargeAction, type ActionResult } from "../_actions/agenda";
 import { ReasonForm } from "./reason-form";
 
@@ -42,6 +34,8 @@ export function ChargesList({
   viewerBarberId: string | null;
   today: string;
 }) {
+  const t = useTranslations("web.agenda");
+  const f = useFormat();
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<"detail" | "correct" | "void">("detail");
@@ -84,12 +78,12 @@ export function ChargesList({
                 <span className="grid min-w-0 flex-1 gap-0.5">
                   <span className="truncate text-label">{customerName}</span>
                   <span className="truncate text-caption text-fg-muted tabular-nums">
-                    {formatDate(c.charged_at)} · {serviceName}
+                    {f.date(c.charged_at)} · {serviceName}
                     {barberName ? ` · ${barberName}` : ""}
                   </span>
                   {voided ? (
                     <span className="truncate text-caption text-fg-muted">
-                      Anulado: {c.void_reason}
+                      {t("voided", { reason: c.void_reason ?? "" })}
                     </span>
                   ) : null}
                 </span>
@@ -99,7 +93,7 @@ export function ChargesList({
                     voided && "text-fg-muted line-through",
                   )}
                 >
-                  {formatPrice(c.amount_cop)}
+                  {f.price(c.amount_cop)}
                 </span>
               </button>
             </li>
@@ -112,7 +106,7 @@ export function ChargesList({
         onOpenChange={(next) => {
           if (!next) setSelectedId(null);
         }}
-        title={mode === "void" ? "Anular cobro" : "Cobro"}
+        title={mode === "void" ? t("sheet.void") : t("sheet.charge")}
         description={selected ? `${selected.customerName} · ${selected.serviceName}` : undefined}
       >
         {selected ? (
@@ -121,10 +115,10 @@ export function ChargesList({
               defaultAmount={selected.charge.amount_cop}
               barberPct={Number(selected.charge.barber_pct)}
               barberLabel={
-                selected.charge.barber_id === viewerBarberId ? "Para ti" : "Para el barbero"
+                selected.charge.barber_id === viewerBarberId ? t("forYou") : t("forBarber")
               }
-              submitLabel="Guardar el valor"
-              pendingLabel="Guardando..."
+              submitLabel={t("saveValue")}
+              pendingLabel={t("saving")}
               pending={pending}
               error={error}
               onCancel={() => setMode("detail")}
@@ -132,9 +126,9 @@ export function ChargesList({
             />
           ) : mode === "void" ? (
             <ReasonForm
-              question="¿Anular este cobro? Deja de contar en la liquidación, pero no se borra."
-              confirmLabel="Sí, anular el cobro"
-              pendingLabel="Anulando..."
+              question={t("voidQuestion")}
+              confirmLabel={t("voidConfirm")}
+              pendingLabel={t("voiding")}
               pending={pending}
               error={error}
               onBack={() => setMode("detail")}
@@ -144,40 +138,43 @@ export function ChargesList({
             <div className="grid gap-4">
               <dl className="grid gap-3 rounded-card border border-border bg-surface p-4 tabular-nums">
                 <div className="flex justify-between gap-3">
-                  <dt className="text-fg-muted">Fecha</dt>
+                  <dt className="text-fg-muted">{t("chargeDetail.date")}</dt>
                   <dd>
-                    {formatDate(selected.charge.charged_at)},{" "}
-                    {formatTime(selected.charge.charged_at)}
+                    {f.date(selected.charge.charged_at)}, {f.time(selected.charge.charged_at)}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-fg-muted">Valor cobrado</dt>
+                  <dt className="text-fg-muted">{t("chargeDetail.amount")}</dt>
                   <dd className={cn(selected.charge.voided_at && "line-through")}>
-                    {formatPrice(selected.charge.amount_cop)}
+                    {f.price(selected.charge.amount_cop)}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-fg-muted">
-                    Para el barbero ({formatPercent(Number(selected.charge.barber_pct))})
+                    {t("chargeDetail.forBarber", {
+                      pct: formatPercent(Number(selected.charge.barber_pct), f.locale),
+                    })}
                   </dt>
-                  <dd>{formatPrice(selected.charge.barber_amount_cop ?? 0)}</dd>
+                  <dd>{f.price(selected.charge.barber_amount_cop ?? 0)}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-fg-muted">Para la barbería</dt>
-                  <dd>{formatPrice(selected.charge.business_amount_cop ?? 0)}</dd>
+                  <dt className="text-fg-muted">{t("chargeDetail.forBusiness")}</dt>
+                  <dd>{f.price(selected.charge.business_amount_cop ?? 0)}</dd>
                 </div>
               </dl>
               {selected.charge.voided_at ? (
-                <p className="text-body text-fg-muted">Anulado: {selected.charge.void_reason}</p>
+                <p className="text-body text-fg-muted">
+                  {t("voided", { reason: selected.charge.void_reason ?? "" })}
+                </p>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   {canCorrect(selected.charge) ? (
                     <Button variant="secondary" onClick={() => setMode("correct")}>
-                      Corregir valor
+                      {t("correct")}
                     </Button>
                   ) : (
                     <p className="col-span-2 text-caption text-fg-muted">
-                      Solo puedes corregir los cobros del mismo día.
+                      {t("chargeDetail.sameDayOnly")}
                     </p>
                   )}
                   {isAdmin ? (
@@ -186,7 +183,7 @@ export function ChargesList({
                       className="text-danger"
                       onClick={() => setMode("void")}
                     >
-                      Anular cobro
+                      {t("sheet.void")}
                     </Button>
                   ) : null}
                 </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState, useTransition } from "react";
 import { Button, InlineError, toast } from "@possos/ui";
 import {
@@ -68,6 +69,7 @@ async function currentSubscription(): Promise<PushSubscription | null> {
  * posterior), así que primero se explica cómo instalarla.
  */
 export function PushSettings({ publicKey }: { publicKey: string | null }) {
+  const t = useTranslations("web.admin.push");
   const [state, setState] = useState<State>("checking");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -121,13 +123,9 @@ export function PushSettings({ publicKey }: { publicKey: string | null }) {
           return;
         }
         setState("on");
-        toast("Activaste los avisos en este celular");
+        toast(t("enabled"));
       } catch {
-        fail(
-          navigator.onLine
-            ? "No pudimos activar los avisos. Intenta de nuevo"
-            : "Sin conexión. Para activar los avisos necesitas conexión",
-        );
+        fail(navigator.onLine ? t("enableFailed") : t("enableOffline"));
       }
     });
   };
@@ -142,9 +140,9 @@ export function PushSettings({ publicKey }: { publicKey: string | null }) {
           await subscription.unsubscribe();
         }
         setState("off");
-        toast("Desactivaste los avisos en este celular");
+        toast(t("disabled"));
       } catch {
-        fail("No pudimos desactivar los avisos. Intenta de nuevo");
+        fail(t("disableFailed"));
       }
     });
   };
@@ -159,29 +157,29 @@ export function PushSettings({ publicKey }: { publicKey: string | null }) {
           return;
         }
         const result = await sendTestPushAction(subscription.endpoint);
-        if (result.ok) toast("Te enviamos un aviso de prueba");
+        if (result.ok) toast(t("testSent"));
         else fail(result.error);
       } catch {
-        fail("No pudimos enviar el aviso. Revisa tu conexión e intenta de nuevo");
+        fail(t("testFailed"));
       }
     });
   };
 
   return (
     <div className="grid gap-3" aria-busy={state === "checking"}>
-      <p className="text-body text-fg-muted">{DESCRIPTIONS[state]}</p>
+      <p className="text-body text-fg-muted">{t(`states.${state}`)}</p>
       {state === "off" ? (
         <Button onClick={enable} disabled={pending} aria-busy={pending}>
-          {pending ? "Activando..." : "Activar avisos"}
+          {pending ? t("enabling") : t("enable")}
         </Button>
       ) : null}
       {state === "on" ? (
         <>
           <Button variant="secondary" onClick={test} disabled={pending} aria-busy={pending}>
-            Enviar un aviso de prueba
+            {t("test")}
           </Button>
           <Button variant="ghost" onClick={disable} disabled={pending}>
-            Desactivar avisos
+            {t("disable")}
           </Button>
         </>
       ) : null}
@@ -189,16 +187,3 @@ export function PushSettings({ publicKey }: { publicKey: string | null }) {
     </div>
   );
 }
-
-const DESCRIPTIONS: Record<State, string> = {
-  checking: "Revisando los avisos de este celular...",
-  unsupported:
-    "Este navegador no puede recibir avisos. En Android usa Chrome; en iPhone, instala la app.",
-  "ios-install":
-    "En el iPhone, los avisos solo llegan con la app instalada. En Safari toca Compartir, luego “Agregar a inicio”, y abre Possos Barber desde su ícono.",
-  "not-configured": "Los avisos todavía no están configurados en la app.",
-  denied:
-    "Bloqueaste los avisos de Possos Barber. Para recibirlos, permítelos en los ajustes del navegador o del celular.",
-  off: "Te avisamos en este celular cuando un cliente reserve, cambie, confirme o cancele una cita.",
-  on: "Los avisos están activos en este celular.",
-};

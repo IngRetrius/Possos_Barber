@@ -1,41 +1,45 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { ChevronDown, ChevronRight, ChevronUp, Plus } from "lucide-react";
 import Link from "next/link";
 import { servicePriceLabel } from "@possos/catalog";
 import { listServices } from "@possos/catalog/server";
 import { Button, formatDuration } from "@possos/ui";
+import { currentLocale } from "../../../../lib/i18n";
 import { loadAdminPanel } from "../../../../lib/panel";
 import { moveServiceAction } from "../_actions/admin";
 import { PanelHeader } from "../_components/panel-header";
 
-export const metadata: Metadata = { title: "Servicios · Panel · Possos Barber" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("web.staff.admin.meta"))("services") };
+}
 
 /** Servicios (administrador): crear, editar, ordenar y desactivar. */
 export default async function ServicesPage() {
   const { db } = await loadAdminPanel("/panel/servicios");
   const result = await listServices(db);
+  const t = await getTranslations("web.staff.admin");
+  const locale = await currentLocale();
   const services = result.ok ? [...result.data].sort((a, b) => a.sort_order - b.sort_order) : [];
 
   return (
     <>
-      <PanelHeader title="Servicios" backHref="/panel/mas">
+      <PanelHeader title={t("services.title")} backHref="/panel/mas">
         <Button asChild variant="secondary" className="shrink-0 px-4">
           <Link href="/panel/servicios/nuevo">
             <Plus aria-hidden="true" strokeWidth={1.5} />
-            Nuevo
+            {t("new")}
           </Link>
         </Button>
       </PanelHeader>
       <main className="grid content-start gap-4 px-gutter pt-2 pb-8">
-        <p className="text-body text-fg-muted">
-          Los clientes los ven en este orden. Un servicio sin precio dice [PENDIENTE].
-        </p>
+        <p className="text-body text-fg-muted">{t("services.intro")}</p>
         {!result.ok ? (
           <p role="alert" className="text-body text-danger">
-            No pudimos cargar los servicios. Revisa tu conexión e intenta de nuevo
+            {t("services.loadError")}
           </p>
         ) : services.length === 0 ? (
-          <p className="text-body text-fg-muted">Todavía no hay servicios.</p>
+          <p className="text-body text-fg-muted">{t("services.none")}</p>
         ) : (
           <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {services.map((s, i) => (
@@ -47,8 +51,8 @@ export default async function ServicesPage() {
                   <span className="grid min-w-0 flex-1 gap-0.5">
                     <span className="truncate text-label">{s.name}</span>
                     <span className="truncate text-caption text-fg-muted tabular-nums">
-                      {formatDuration(s.duration_min)} · {servicePriceLabel(s.price_cop)}
-                      {s.active ? "" : " · Inactivo"}
+                      {formatDuration(s.duration_min)} · {servicePriceLabel(s.price_cop, locale)}
+                      {s.active ? "" : t("services.inactive")}
                     </span>
                   </span>
                   <ChevronRight
@@ -66,7 +70,7 @@ export default async function ServicesPage() {
                     variant="ghost"
                     size="icon"
                     disabled={i === 0}
-                    aria-label={`Subir ${s.name}`}
+                    aria-label={t("services.up", { name: s.name })}
                   >
                     <ChevronUp strokeWidth={1.5} aria-hidden="true" />
                   </Button>
@@ -77,7 +81,7 @@ export default async function ServicesPage() {
                     variant="ghost"
                     size="icon"
                     disabled={i === services.length - 1}
-                    aria-label={`Bajar ${s.name}`}
+                    aria-label={t("services.down", { name: s.name })}
                   >
                     <ChevronDown strokeWidth={1.5} aria-hidden="true" />
                   </Button>

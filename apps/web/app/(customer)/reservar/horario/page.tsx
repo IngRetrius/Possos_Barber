@@ -65,7 +65,7 @@ export default async function TimeStepPage({ searchParams }: PageProps<"/reserva
     barberId: rpcBarberId,
   });
 
-  const position = stepPosition("time", flow.steps);
+  const position = stepPosition("time", flow.steps, f.locale);
   const name = barberName(flow, barberId);
   return (
     <>

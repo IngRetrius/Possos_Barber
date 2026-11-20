@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { holidaysBetween } from "@possos/barbers";
 import { listTimeOff } from "@possos/barbers/server";
 import { TimeOffForm } from "@possos/barbers/ui";
 import { addDays, dayBounds, parsePeriod } from "@possos/booking";
-import { Button, formatDate, formatDateLong, formatTime } from "@possos/ui";
+import { Button } from "@possos/ui";
+import { currentFormatters } from "../../../../lib/i18n";
 import { loadPanel } from "../../../../lib/panel";
 import { todayKey } from "../../../../lib/panel-dates";
 import { blockHolidayAction, createTimeOffAction, deleteTimeOffAction } from "../_actions/schedule";
 import { BarberSwitcher } from "../_components/barber-switcher";
 import { PanelHeader } from "../_components/panel-header";
 
-export const metadata: Metadata = { title: "Bloqueos · Panel · Possos Barber" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("web.staff.admin.meta"))("timeOff") };
+}
 
 /** Días que se miran hacia adelante para bloqueos y festivos. */
 const HORIZON_DAYS = 180;
@@ -40,6 +44,10 @@ export default async function TimeOffPage() {
     return blocks.some((b) => b.start <= from && b.end >= to);
   };
   const holidays = holidaysBetween(today, until);
+  const t = await getTranslations("web.staff.admin");
+  const f = await currentFormatters();
+  const formatDate = f.date;
+  const formatTime = f.time;
 
   const describe = (b: { start: string; end: string }) => {
     const midnight = formatTime(dayBounds(today).from);
@@ -48,16 +56,27 @@ export default async function TimeOffPage() {
     if (startsMidnight && endsMidnight) {
       const first = formatDate(b.start);
       const last = formatDate(new Date(new Date(b.end).getTime() - 1).toISOString());
-      return first === last ? `${first}, todo el día` : `${first} a ${last}, todo el día`;
+      return first === last
+        ? t("timeOff.allDay", { date: first })
+        : t("timeOff.allDayRange", { from: first, to: last });
     }
-    return `${formatDate(b.start)}, ${formatTime(b.start)} a ${
-      formatDate(b.end) === formatDate(b.start) ? "" : `${formatDate(b.end)}, `
-    }${formatTime(b.end)}`;
+    return formatDate(b.end) === formatDate(b.start)
+      ? t("timeOff.range", {
+          from: formatDate(b.start),
+          start: formatTime(b.start),
+          end: formatTime(b.end),
+        })
+      : t("timeOff.rangeDays", {
+          from: formatDate(b.start),
+          start: formatTime(b.start),
+          to: formatDate(b.end),
+          end: formatTime(b.end),
+        });
   };
 
   return (
     <>
-      <PanelHeader title="Bloqueos" backHref="/panel/mas" />
+      <PanelHeader title={t("timeOff.title")} backHref="/panel/mas" />
       <main className="grid content-start gap-8 px-gutter pb-8">
         {barber && ctx.viewer.isAdmin && (ctx.barbers.length > 1 || !ctx.viewer.barberId) ? (
           <div className="-mx-gutter">
@@ -72,11 +91,11 @@ export default async function TimeOffPage() {
           </div>
         ) : null}
         {!barber ? (
-          <p className="text-body text-fg-muted">Todavía no hay barberos.</p>
+          <p className="text-body text-fg-muted">{t("noBarbers")}</p>
         ) : (
           <>
             <section className="grid gap-3">
-              <h2 className="text-heading">Nuevo bloqueo</h2>
+              <h2 className="text-heading">{t("timeOff.newBlock")}</h2>
               <TimeOffForm
                 key={barber.id}
                 action={createTimeOffAction}
@@ -86,13 +105,13 @@ export default async function TimeOffPage() {
             </section>
 
             <section className="grid gap-3">
-              <h2 className="text-heading">Próximos bloqueos</h2>
+              <h2 className="text-heading">{t("timeOff.upcoming")}</h2>
               {!list?.ok ? (
                 <p role="alert" className="text-body text-danger">
-                  No pudimos cargar los bloqueos. Revisa tu conexión e intenta de nuevo
+                  {t("timeOff.loadError")}
                 </p>
               ) : blocks.length === 0 ? (
-                <p className="text-body text-fg-muted">No tienes bloqueos.</p>
+                <p className="text-body text-fg-muted">{t("timeOff.none")}</p>
               ) : (
                 <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
                   {blocks.map((b) => (
@@ -106,7 +125,10 @@ export default async function TimeOffPage() {
                       <form action={deleteTimeOffAction}>
                         <input type="hidden" name="bloqueo" value={b.id} />
                         <Button type="submit" variant="ghost" className="px-3 text-danger">
-                          Borrar<span className="sr-only"> el bloqueo del {describe(b)}</span>
+                          {t("remove")}
+                          <span className="sr-only">
+                            {t("timeOff.removeHint", { when: describe(b) })}
+                          </span>
                         </Button>
                       </form>
                     </li>
@@ -116,25 +138,26 @@ export default async function TimeOffPage() {
             </section>
 
             <section className="grid gap-3">
-              <h2 className="text-heading">Festivos</h2>
-              <p className="text-body text-fg-muted">
-                Festivos de Colombia de los próximos meses. Bloquea los que no vas a atender.
-              </p>
+              <h2 className="text-heading">{t("timeOff.holidays")}</h2>
+              <p className="text-body text-fg-muted">{t("timeOff.holidaysIntro")}</p>
               <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
                 {holidays.map((h) => (
                   <li key={h.date} className="flex min-h-16 items-center gap-3 px-4 py-2">
                     <span className="grid min-w-0 flex-1 gap-0.5">
                       <span className="text-label">{h.name}</span>
-                      <span className="text-caption text-fg-muted">{formatDateLong(h.date)}</span>
+                      <span className="text-caption text-fg-muted">{f.dateLong(h.date)}</span>
                     </span>
                     {covered(h.date) ? (
-                      <span className="text-caption text-fg-muted">Bloqueado</span>
+                      <span className="text-caption text-fg-muted">{t("timeOff.blocked")}</span>
                     ) : (
                       <form action={blockHolidayAction}>
                         <input type="hidden" name="barbero" value={barber.id} />
                         <input type="hidden" name="fecha" value={h.date} />
                         <Button type="submit" variant="secondary" className="px-4">
-                          Bloquear<span className="sr-only"> el {formatDateLong(h.date)}</span>
+                          {t("timeOff.block")}
+                          <span className="sr-only">
+                            {t("timeOff.blockHint", { date: f.dateLong(h.date) })}
+                          </span>
                         </Button>
                       </form>
                     )}

@@ -93,6 +93,7 @@ describe("pasos", () => {
     const steps = bookingSteps({ services: 3, barbers: 2 });
     expect(steps).toEqual(["service", "barber", "time", "confirm"]);
     expect(stepPosition("time", steps)).toEqual({ step: 3, total: 4, name: "Horario" });
+    expect(stepPosition("time", steps, "en").name).toBe("Time");
   });
 
   it("si se salta el barbero, el indicador dice de 3", () => {

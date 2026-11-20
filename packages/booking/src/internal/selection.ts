@@ -1,3 +1,5 @@
+import { DEFAULT_LOCALE, type Locale } from "@possos/config/constants";
+
 /*
  * Estado del flujo de reserva en la URL (`?servicio=…&barbero=…&fecha=…&hora=…`): el botón atrás
  * funciona y el regreso del registro no pierde nada. Sin efectos: lo usan el servidor y el
@@ -28,11 +30,10 @@ export interface BookingSelection {
 
 export type BookingStep = "service" | "barber" | "time" | "confirm";
 
-export const BOOKING_STEP_NAMES: Record<BookingStep, string> = {
-  service: "Servicio",
-  barber: "Barbero",
-  time: "Horario",
-  confirm: "Confirmar",
+/** Nombre de cada paso en cada idioma (`BOOKING_STEP_NAMES[locale][step]`). */
+export const BOOKING_STEP_NAMES: Record<Locale, Record<BookingStep, string>> = {
+  es: { service: "Servicio", barber: "Barbero", time: "Horario", confirm: "Confirmar" },
+  en: { service: "Service", barber: "Barber", time: "Time", confirm: "Confirm" },
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -108,12 +109,13 @@ export function bookingSteps(counts: { services: number; barbers: number }): Boo
 export function stepPosition(
   step: BookingStep,
   steps: BookingStep[],
+  locale: Locale = DEFAULT_LOCALE,
 ): { step: number; total: number; name: string } {
   const index = steps.indexOf(step);
   return {
     step: index === -1 ? 1 : index + 1,
     total: steps.length,
-    name: BOOKING_STEP_NAMES[step],
+    name: BOOKING_STEP_NAMES[locale][step],
   };
 }
 

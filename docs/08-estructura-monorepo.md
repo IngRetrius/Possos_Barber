@@ -54,6 +54,7 @@ packages/booking/
 │   ├── server.ts       # API pública de servidor: getAvailableSlots, book, cancel, reschedule...
 │   ├── ui.ts           # API pública de UI: <BookingFlow/>, <MyAppointments/>, <StaffAgenda/>
 │   ├── events.ts       # contrato de los eventos que publica (versionado)
+│   ├── messages.ts     # textos de su interfaz en español e inglés (docs/11, "Idiomas")
 │   └── internal/       # todo lo demás; nadie de afuera lo importa
 └── sql/README.md       # qué tablas y funciones de Postgres le pertenecen
 ```
@@ -64,7 +65,8 @@ packages/booking/
   "exports": {
     ".": "./src/index.ts",
     "./server": "./src/server.ts",
-    "./ui": "./src/ui.ts"
+    "./ui": "./src/ui.ts",
+    "./messages": "./src/messages.ts"
   }
 }
 ```

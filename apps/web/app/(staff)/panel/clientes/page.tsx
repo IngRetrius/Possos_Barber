@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { listBookingStatus } from "@possos/booking/server";
 import { formatPhone } from "@possos/customers";
 import { searchCustomers } from "@possos/customers/server";
 import { Field, Input, List, ListRow, StatusBadge } from "@possos/ui";
 import { loadPanel } from "../../../../lib/panel";
 import { param } from "../../../../lib/session";
+import { LocaleSwitch } from "../../../_components/locale-switch";
 
-export const metadata: Metadata = { title: "Clientes · Panel · Possos Barber" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("web.staff.meta"))("customers") };
+}
 
 /**
  * "Clientes": los que la sesión puede ver (el barbero, solo los que tuvieron cita con él o que
@@ -15,6 +19,7 @@ export const metadata: Metadata = { title: "Clientes · Panel · Possos Barber" 
 export default async function CustomersPage({ searchParams }: PageProps<"/panel/clientes">) {
   const params = await searchParams;
   const ctx = await loadPanel("/panel/clientes");
+  const t = await getTranslations("web.staff.customers");
   const query = param(params.q)?.slice(0, 60) ?? "";
   const found = await searchCustomers(ctx.db, { query, limit: 50 });
   const customers = found.ok ? found.data : [];
@@ -27,23 +32,22 @@ export default async function CustomersPage({ searchParams }: PageProps<"/panel/
   return (
     <main className="grid content-start gap-5 pb-6">
       <header className="grid gap-4 px-gutter pt-safe">
-        <h1 className="pt-4 text-title">Clientes</h1>
+        <div className="flex items-center justify-between gap-3 pt-4">
+          <h1 className="text-title">{t("title")}</h1>
+          <LocaleSwitch />
+        </div>
         <form role="search" action="/panel/clientes">
-          <Field label="Buscar por nombre o celular">
+          <Field label={t("search")}>
             <Input type="search" name="q" defaultValue={query} enterKeyHint="search" />
           </Field>
         </form>
       </header>
       {!found.ok ? (
         <p role="alert" className="px-gutter text-body text-danger">
-          No pudimos cargar los clientes. Revisa tu conexión e intenta de nuevo
+          {t("loadError")}
         </p>
       ) : customers.length === 0 ? (
-        <p className="px-gutter text-body text-fg-muted">
-          {query
-            ? "No encontramos clientes con ese nombre o celular."
-            : "Todavía no tienes clientes."}
-        </p>
+        <p className="px-gutter text-body text-fg-muted">{query ? t("noResults") : t("empty")}</p>
       ) : (
         <List className="mx-gutter">
           {customers.map((c) => {
@@ -56,15 +60,13 @@ export default async function CustomersPage({ searchParams }: PageProps<"/panel/
                 href={`/panel/clientes/${c.id}`}
                 detail={
                   <>
-                    {c.phone ? formatPhone(c.phone) : "Sin celular"}
-                    {noShows
-                      ? ` · ${noShows === 1 ? "1 inasistencia" : `${noShows} inasistencias`}`
-                      : ""}
+                    {c.phone ? formatPhone(c.phone) : t("noPhone")}
+                    {noShows ? ` · ${t("noShows", { count: noShows })}` : ""}
                   </>
                 }
                 value={
                   s?.requires_approval ? (
-                    <StatusBadge tone="warning">Necesita aprobación</StatusBadge>
+                    <StatusBadge tone="warning">{t("needsApproval")}</StatusBadge>
                   ) : undefined
                 }
               />

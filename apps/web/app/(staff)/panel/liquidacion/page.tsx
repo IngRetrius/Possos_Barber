@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { listAgendaByIds } from "@possos/booking/server";
 import {
@@ -8,7 +9,8 @@ import {
   type SettlementPeriod,
 } from "@possos/commissions";
 import { getSettlement, listCharges, listCommissionRates } from "@possos/commissions/server";
-import { Button, cn, Field, formatDate, formatPrice, Input } from "@possos/ui";
+import { Button, cn, Field, Input } from "@possos/ui";
+import { currentFormatters } from "../../../../lib/i18n";
 import { loadPanel } from "../../../../lib/panel";
 import { parseDay, todayKey } from "../../../../lib/panel-dates";
 import { param } from "../../../../lib/session";
@@ -16,7 +18,9 @@ import { AutoSubmitSelect } from "../_components/auto-submit-select";
 import { ChargesList } from "../_components/charges-list";
 import { PanelHeader } from "../_components/panel-header";
 
-export const metadata: Metadata = { title: "Liquidación · Panel · Possos Barber" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("web.staff.admin.meta"))("settlement") };
+}
 
 const ALL = "todos";
 
@@ -29,10 +33,13 @@ export default async function SettlementPage({ searchParams }: PageProps<"/panel
   const params = await searchParams;
   const ctx = await loadPanel("/panel/liquidacion");
   const today = todayKey();
+  const t = await getTranslations("web.staff.admin.settlement");
+  const tp = await getTranslations("commissions.periods");
+  const f = await currentFormatters();
   const isAdmin = ctx.viewer.isAdmin;
 
   const periodParam = param(params.periodo) as SettlementPeriod | undefined;
-  const period: SettlementPeriod = SETTLEMENT_PERIODS.some((p) => p.value === periodParam)
+  const period: SettlementPeriod = SETTLEMENT_PERIODS.includes(periodParam as SettlementPeriod)
     ? periodParam!
     : "semana";
   let from: string;
@@ -85,23 +92,23 @@ export default async function SettlementPage({ searchParams }: PageProps<"/panel
 
   return (
     <>
-      <PanelHeader title="Liquidación" backHref="/panel/mas" />
+      <PanelHeader title={t("title")} backHref="/panel/mas" />
       <main className="grid content-start gap-6 px-gutter pb-8">
-        <nav aria-label="Periodo" className="-mx-gutter overflow-x-auto px-gutter">
+        <nav aria-label={t("period")} className="-mx-gutter overflow-x-auto px-gutter">
           <ul className="flex gap-2">
             {SETTLEMENT_PERIODS.map((p) => (
-              <li key={p.value}>
+              <li key={p}>
                 <Link
-                  href={href({ periodo: p.value })}
-                  aria-current={p.value === period ? "page" : undefined}
+                  href={href({ periodo: p })}
+                  aria-current={p === period ? "page" : undefined}
                   className={cn(
                     "inline-flex h-12 items-center rounded-pill border px-4 text-label whitespace-nowrap",
-                    p.value === period
+                    p === period
                       ? "border-fg bg-fg text-bg"
                       : "border-border-strong text-fg hover:bg-surface-2",
                   )}
                 >
-                  {p.label}
+                  {tp(p)}
                 </Link>
               </li>
             ))}
@@ -113,7 +120,7 @@ export default async function SettlementPage({ searchParams }: PageProps<"/panel
             <input type="hidden" name="periodo" value="rango" />
             <input type="hidden" name="barbero" value={barberValue} />
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Desde" className="min-w-0">
+              <Field label={t("from")} className="min-w-0">
                 <Input
                   type="date"
                   name="desde"
@@ -121,12 +128,12 @@ export default async function SettlementPage({ searchParams }: PageProps<"/panel
                   className="w-0 min-w-full px-3"
                 />
               </Field>
-              <Field label="Hasta" className="min-w-0">
+              <Field label={t("to")} className="min-w-0">
                 <Input type="date" name="hasta" defaultValue={to} className="w-0 min-w-full px-3" />
               </Field>
             </div>
             <Button type="submit" variant="secondary">
-              Ver el rango
+              {t("showRange")}
             </Button>
           </form>
         ) : null}
@@ -140,18 +147,18 @@ export default async function SettlementPage({ searchParams }: PageProps<"/panel
                 <input type="hidden" name="hasta" value={to} />
               </>
             ) : null}
-            <AutoSubmitSelect name="barbero" label="Liquidación de" defaultValue={barberValue}>
-              <option value={ALL}>Toda la barbería</option>
+            <AutoSubmitSelect name="barbero" label={t("of")} defaultValue={barberValue}>
+              <option value={ALL}>{t("wholeShop")}</option>
               {ctx.barbers.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.display_name}
-                  {b.active ? "" : " (inactivo)"}
+                  {b.active ? "" : t("inactive")}
                 </option>
               ))}
             </AutoSubmitSelect>
             <noscript>
               <Button type="submit" variant="secondary" className="mt-2 w-full">
-                Ver
+                {t("show")}
               </Button>
             </noscript>
           </form>
@@ -159,62 +166,59 @@ export default async function SettlementPage({ searchParams }: PageProps<"/panel
 
         <section aria-labelledby="totales" className="grid gap-4">
           <h2 id="totales" className="sr-only">
-            Totales
+            {t("totals")}
           </h2>
           <p className="text-body text-fg-muted tabular-nums">
-            {from === to ? formatDate(from) : `${formatDate(from)} a ${formatDate(to)}`}
+            {from === to ? f.date(from) : t("range", { from: f.date(from), to: f.date(to) })}
           </p>
           {!settlement.ok ? (
             <p role="alert" className="text-body text-danger">
-              No pudimos cargar la liquidación. Revisa tu conexión e intenta de nuevo
+              {t("loadError")}
             </p>
           ) : (
             <dl className="grid grid-cols-2 gap-4 rounded-card border border-border bg-surface p-4 tabular-nums">
               <div className="col-span-2 grid gap-1">
-                <dt className="text-label text-fg-muted">Total cobrado</dt>
+                <dt className="text-label text-fg-muted">{t("total")}</dt>
                 <dd className="text-title" data-testid="total">
-                  {formatPrice(total.amount)}
+                  {f.price(total.amount)}
                 </dd>
               </div>
               <div className="grid gap-1">
                 <dt className="text-label text-fg-muted">
-                  {barberId && barberId === ctx.viewer.barberId ? "Para ti" : "Para el barbero"}
-                  {rate ? ` (${formatPercent(Number(rate.barber_pct))} hoy)` : ""}
+                  {barberId && barberId === ctx.viewer.barberId ? t("forYou") : t("forBarber")}
+                  {rate
+                    ? t("rateToday", { pct: formatPercent(Number(rate.barber_pct), f.locale) })
+                    : ""}
                 </dt>
                 <dd className="text-heading" data-testid="barbero">
-                  {formatPrice(total.barber)}
+                  {f.price(total.barber)}
                 </dd>
               </div>
               <div className="grid gap-1">
-                <dt className="text-label text-fg-muted">Para la barbería</dt>
+                <dt className="text-label text-fg-muted">{t("forBusiness")}</dt>
                 <dd className="text-heading" data-testid="barberia">
-                  {formatPrice(total.business)}
+                  {f.price(total.business)}
                 </dd>
               </div>
               <div className="col-span-2 grid gap-1">
-                <dt className="sr-only">Servicios</dt>
-                <dd className="text-body text-fg-muted">
-                  {total.count === 1 ? "1 servicio" : `${total.count} servicios`}
-                </dd>
+                <dt className="sr-only">{t("services")}</dt>
+                <dd className="text-body text-fg-muted">{t("count", { count: total.count })}</dd>
               </div>
             </dl>
           )}
-          <p className="text-caption text-fg-muted">
-            Cada cobro guarda el porcentaje que había ese día: cambiarlo no cambia los periodos
-            anteriores. Los anulados no cuentan.
-          </p>
+          <p className="text-caption text-fg-muted">{t("note")}</p>
         </section>
 
         <section aria-labelledby="cobros" className="grid gap-3">
           <h2 id="cobros" className="text-heading">
-            Cobros
+            {t("charges")}
           </h2>
           {!charges.ok ? (
             <p role="alert" className="text-body text-danger">
-              No pudimos cargar los cobros. Revisa tu conexión e intenta de nuevo
+              {t("chargesLoadError")}
             </p>
           ) : charges.data.length === 0 ? (
-            <p className="text-body text-fg-muted">No hay cobros en este periodo.</p>
+            <p className="text-body text-fg-muted">{t("noCharges")}</p>
           ) : (
             <ChargesList
               isAdmin={isAdmin}
@@ -224,7 +228,7 @@ export default async function SettlementPage({ searchParams }: PageProps<"/panel
                 const a = byAppointment.get(c.appointment_id);
                 return {
                   charge: c,
-                  customerName: a?.customerName ?? "Cliente",
+                  customerName: a?.customerName ?? t("customer"),
                   serviceName: a?.serviceName ?? "",
                   barberName: barberId ? null : (names.get(c.barber_id) ?? null),
                 };

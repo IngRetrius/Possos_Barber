@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { listBarberServiceIds } from "@possos/barbers/server";
 import { listActiveServices } from "@possos/catalog/server";
 import { searchCustomers } from "@possos/customers/server";
@@ -10,7 +11,9 @@ import { NewAppointmentForm } from "../../_components/new-appointment-form";
 import { PanelHeader } from "../../_components/panel-header";
 import { freeStartsFor } from "../../_lib/free-starts";
 
-export const metadata: Metadata = { title: "Nueva cita · Panel · Possos Barber" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("web.staff.meta"))("newAppointment") };
+}
 
 /**
  * "Nueva cita" (docs/11): página completa porque tiene búsqueda y formulario. Desde una hora
@@ -19,6 +22,7 @@ export const metadata: Metadata = { title: "Nueva cita · Panel · Possos Barber
 export default async function NewAppointmentPage({ searchParams }: PageProps<"/panel/cita/nueva">) {
   const params = await searchParams;
   const ctx = await loadPanel("/panel/cita/nueva");
+  const t = await getTranslations("web.staff.newAppointment");
   const barber = ctx.barber;
   const hora = param(params.hora);
   const fromHour = hora && !Number.isNaN(new Date(hora).getTime()) ? hora : null;
@@ -27,8 +31,8 @@ export default async function NewAppointmentPage({ searchParams }: PageProps<"/p
   if (!barber) {
     return (
       <>
-        <PanelHeader title="Nueva cita" backHref="/panel" />
-        <p className="px-gutter text-body text-fg-muted">Primero crea un barbero en Más.</p>
+        <PanelHeader title={t("title")} backHref="/panel" />
+        <p className="px-gutter text-body text-fg-muted">{t("noBarbers")}</p>
       </>
     );
   }
@@ -44,9 +48,11 @@ export default async function NewAppointmentPage({ searchParams }: PageProps<"/p
 
   return (
     <>
-      <PanelHeader title="Nueva cita" backHref={`/panel?dia=${date}`} />
+      <PanelHeader title={t("title")} backHref={`/panel?dia=${date}`} />
       {ctx.barbers.length > 1 ? (
-        <p className="px-gutter pb-2 text-body text-fg-muted">Con {barber.display_name}</p>
+        <p className="px-gutter pb-2 text-body text-fg-muted">
+          {t("with", { name: barber.display_name })}
+        </p>
       ) : null}
       <NewAppointmentForm
         barberId={barber.id}

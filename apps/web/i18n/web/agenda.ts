@@ -34,6 +34,13 @@ const es = {
   notesTitle: "Notas sobre el cliente",
   loading: "Cargando...",
   noNotes: "Sin notas.",
+  chargeDetail: {
+    date: "Fecha",
+    amount: "Valor cobrado",
+    forBarber: "Para el barbero ({pct})",
+    forBusiness: "Para la barbería",
+    sameDayOnly: "Solo puedes corregir los cobros del mismo día.",
+  },
   newAppointment: {
     service: "Servicio",
     noServices: "Este barbero no tiene servicios. Asígnalos en Más, Barberos.",
@@ -86,6 +93,13 @@ const en: typeof es = {
   notesTitle: "Notes about the customer",
   loading: "Loading...",
   noNotes: "No notes.",
+  chargeDetail: {
+    date: "Date",
+    amount: "Amount charged",
+    forBarber: "For the barber ({pct})",
+    forBusiness: "For the barbershop",
+    sameDayOnly: "You can only correct charges from the same day.",
+  },
   newAppointment: {
     service: "Service",
     noServices: "This barber has no services. Assign them in More, Barbers.",

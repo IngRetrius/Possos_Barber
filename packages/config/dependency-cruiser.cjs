@@ -16,8 +16,9 @@
 const DOMAIN = "auth|catalog|barbers|customers|booking|commissions|notifications";
 
 /** Archivos que un paquete puede declarar en su campo `exports` (más el CSS de `ui`). */
+// `messages` son los textos de la interfaz en cada idioma, que junta apps/web (docs/11, "Idiomas").
 const PUBLIC_ENTRY =
-  "^packages/[^/]+/src/((index|server|ui|client|events|admin|constants|proxy)\\.tsx?|styles\\.css)$";
+  "^packages/[^/]+/src/((index|server|ui|client|events|admin|constants|proxy|messages)\\.tsx?|styles\\.css)$";
 
 /** Prohíbe que `from` importe alguno de los paquetes de `to`. */
 const forbidPackages = (name, from, to, comment) => ({

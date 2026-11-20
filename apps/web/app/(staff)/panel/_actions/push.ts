@@ -9,7 +9,6 @@ import {
 import { pushSubject } from "../../../../lib/business";
 import { loadPanel } from "../../../../lib/panel";
 import { getTranslations } from "next-intl/server";
-import { currentLocale } from "../../../../lib/i18n";
 
 /** Textos de las acciones del panel, en el idioma de la petición. */
 const actionText = () => getTranslations("web.panel.actions");

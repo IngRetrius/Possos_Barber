@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import {
@@ -14,7 +15,9 @@ import { addPortfolioAction, setPhotoAction, updateBarberAction } from "../../_a
 import { PanelHeader } from "../../_components/panel-header";
 import { RemoveWorkButton } from "../../_components/remove-work-button";
 
-export const metadata: Metadata = { title: "Barbero · Panel · Possos Barber" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("web.staff.admin.meta"))("barber") };
+}
 
 /** Perfil de un barbero (administrador): foto, portafolio, datos, servicios y si está activo. */
 export default async function EditBarberPage({ params }: PageProps<"/panel/barberos/[id]">) {
@@ -31,6 +34,7 @@ export default async function EditBarberPage({ params }: PageProps<"/panel/barbe
   const offered = serviceIds.ok ? serviceIds.data : [];
   const photo = b.photo_path ? publicImageUrl(db, "barber-photos", b.photo_path) : null;
   const works = portfolio.ok ? portfolio.data : [];
+  const t = await getTranslations("web.staff.admin.barbers");
 
   return (
     <>
@@ -46,13 +50,13 @@ export default async function EditBarberPage({ params }: PageProps<"/panel/barbe
       >
         <section className="grid gap-3" aria-labelledby="foto">
           <h2 id="foto" className="text-heading">
-            Foto
+            {t("photo")}
           </h2>
           <div className="flex items-center gap-4">
             {photo ? (
               <Image
                 src={photo}
-                alt={`Foto de ${b.display_name}`}
+                alt={t("photoAlt", { name: b.display_name })}
                 width={80}
                 height={80}
                 sizes="80px"
@@ -60,32 +64,30 @@ export default async function EditBarberPage({ params }: PageProps<"/panel/barbe
               />
             ) : (
               <span className="flex size-20 shrink-0 items-center justify-center rounded-pill border border-border text-caption text-fg-muted">
-                Sin foto
+                {t("noPhoto")}
               </span>
             )}
             <ImageUpload
               barberId={b.id}
               bucket="barber-photos"
               onUploaded={setPhotoAction.bind(null, b.id)}
-              label={photo ? "Cambiar la foto" : "Subir una foto"}
+              label={photo ? t("changePhoto") : t("uploadPhoto")}
               className="flex-1"
             />
           </div>
         </section>
         <section className="grid gap-3" aria-labelledby="portafolio">
           <h2 id="portafolio" className="text-heading">
-            Portafolio
+            {t("portfolio")}
           </h2>
-          <p className="text-body text-fg-muted">
-            Fotos de cortes para la página pública. Se guardan apenas las subes.
-          </p>
+          <p className="text-body text-fg-muted">{t("portfolioIntro")}</p>
           {works.length > 0 ? (
             <ul className="grid grid-cols-3 gap-2">
               {works.map((w) => (
                 <li key={w.id} className="grid gap-1">
                   <Image
                     src={publicImageUrl(db, "portfolio", w.image_path)}
-                    alt={w.caption ?? `Trabajo de ${b.display_name}`}
+                    alt={w.caption ?? t("workAlt", { name: b.display_name })}
                     width={120}
                     height={120}
                     sizes="120px"
@@ -100,7 +102,7 @@ export default async function EditBarberPage({ params }: PageProps<"/panel/barbe
             barberId={b.id}
             bucket="portfolio"
             onUploaded={addPortfolioAction.bind(null, b.id)}
-            label="Agregar una foto"
+            label={t("addPhoto")}
           />
         </section>
       </BarberForm>

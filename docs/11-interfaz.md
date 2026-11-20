@@ -115,9 +115,8 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 
 ```
 ┌──────────────────────────────────┐
-│ [P]  Possos Barber      Ingresar │
+│ [P] Possos Barber   Ingresar  EN │  el nombre es el título (h1)
 │                                  │
-│ Barbería en Girardot             │
 │ [PENDIENTE: frase del dueño]     │
 │                                  │
 │ Servicios                        │
@@ -318,6 +317,16 @@ Solo aparece si hay más de un servicio activo. Lista de filas de 64 px: nombre,
 
 - "Avisos" arriba, solo para quien es barbero (F8): activar los avisos push de ese celular y enviar uno de prueba.
 - Liquidación, horario semanal, bloqueos, servicios, barberos y porcentajes (admin), configuración de la agenda y de los recordatorios, costo de WhatsApp del mes.
+
+## Idiomas
+
+Pedido de Juan el 20/11/2026: la app también en inglés, para quien no lee español.
+
+- **Botón ES/EN** arriba a la derecha en todas las pantallas (inicio, cuentas, pasos de la reserva, Mis citas y panel). Dice el idioma al que cambia, escrito en ese idioma ("EN" en español, "ES" en inglés), con su `lang` para el lector de pantalla. Es un formulario con una acción de servidor: funciona sin JavaScript.
+- **El idioma va en una cookie** (`NEXT_LOCALE`, un año), no en la URL. Así los enlaces de WhatsApp, de los correos y de los avisos sirven igual en los dos idiomas. Por omisión, español. `<html lang>` es `es-CO` o `en`.
+- **Textos**: next-intl. Cada paquete trae los suyos en `src/messages.ts` (entrada `./messages` de `exports`) y la app los junta en `apps/web/i18n/`. El inglés tiene el tipo del español, así que una clave que falta es un error de TypeScript, y una clave que no existe también.
+- **Formatos** en inglés: "Fri, Nov 20", "3:00 PM", "$35,000" (pesos con coma de miles), "50%". Los datos del dueño sin confirmar dicen [PENDING].
+- **Quedan en español**: los datos del negocio (nombres de servicios, dirección, descripciones), los nombres de los festivos, el manifiesto de la PWA, los correos de Supabase, los recordatorios de WhatsApp y los avisos push al barbero (el servidor los manda sin saber el idioma de la persona). La política de datos tiene traducción, pero rige la versión en español y la página lo dice.
 
 ## Textos de la interfaz
 

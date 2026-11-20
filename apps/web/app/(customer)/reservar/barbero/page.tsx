@@ -13,6 +13,7 @@ import { createClient } from "@possos/supabase/server";
 import { formatDuration, StepHeader } from "@possos/ui";
 import { loadBookingFlow, previousStepHref } from "../../../../lib/booking-flow";
 import { LocaleSwitch } from "../../../_components/locale-switch";
+import { currentLocale } from "../../../../lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("web.customer.meta"))("barber") };
@@ -35,7 +36,7 @@ export default async function BarberStepPage({ searchParams }: PageProps<"/reser
     );
   }
 
-  const position = stepPosition("barber", flow.steps);
+  const position = stepPosition("barber", flow.steps, await currentLocale());
   const t = await getTranslations("web.customer.barber");
   const timeHref = (barberId: string) =>
     selectionHref(BOOKING_ROUTES.time, { serviceId: service.id, barberId, date: selection.date });

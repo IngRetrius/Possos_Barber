@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useActionState, useState, useTransition, type ReactNode } from "react";
 import type { StaffRole } from "@possos/auth";
 import {
@@ -35,6 +36,7 @@ function SettingsForm({
   savedLabel: string;
   children: (errors: Record<string, string>) => ReactNode;
 }) {
+  const t = useTranslations("web.admin.settings");
   const [state, formAction, pending] = useActionState(action, {});
   return (
     <form
@@ -46,7 +48,7 @@ function SettingsForm({
       {children(state.fieldErrors ?? {})}
       {state.error ? <InlineError>{state.error}</InlineError> : null}
       <Button type="submit" variant="secondary" disabled={pending} aria-busy={pending}>
-        {pending ? "Guardando..." : submitLabel}
+        {pending ? t("saving") : submitLabel}
       </Button>
       <p role="status" className="text-caption text-fg-muted empty:hidden">
         {state.saved && !pending ? savedLabel : ""}
@@ -64,14 +66,15 @@ export function RateForm({
   barberName: string;
   pct: string;
 }) {
+  const t = useTranslations("web.admin.settings");
   return (
-    <SettingsForm action={setRateAction} submitLabel="Guardar" savedLabel="Guardaste el porcentaje">
+    <SettingsForm action={setRateAction} submitLabel={t("save")} savedLabel={t("rateSaved")}>
       {(errors) => (
         <>
           <input type="hidden" name="barbero" value={barberId} />
           <Field
-            label={`Porcentaje de ${barberName}`}
-            hint={pct ? undefined : "Sin porcentaje no se pueden registrar sus cobros."}
+            label={t("rateLabel", { name: barberName })}
+            hint={pct ? undefined : t("rateHint")}
             error={errors.porcentaje}
           >
             <Input
@@ -98,31 +101,24 @@ export function BookingSettingsForm({
     no_show_threshold: number;
   };
 }) {
+  const t = useTranslations("web.admin.settings");
   return (
     <SettingsForm
       action={saveBookingSettingsAction}
-      submitLabel="Guardar la agenda"
-      savedLabel="Guardaste las reglas de la agenda"
+      submitLabel={t("bookingSave")}
+      savedLabel={t("bookingSaved")}
     >
       {(errors) => (
         <>
-          <Field
-            label="Anticipación mínima, en minutos"
-            hint="Cuánto antes debe reservar el cliente. El personal no tiene esta regla."
-            error={errors.minLeadMin}
-          >
+          <Field label={t("minLead")} hint={t("minLeadHint")} error={errors.minLeadMin}>
             <Input name="anticipacion" inputMode="numeric" defaultValue={initial.min_lead_min} />
           </Field>
-          <Field
-            label="Días hacia adelante"
-            hint="Hasta cuántos días después de hoy puede reservar el cliente."
-            error={errors.maxDaysAhead}
-          >
+          <Field label={t("maxDays")} hint={t("maxDaysHint")} error={errors.maxDaysAhead}>
             <Input name="dias" inputMode="numeric" defaultValue={initial.max_days_ahead} />
           </Field>
           <Field
-            label="Cancelar o cambiar hasta, en minutos antes"
-            hint="Después de eso, el cliente tiene que escribirle al barbero."
+            label={t("cancelWindow")}
+            hint={t("cancelWindowHint")}
             error={errors.cancelWindowMin}
           >
             <Input
@@ -131,11 +127,7 @@ export function BookingSettingsForm({
               defaultValue={initial.cancel_window_min}
             />
           </Field>
-          <Field
-            label="Inasistencias para pedir aprobación"
-            hint="Desde ese número, las reservas del cliente esperan a que el barbero las apruebe."
-            error={errors.noShowThreshold}
-          >
+          <Field label={t("noShows")} hint={t("noShowsHint")} error={errors.noShowThreshold}>
             <Input
               name="inasistencias"
               inputMode="numeric"
@@ -157,26 +149,23 @@ export function ReminderSettingsForm({
   second: string;
   sendConfirmation: boolean;
 }) {
+  const t = useTranslations("web.admin.settings");
   return (
     <SettingsForm
       action={saveReminderSettingsAction}
-      submitLabel="Guardar los recordatorios"
-      savedLabel="Guardaste los recordatorios"
+      submitLabel={t("remindersSave")}
+      savedLabel={t("remindersSaved")}
     >
       {(errors) => (
         <>
-          <Field label="Primer recordatorio, horas antes" error={errors.firstHours}>
+          <Field label={t("first")} error={errors.firstHours}>
             <Input name="primero" inputMode="decimal" defaultValue={first} />
           </Field>
-          <Field
-            label="Segundo recordatorio, horas antes"
-            hint="Vacío para mandar solo uno."
-            error={errors.secondHours}
-          >
+          <Field label={t("second")} hint={t("secondHint")} error={errors.secondHours}>
             <Input name="segundo" inputMode="decimal" defaultValue={second} />
           </Field>
           <Checkbox name="confirmacion" value="si" defaultChecked={sendConfirmation}>
-            Mandar la confirmación apenas se reserva
+            {t("confirmation")}
           </Checkbox>
         </>
       )}
@@ -185,28 +174,21 @@ export function ReminderSettingsForm({
 }
 
 export function GrantRoleForm({ profiles }: { profiles: { id: string; name: string }[] }) {
+  const t = useTranslations("web.admin.settings");
   const [role, setRole] = useState<StaffRole>("barber");
   return (
-    <SettingsForm action={grantRoleAction} submitLabel="Dar el rol" savedLabel="Diste el rol">
+    <SettingsForm action={grantRoleAction} submitLabel={t("grant")} savedLabel={t("granted")}>
       {(errors) => (
         <>
-          <Field
-            label="Correo de la cuenta"
-            hint="La persona primero se registra en la app con ese correo."
-            error={errors.correo}
-          >
+          <Field label={t("email")} hint={t("emailHint")} error={errors.correo}>
             <Input name="correo" type="email" autoComplete="off" />
           </Field>
           <fieldset className="grid gap-1">
-            <legend className="mb-1 text-label">Rol</legend>
+            <legend className="mb-1 text-label">{t("role")}</legend>
             {(
               [
-                ["barber", "Barbero", "Ve su agenda, sus clientes y su liquidación."],
-                [
-                  "admin",
-                  "Administrador",
-                  "Ve y cambia todo, incluidos los datos de todos los clientes.",
-                ],
+                ["barber", t("barber"), t("barberHint")],
+                ["admin", t("admin"), t("adminHint")],
               ] as const
             ).map(([value, label, hint]) => (
               <label key={value} className="flex min-h-12 cursor-pointer items-start gap-3 py-2">
@@ -228,12 +210,8 @@ export function GrantRoleForm({ profiles }: { profiles: { id: string; name: stri
           </fieldset>
           {role === "barber" ? (
             <Field
-              label="Perfil de barbero"
-              hint={
-                profiles.length === 0
-                  ? "No hay perfiles sin cuenta. Créalo primero en Barberos."
-                  : "Su agenda, su foto y su porcentaje."
-              }
+              label={t("profile")}
+              hint={profiles.length === 0 ? t("noProfiles") : t("profileHint")}
               error={errors.perfil}
             >
               <select
@@ -241,7 +219,7 @@ export function GrantRoleForm({ profiles }: { profiles: { id: string; name: stri
                 defaultValue=""
                 className="h-12 w-full rounded-card border border-border-strong bg-surface px-4 text-body text-fg"
               >
-                <option value="">Elige un perfil</option>
+                <option value="">{t("chooseProfile")}</option>
                 {profiles.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -256,8 +234,6 @@ export function GrantRoleForm({ profiles }: { profiles: { id: string; name: stri
   );
 }
 
-const ROLE_LABEL: Record<StaffRole, string> = { admin: "Administrador", barber: "Barbero" };
-
 export function RevokeRoleButton({
   userId,
   role,
@@ -267,7 +243,9 @@ export function RevokeRoleButton({
   role: StaffRole;
   email: string;
 }) {
+  const t = useTranslations("web.admin.settings");
   const [pending, start] = useTransition();
+  const roleName = t(`roles.${role}`);
   return (
     <Button
       variant="ghost"
@@ -277,16 +255,14 @@ export function RevokeRoleButton({
       onClick={() =>
         start(async () => {
           const result = await revokeRoleAction(userId, role);
-          if (result.ok) toast(`Quitaste el rol de ${ROLE_LABEL[role].toLowerCase()}`);
-          else toast.error(result.error ?? "No pudimos quitar el rol");
+          if (result.ok) toast(t("revoked", { role: roleName }));
+          else toast.error(result.error ?? t("revokeFailed"));
         })
       }
     >
-      {ROLE_LABEL[role]}
+      {role === "admin" ? t("admin") : t("barber")}
       <X aria-hidden="true" strokeWidth={1.5} />
-      <span className="sr-only">
-        : quitar el rol de {ROLE_LABEL[role].toLowerCase()} a {email}
-      </span>
+      <span className="sr-only">{t("revokeHint", { role: roleName, email })}</span>
     </Button>
   );
 }

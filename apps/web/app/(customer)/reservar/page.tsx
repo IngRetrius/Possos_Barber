@@ -8,6 +8,7 @@ import { createClient } from "@possos/supabase/server";
 import { Button, EmptyState, StepHeader } from "@possos/ui";
 import { loadBookingFlow, timeStepHref } from "../../../lib/booking-flow";
 import { LocaleSwitch } from "../../_components/locale-switch";
+import { currentLocale } from "../../../lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("web.customer.meta"))("service") };
@@ -24,7 +25,7 @@ export default async function ServiceStepPage({ searchParams }: PageProps<"/rese
 
   if (flow.services.length === 1) redirect(timeStepHref(flow, selection));
 
-  const position = stepPosition("service", flow.steps);
+  const position = stepPosition("service", flow.steps, await currentLocale());
   const t = await getTranslations("web.customer");
   return (
     <>
