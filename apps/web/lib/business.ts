@@ -63,3 +63,13 @@ export function siteUrl(): string {
   if (production) return `https://${production}`;
   return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 }
+
+/**
+ * Contacto VAPID de los avisos push (F8). Los servicios de push (Apple, Google) exigen una URL
+ * `https:` o un `mailto:`; en local el sitio es `http://localhost`, así que se usa el de
+ * producción. No se usa un correo para no exponer el de nadie.
+ */
+export function pushSubject(): string {
+  const url = siteUrl();
+  return url.startsWith("https://") ? url : "https://possos-web.vercel.app";
+}

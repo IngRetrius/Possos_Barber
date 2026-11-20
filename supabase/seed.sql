@@ -97,3 +97,11 @@ insert into public.customer_booking_status (customer_id, no_show_count, requires
 insert into public.barber_customers (barber_id, customer_id) values
   ('5eedba00-0000-0000-0000-000000000001', '5eedc000-0000-0000-0000-000000000001'),
   ('5eedba00-0000-0000-0000-000000000001', '5eedc000-0000-0000-0000-000000000002');
+
+-- Despacho de notificaciones (F8): pg_net llama a la app de `pnpm dev` en el Mac. El secreto
+-- es solo de desarrollo y debe ser igual a CRON_SECRET de apps/web/.env.local. En producción
+-- los dos valores se cargan a mano en Vault (fases/F8-entrega.md) y nunca van en el repo.
+select vault.create_secret(
+  'http://host.docker.internal:3000/api/notifications/dispatch', 'notifications_dispatch_url'
+);
+select vault.create_secret('solo-local-despacho', 'notifications_dispatch_secret');

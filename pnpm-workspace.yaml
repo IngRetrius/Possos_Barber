@@ -1,3 +1,8 @@
 packages:
   - apps/*
   - packages/*
+# Serwist (F8) compila el service worker con esbuild y @swc/core. Sus scripts de instalación solo
+# verifican el binario de la plataforma.
+allowBuilds:
+  "@swc/core": true
+  esbuild: true

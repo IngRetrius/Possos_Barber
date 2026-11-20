@@ -306,6 +306,7 @@ Solo aparece si hay más de un servicio activo. Lista de filas de 64 px: nombre,
 
 ### Más
 
+- "Avisos" arriba, solo para quien es barbero (F8): activar los avisos push de ese celular y enviar uno de prueba.
 - Liquidación, horario semanal, bloqueos, servicios, barberos y porcentajes (admin), configuración de la agenda y de los recordatorios, costo de WhatsApp del mes.
 
 ## Textos de la interfaz
@@ -454,11 +455,27 @@ Pantallas del barbero y del administrador. Los avisos de éxito salen arriba (`t
 | Mover | Título "Mover cita", el cliente con "ahora el ...", la misma elección de fecha y hora y "Mover la cita" ("Moviendo...") |
 | Semana | "Semana", "lun 16 nov a dom 22 nov", por día "3 citas · 5 libres", "Sin horario" o "Bloqueado", y la barra de ocupación |
 | Clientes | "Buscar por nombre o celular", "1 inasistencia" o "2 inasistencias", "Necesita aprobación", "Todavía no tienes clientes." |
-| Más | Secciones "Cobros" ("Liquidación"), "Agenda" ("Horario semanal", "Bloqueos") y, solo para el administrador, "Administración" ("Servicios", "Barberos", "Porcentajes", "Configuración", "Roles"). "Cerrar sesión". El costo de WhatsApp del mes llega con F7 |
+| Más | Secciones "Avisos" (F8, solo quien es barbero), "Cobros" ("Liquidación"), "Agenda" ("Horario semanal", "Bloqueos") y, solo para el administrador, "Administración" ("Servicios", "Barberos", "Porcentajes", "Configuración", "Roles"). "Cerrar sesión". El costo de WhatsApp del mes llega con F7 |
 | Horario semanal | "Las horas que ven los clientes salen de aquí. Para el almuerzo, usa dos rangos. Las citas que ya existen no cambian." Por día: "Cerrado", "Agregar rango", "Igual que el [día anterior]". Errores junto al día: "Cada rango debe terminar después de empezar", "Dos rangos de este día se cruzan". Botón "Guardar horario"; después, "Guardaste el horario" |
 | Bloqueos | "Nuevo bloqueo": "Desde", "Hasta", "Todo el día", "Hora de inicio", "Hora de fin", "Motivo" (ayuda "Opcional. Solo lo ve el personal."), "Bloquear". Con citas debajo: "Bloqueaste ese horario, pero hay 1 cita debajo. Muévelas o cancélalas:" y un enlace por cita; sin citas: "Bloqueaste ese horario. No había citas." "Próximos bloqueos" con "Borrar" ("No tienes bloqueos."). "Festivos": "Festivos de Colombia de los próximos meses. Bloquea los que no vas a atender." con "Bloquear" o "Bloqueado"; el motivo queda "Festivo: [nombre]" |
 | Servicios (administrador) | "Los clientes los ven en este orden. Un servicio sin precio dice [PENDIENTE]." Filas con duración, precio o [PENDIENTE] e "Inactivo"; "Subir" y "Bajar". Formulario: "Nombre", "Duración en minutos" ("En múltiplos de 5."), "Precio en pesos" ("Déjalo vacío si todavía no está definido: los clientes verán [PENDIENTE]."), "Descripción", "Activo" ("Si lo desactivas, los clientes ya no lo pueden reservar. Las citas que existen no cambian."), "Crear servicio" o "Guardar" |
 | Barberos (administrador) | Lista con "Activo" o "Inactivo" y "con cuenta" o "sin cuenta". Nuevo: "Nombre visible" y "Porcentaje para el barbero" ("Del valor de cada servicio. El resto es para la barbería."). Perfil: "Foto" ("Subir una foto" o "Cambiar la foto"), "Portafolio" ("Agregar una foto", "Quitar"), "Presentación", "WhatsApp", "Intervalo de las horas", "Servicios que hace", "Activo". Error de imagen: "No pudimos leer esa imagen. Usa una foto JPG o PNG." |
+
+### PWA y avisos (F8)
+
+| Lugar | Texto |
+|---|---|
+| Aviso arriba, sin conexión (en cualquier pantalla) | "Sin conexión. Para reservar, cambiar o cancelar necesitas conexión." Aviso de estado (`role="status"`): queda mientras no haya red y no roba el foco |
+| Aviso arriba, versión nueva | "Hay una versión nueva." con "Actualizar" ("Actualizando..."), que recarga con la versión nueva. Si se ignora, la versión nueva entra la próxima vez que se abra la app |
+| Pantalla sin conexión | Título "Sin conexión", "No pudimos cargar esta página. Revisa tu conexión e intenta de nuevo.", "Para ver las horas libres, reservar, cambiar o cancelar necesitas conexión. Tus citas se pueden ver sin conexión en Mis citas si ya las abriste en este celular." Botones "Intentar de nuevo" y "Ver mis citas" |
+| Error de una acción (límite de error) | Con red: "Algo salió mal" y "No pudimos completar la acción. Intenta de nuevo." Sin red: "Sin conexión" y "No pudimos completar la acción. Para reservar, cambiar o cancelar necesitas conexión." Botón "Intentar de nuevo" |
+| Cancelar sin conexión (hoja) | "Sin conexión. Para cancelar tu cita necesitas conexión" |
+| Mis citas, al final | "Instala la app para abrir tus citas con un toque, aun sin señal." e "Instalar la app" (solo si no está instalada: en Android el aviso del navegador, en iPhone la hoja de F4). Nunca al entrar a la app |
+| Más, sección "Avisos" (solo quien es barbero, arriba de todo) | "Te avisamos en este celular cuando un cliente reserve, cambie, confirme o cancele una cita." y "Activar avisos" ("Activando..."). El permiso del navegador se pide solo al tocar el botón. Activos: "Los avisos están activos en este celular.", "Enviar un aviso de prueba" y "Desactivar avisos". Avisos arriba: "Activaste los avisos en este celular", "Desactivaste los avisos en este celular", "Te enviamos un aviso de prueba" |
+| Avisos, otros estados | Bloqueados: "Bloqueaste los avisos de Possos Barber. Para recibirlos, permítelos en los ajustes del navegador o del celular." iPhone sin instalar: "En el iPhone, los avisos solo llegan con la app instalada. En Safari toca Compartir, luego "Agregar a inicio", y abre Possos Barber desde su ícono." Sin soporte: "Este navegador no puede recibir avisos. En Android usa Chrome; en iPhone, instala la app." Sin claves: "Los avisos todavía no están configurados en la app." |
+| Errores de avisos | "No pudimos activar los avisos. Intenta de nuevo", "Sin conexión. Para activar los avisos necesitas conexión", "No pudimos desactivar los avisos. Intenta de nuevo", "No pudimos enviar el aviso. Revisa tu conexión e intenta de nuevo", "Este celular ya no recibe avisos. Desactívalos y vuelve a activarlos", "Los avisos son para la cuenta de un barbero" |
+| Push al barbero (título y cuerpo) | "Nueva reserva", "Reserva por aprobar", "Cita cambiada" (el cuerpo dice "ahora el ..."), "Cambio por aprobar", "Cita cancelada", "Cita confirmada". Cuerpo: "[cliente] · [servicio] · vie 20 nov, 3:00 p. m.". Nunca el celular del cliente. Tocarlo abre la cita en "Hoy", en su día (`/panel?dia=...&cita=...`). Solo avisa lo que hizo el cliente, no lo que hizo el personal. Aviso de prueba: "Avisos activos" y "Así te avisamos cuando un cliente reserve, cambie, confirme o cancele una cita." |
+| App instalada | Nombre "Possos Barber" (corto "Possos"), monograma sobre `#0B0B0B`, a pantalla completa. En iPhone, barra de estado negra (no translúcida): ninguna pantalla queda debajo de la isla |
 
 ## Beunik: lo que muestran las capturas del dueño
 

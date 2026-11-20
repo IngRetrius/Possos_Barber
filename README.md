@@ -57,6 +57,8 @@ Con `pnpm dev`, `http://localhost:3000/muestras` muestra todos los componentes d
 
 La semilla (`supabase/seed.sql`) crea cinco cuentas para probar en local, todas con la contraseña `possos-local`: `barbero@ejemplo.test` (administrador y barbero), `barbero2@ejemplo.test` (barbero sin rol de administrador, inactivo para que la reserva siga con un solo barbero), `cliente@ejemplo.test` y `cliente2@ejemplo.test` (clientes con perfil) y `aprobacion@ejemplo.test` (cliente con 2 inasistencias: sus reservas esperan aprobación). Solo existen en la base local.
 
+PWA y avisos (F8): `apps/web/.env.local` necesita además `NEXT_PUBLIC_VAPID_PUBLIC_KEY` y `VAPID_PRIVATE_KEY` (claves propias de cada equipo: `pnpm --filter @possos/notifications exec web-push generate-vapid-keys`) y `CRON_SECRET=solo-local-despacho`, el secreto de la semilla. Con eso, cada cita que se crea en la base local llama por `pg_net` a `http://host.docker.internal:3000/api/notifications/dispatch` (el `pnpm dev` del equipo). El service worker también corre con `pnpm dev`, pero sin precarga: para probar sin conexión con estilos, usa `next build && next start` (ver [F8-entrega](fases/F8-entrega.md)).
+
 Los correos de Supabase Auth en local (activar la cuenta, cambiar la contraseña) no salen a internet: llegan a Mailpit, en `http://127.0.0.1:55324`. Google está apagado en local, así que el botón "Continuar con Google" no aparece.
 
 Supabase local usa los puertos 55320 a 55329 (API en `http://127.0.0.1:55321`, Studio en `http://127.0.0.1:55323`) para no chocar con otros proyectos.

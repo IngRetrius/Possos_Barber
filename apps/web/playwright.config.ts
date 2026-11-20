@@ -22,6 +22,9 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",
+    // El service worker de la PWA (F8) solo corre en pwa.spec, que lo permite. En las demás,
+    // las navegaciones van directo a la red, como antes de F8.
+    serviceWorkers: "block",
   },
   projects: [
     {

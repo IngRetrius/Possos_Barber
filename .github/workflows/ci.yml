@@ -68,6 +68,16 @@ jobs:
           echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
           echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY" >> "$GITHUB_ENV"
           echo "MAILPIT_URL=$MAILPIT_URL" >> "$GITHUB_ENV"
+          # F8: la ruta de despacho lee citas con la clave secreta de esta base de CI y exige el
+          # secreto de la semilla (supabase/seed.sql).
+          echo "SUPABASE_SECRET_KEY=$SECRET_KEY" >> "$GITHUB_ENV"
+          echo "CRON_SECRET=solo-local-despacho" >> "$GITHUB_ENV"
+      # F8: claves VAPID desechables, nuevas en cada corrida ("Avisos" en "Más" las necesita).
+      - name: Claves VAPID de prueba
+        run: |
+          pnpm --filter @possos/notifications exec web-push generate-vapid-keys --json > /tmp/vapid.json
+          node -e 'const k=require("/tmp/vapid.json");console.log("NEXT_PUBLIC_VAPID_PUBLIC_KEY="+k.publicKey);console.log("VAPID_PRIVATE_KEY="+k.privateKey)' >> "$GITHUB_ENV"
+          rm /tmp/vapid.json
       - run: pnpm --filter web test:e2e
         env:
           NEXT_TELEMETRY_DISABLED: 1

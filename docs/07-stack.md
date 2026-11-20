@@ -15,10 +15,10 @@ Las versiones se fijan con `pnpm` al iniciar el código. Este documento dice qu�
 | Componentes | **shadcn/ui** (sobre Radix), copiados en `packages/ui` | Accesibles y sin dependencia de una librería cerrada; se adaptan a la marca |
 | Validación | **Zod** | Un mismo esquema valida formularios y Server Actions |
 | Fechas | **date-fns v4 con `@date-fns/tz`** | Todo se guarda en UTC (`timestamptz`) y se muestra en America/Bogota |
-| PWA | **Serwist** (`@serwist/turbopack`) y `app/manifest.ts` de Next | Sucesor mantenido de next-pwa y compatible con App Router. Next 16 compila con Turbopack, que necesita `@serwist/turbopack` en lugar de `@serwist/next`. Verificado el 19/11/2026 con Next 16.4.6 y Serwist 9.5.15: `withSerwist` en `next.config`, una ruta `app/serwist/[path]/route.ts` que compila `app/sw.ts` con esbuild y sirve `/serwist/sw.js`, y `SerwistProvider` en el layout |
-| Push | Web Push con claves VAPID (librería `web-push` en Node) | Sin costo. En iOS solo funciona con la app instalada (desde iOS 16.4) |
+| PWA | **Serwist** (`@serwist/turbopack`) y `app/manifest.ts` de Next | Sucesor mantenido de next-pwa y compatible con App Router. Next 16 compila con Turbopack, que necesita `@serwist/turbopack` en lugar de `@serwist/next`. Hecho en F8 con Next 16.4.6 y Serwist 9.5.15: `withSerwist` en `next.config`, la ruta `app/serwist/[path]/route.ts` que compila `app/sw.ts` con esbuild y sirve `/serwist/sw.js`. El worker se registra con un componente propio (`app/_components/pwa-runtime.tsx`), no con `SerwistProvider`, que guarda en caché cada página que se visita (datos de clientes del panel) |
+| Push | Web Push con claves VAPID (librería `web-push` 3.6.7 en Node) | Sin costo. En iOS solo funciona con la app instalada (desde iOS 16.4). Se usa la 3.6.7 y no la 4.0.0 (noviembre de 2026, ESM y sin tipos): la 3 tiene `@types/web-push` |
 | WhatsApp | **Cloud API de Meta** por HTTP (`fetch`), sin SDK ni intermediarios | Es lo que abarata los mensajes ([03](03-recordatorios-whatsapp.md)) |
-| Tareas programadas | **Vercel Cron** cada 5 minutos, que llama a una ruta de `apps/web` | Despacha los recordatorios que ya tocan. Todo queda en Node y TypeScript dentro del monorepo |
+| Despacho y tareas programadas | **`pg_net` y `pg_cron` de Supabase**, que llaman a la ruta `/api/notifications/dispatch` de `apps/web` (decidido en F8, el 19/11/2026; antes decía Vercel Cron) | Un evento de la agenda llama a la ruta al instante (`pg_net`) y `pg_cron` revisa cada minuto si algo quedó atrás. El código del despacho sigue en Node y TypeScript dentro del monorepo. Ver abajo |
 | Pruebas | **Vitest** (unidad), **pgTAP** con `supabase test db` (SQL y RLS) y **Playwright** con viewport de celular (de punta a punta) | La prueba más importante, que no haya dos citas a la vez, se hace en pgTAP contra la base real |
 | Límites entre módulos | Campo `exports` en cada `package.json` más **dependency-cruiser** en CI | Ver [08](08-estructura-monorepo.md) |
 | Lint y formato | ESLint y Prettier | Estándar |
@@ -27,6 +27,14 @@ Las versiones se fijan con `pnpm` al iniciar el código. Este documento dice qu�
 ## Decisiones y alternativas descartadas
 
 **Next.js frente a Vite con una SPA.** Una SPA no renderiza en el servidor la página pública, y Next da rutas de API, cron e imágenes optimizadas en Vercel sin piezas extra.
+
+**Cómo se dispara el despacho (F8, 19/11/2026): `pg_net` y `pg_cron` de Supabase, no Vercel Cron.** Lo que se pedía: el barbero recibe el push de una reserva en menos de 1 minuto con la app cerrada, y F7 manda recordatorios a su hora (desfase menor a 5 minutos), con el mismo despacho.
+- *Vercel Cron:* en el plan Hobby solo corre una vez al día (con hora imprecisa); cada minuto exige el plan Pro. Aun cada minuto, el push tardaría hasta 60 s más el proceso, justo en el límite. Y despertaría la función 1.440 veces al día aunque no haya nada que hacer.
+- *Webhook de base de datos de Supabase:* es un trigger con `pg_net` creado desde el panel; queda fuera del repo y sin pruebas.
+- *Elegido:* un trigger de `notifications` sobre `booking_events` (en una migración, con pgTAP) llama con `pg_net` a `/api/notifications/dispatch` en cuanto termina la transacción (`pg_net` encola dentro de la transacción y envía después del commit; si la reserva se deshace, no sale nada). `pg_cron` revisa cada minuto y llama a la ruta solo si algún consumidor tiene eventos pendientes (con la barbería quieta, cero invocaciones). Los dos existen en el plan gratuito de Supabase y no dependen del plan de Vercel. Medido en local: de la reserva al push, menos de 3 segundos.
+- *Regiones:* la base está en `us-west-2` y las funciones en `iad1`. Cada despacho hace unas pocas idas y vueltas entre las dos costas (decenas de milisegundos cada una): no afecta el minuto. Mover las funciones a `pdx1` (pendiente de F0) lo acorta, pero no hace falta.
+- *Seguridad:* la ruta exige `Authorization: Bearer <CRON_SECRET>` (el mismo nombre que usa Vercel Cron, por si algún día se usa). La URL y el secreto viven en Supabase Vault y en las variables de Vercel, nunca en el repo.
+- *F7* agrega su consumidor (`whatsapp`) a la misma ruta y su revisión de `message_jobs` vencidos a `private.notifications_backstop()`; no necesita Vercel Cron.
 
 **Turborepo frente a Nx.** Nx sobra para un monorepo de esta escala. Turborepo se configura con un `turbo.json` pequeño.
 

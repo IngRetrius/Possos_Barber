@@ -489,15 +489,21 @@ export type Database = {
         Row: {
           consumer: string;
           last_event_id: number;
+          lease_until: string | null;
+          updated_at: string;
         };
         ComputedFields: never;
         Insert: {
           consumer: string;
           last_event_id?: number;
+          lease_until?: string | null;
+          updated_at?: string;
         };
         Update: {
           consumer?: string;
           last_event_id?: number;
+          lease_until?: string | null;
+          updated_at?: string;
         };
         Relationships: [];
       };
@@ -810,6 +816,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      ack_booking_events: {
+        Args: { p_consumer: string; p_last_event_id?: number };
+        Returns: boolean;
+      };
       book_appointment: {
         Args: { p_barber_id?: string; p_service_id: string; p_start_at: string };
         Returns: {
@@ -864,6 +874,23 @@ export type Database = {
           to: "appointments";
           isOneToOne: true;
           isSetofReturn: false;
+        };
+      };
+      claim_booking_events: {
+        Args: { p_consumer: string; p_limit?: number };
+        Returns: {
+          appointment_id: string | null;
+          created_at: string;
+          id: number;
+          payload: NonNullable<Json>;
+          type: string;
+          version: number;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "booking_events";
+          isOneToOne: false;
+          isSetofReturn: true;
         };
       };
       confirm_appointment: {
@@ -1029,6 +1056,14 @@ export type Database = {
           status: Database["public"]["Enums"]["appointment_status"];
         }[];
       };
+      list_push_targets: {
+        Args: { p_barber_id: string };
+        Returns: {
+          auth: string;
+          endpoint: string;
+          p256dh: string;
+        }[];
+      };
       list_staff: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -1121,6 +1156,10 @@ export type Database = {
       reset_no_shows: { Args: { p_customer_id: string }; Returns: undefined };
       revoke_role: {
         Args: { p_role: Database["public"]["Enums"]["staff_role"]; p_user_id: string };
+        Returns: undefined;
+      };
+      save_push_subscription: {
+        Args: { p_auth: string; p_endpoint: string; p_p256dh: string };
         Returns: undefined;
       };
       set_working_hours: {

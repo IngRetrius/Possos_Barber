@@ -3,10 +3,15 @@ import { SignOutButton } from "@possos/auth/ui";
 import { List, ListRow } from "@possos/ui";
 import { signOutAction } from "../../../(auth)/actions";
 import { loadPanel } from "../../../../lib/panel";
+import { PushSettings } from "../_components/push-settings";
 
 export const metadata: Metadata = { title: "Más · Panel · Possos Barber" };
 
-/** "Más" (docs/11): lo que no se usa todos los días. Lo del administrador solo lo ve él. */
+/**
+ * "Más" (docs/11): lo que no se usa todos los días. Lo del administrador solo lo ve él.
+ * "Avisos" (F8) va primero y solo para quien es barbero: es lo único que se hace una vez por
+ * celular y el dueño lo busca al instalar la app.
+ */
 export default async function MorePage() {
   const ctx = await loadPanel("/panel/mas");
   const { viewer } = ctx;
@@ -23,6 +28,15 @@ export default async function MorePage() {
           {viewer.email ? ` · ${viewer.email}` : ""}
         </p>
       </header>
+
+      {viewer.barberId ? (
+        <section className="grid gap-3" aria-labelledby="avisos">
+          <h2 id="avisos" className="text-heading">
+            Avisos
+          </h2>
+          <PushSettings publicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null} />
+        </section>
+      ) : null}
 
       <section className="grid gap-3">
         <h2 className="text-heading">Cobros</h2>

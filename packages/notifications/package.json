@@ -13,11 +13,15 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@possos/booking": "workspace:*",
     "@possos/supabase": "workspace:*",
-    "server-only": "0.0.1"
+    "server-only": "0.0.1",
+    "web-push": "3.6.7"
   },
   "devDependencies": {
     "@possos/config": "workspace:*",
+    "@types/node": "26.6.6",
+    "@types/web-push": "3.6.4",
     "eslint": "9.39.5",
     "typescript": "6.0.3",
     "vitest": "5.1.1"

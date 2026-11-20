@@ -19,6 +19,8 @@ import {
   requireCustomer,
   STAFF_HOME,
 } from "../../../lib/session";
+import { InstallHint } from "../../_components/install-hint";
+import { KeepOffline } from "../../_components/keep-offline";
 import { SiteHeader } from "../../_components/site-header";
 import { cancelMyAppointmentAction } from "./actions";
 import { cardContext } from "./_components/my-appointments";
@@ -32,6 +34,9 @@ const HISTORY_SIZE = 10;
  * "Mis citas" (docs/11): arriba la próxima cita con "Cambiar hora" y "Cancelar"; las demás
  * próximas en una lista que abre cada una; abajo el historial con "Volver a reservar": las
  * últimas 10, y con `?historial=todas`, hasta 100.
+ *
+ * Sin conexión (F8) se ve la última versión guardada, con las citas próximas, y abajo invita a
+ * instalar la app (nunca al entrar).
  */
 export default async function MyAppointmentsPage({ searchParams }: PageProps<"/mis-citas">) {
   const showAll = param((await searchParams).historial) === "todas";
@@ -131,7 +136,12 @@ export default async function MyAppointmentsPage({ searchParams }: PageProps<"/m
             ) : null}
           </section>
         ) : null}
+
+        <InstallHint lead="Instala la app para abrir tus citas con un toque, aun sin señal." />
       </main>
+      <KeepOffline
+        urls={[MY_APPOINTMENTS_PATH, ...upcoming.map((a) => MY_APPOINTMENTS_ROUTES.detail(a.id))]}
+      />
     </>
   );
 }

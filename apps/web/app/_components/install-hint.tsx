@@ -23,13 +23,18 @@ function isIos(): boolean {
 }
 
 /**
- * "Instalar la app" en la pantalla "Listo" (docs/11). No aparece si ya está instalada. En
- * Android usa el aviso del navegador (cuando exista el manifiesto de F8); en iPhone explica los
- * pasos, porque Safari no tiene ese aviso.
+ * "Instalar la app" en "Listo" y en "Mis citas" (docs/11), nunca al entrar. No aparece si ya
+ * está instalada. En Android usa el aviso del navegador (`beforeinstallprompt`, que Chrome manda
+ * desde que existe el manifiesto de F8); en iPhone explica los pasos, porque Safari no tiene ese
+ * aviso.
  */
 const noSubscription = () => () => {};
 
-export function InstallHint() {
+/**
+ * Con `lead`, el botón va con una frase arriba que explica para qué instalarla (en "Mis
+ * citas"). Si la app ya está instalada, no se muestra nada, tampoco la frase.
+ */
+export function InstallHint({ lead }: { lead?: string } = {}) {
   // En el servidor no se sabe: no se muestra nada hasta hidratar.
   const iosBrowser = useSyncExternalStore(
     noSubscription,
@@ -50,8 +55,18 @@ export function InstallHint() {
     return () => window.removeEventListener("beforeinstallprompt", onPrompt);
   }, []);
 
+  const withLead = (hint: React.ReactNode) =>
+    lead ? (
+      <section className="grid gap-3">
+        <p className="text-body text-fg-muted">{lead}</p>
+        {hint}
+      </section>
+    ) : (
+      hint
+    );
+
   if (canPrompt) {
-    return (
+    return withLead(
       <Button
         variant="secondary"
         onClick={() => {
@@ -61,12 +76,12 @@ export function InstallHint() {
         }}
       >
         Instalar la app
-      </Button>
+      </Button>,
     );
   }
 
   if (iosBrowser) {
-    return (
+    return withLead(
       <Sheet
         title="Instala la app en tu iPhone"
         trigger={<Button variant="secondary">Instalar la app</Button>}
@@ -76,7 +91,7 @@ export function InstallHint() {
           <li>Busca en la lista &quot;Agregar a inicio&quot; y tócalo.</li>
           <li>Toca &quot;Agregar&quot;. Possos Barber queda en tu pantalla de inicio.</li>
         </ol>
-      </Sheet>
+      </Sheet>,
     );
   }
 

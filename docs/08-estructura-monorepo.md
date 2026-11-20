@@ -12,7 +12,7 @@ possos-web/
 │       │   ├── (customer)/          # reservar, mis-citas, perfil
 │       │   ├── (staff)/panel/       # agenda, clientes, horario, servicios, barberos, ajustes
 │       │   ├── api/
-│       │   │   ├── cron/dispatch/   # Vercel Cron → notifications.dispatchDue()
+│       │   │   ├── notifications/dispatch/ # pg_net y pg_cron → despacho (F8; F7 agrega dispatchDue())
 │       │   │   └── whatsapp/webhook/# Meta → notifications.handleWebhook()
 │       │   ├── manifest.ts          # manifiesto de la PWA
 │       │   ├── serwist/[path]/      # ruta que compila y sirve el service worker (@serwist/turbopack)

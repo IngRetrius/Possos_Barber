@@ -4,7 +4,7 @@
 
 Que cada cita reciba su confirmación y sus recordatorios por la Cloud API de Meta, que el cliente pueda confirmar o pedir el cambio con un botón, y que el barbero vea en la agenda si el mensaje llegó. Es la razón del proyecto ([docs/03](../docs/03-recordatorios-whatsapp.md)).
 
-**Depende de:** F2, F5 y el trámite de Meta terminado (número, nombre visible y plantillas aprobadas). **Toca:** `packages/notifications` y las rutas `api/cron/dispatch` y `api/whatsapp/webhook`.
+**Depende de:** F2, F5 y el trámite de Meta terminado (número, nombre visible y plantillas aprobadas). **Toca:** `packages/notifications` y las rutas `api/notifications/dispatch` (existe desde F8) y `api/whatsapp/webhook`. Antes de empezar, leer [F8-entrega.md](F8-entrega.md#cómo-se-conecta-f7-al-despacho).
 
 ## Tareas
 
@@ -16,7 +16,7 @@ Que cada cita reciba su confirmación y sus recordatorios por la Cloud API de Me
 
 ### Programación
 
-- [ ] Consumidor de `booking_events` con su cursor en `event_cursors`.
+- [ ] Consumidor `whatsapp` de `booking_events` con su cursor en `event_cursors`, con el despacho de F8 (`EventConsumer` de `@possos/notifications/server`).
 - [ ] `appointment.created` crea los `message_jobs` según `notification_settings`; no crea el de 24 h si faltan menos de 24 h.
 - [ ] Cancelar o reprogramar pasa los trabajos pendientes a `skipped` (y la reprogramación crea los nuevos).
 - [ ] Respeta `whatsapp_opt_in`.
@@ -24,7 +24,7 @@ Que cada cita reciba su confirmación y sus recordatorios por la Cloud API de Me
 ### Despacho
 
 - [ ] `dispatchDue()`: toma trabajos vencidos con `for update skip locked`, los pasa a `sending`, vuelve a leer la cita con `get_appointment_for_notification` y envía por HTTP a la Cloud API.
-- [ ] Vercel Cron cada 5 minutos con `CRON_SECRET`.
+- [ ] Sin Vercel Cron (decisión de F8): `pg_cron` ya llama cada minuto a `/api/notifications/dispatch` con `CRON_SECRET` cuando hay algo pendiente. F7 agrega los `message_jobs` vencidos a esa revisión (`private.notifications_backstop()`) y `dispatchDue()` a la ruta.
 - [ ] Reintentos con límite y `last_error`.
 
 ### Webhook

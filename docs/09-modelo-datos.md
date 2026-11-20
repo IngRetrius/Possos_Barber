@@ -158,11 +158,15 @@ Reemplaza las "facturas" de Beunik, que según el dueño (19/11/2026) solo repar
 | `message_jobs` | `id`, `appointment_id`, `kind` (`confirmation` \| `reminder` \| `cancellation`), `offset_min`, `channel` (`whatsapp` \| `push`), `send_at`, `status` (`scheduled` \| `sending` \| `sent` \| `delivered` \| `read` \| `failed` \| `skipped`), `provider_message_id` (único), `attempts`, `last_error`. Único (`appointment_id`, `kind`, `offset_min`, `channel`) |
 | `inbound_messages` | `id`, `provider_message_id` (único, para no procesar dos veces), `from_phone`, `button_payload`, `appointment_id`, `payload`, `received_at` |
 | `push_subscriptions` | `id`, `user_id`, `endpoint` (único), `p256dh`, `auth`, `created_at` |
-| `event_cursors` | `consumer` (PK), `last_event_id` |
+| `event_cursors` | `consumer` (PK: `push` desde F8, `whatsapp` en F7), `last_event_id`, `lease_until` (turno del despacho que lo procesa), `updated_at` |
 
 Reglas del despacho:
-- Al procesar `appointment.created` se crean los `message_jobs`.
-- Si la cita se cancela o se reprograma, los trabajos pendientes pasan a `skipped`.
+- Cada consumidor lee `booking_events` con su propio cursor: `claim_booking_events` toma el turno y los eventos pendientes, `ack_booking_events` avanza el cursor y suelta el turno. Entrega al menos una vez y en orden; un consumidor debe tolerar ver un evento dos veces.
+- El cursor no salta un id que falta si el evento siguiente tiene menos de 2 minutos: puede ser una reserva que todavía no termina (los ids salen al insertar, pero las transacciones terminan en otro orden). Pasados 2 minutos, el hueco es una transacción deshecha y se salta.
+- El despacho lo dispara la base (F8, ver [07](07-stack.md#decisiones-y-alternativas-descartadas)): un trigger de `notifications` sobre `booking_events` hace un POST con `pg_net` a `/api/notifications/dispatch` con cada transacción que publica eventos, y `pg_cron` revisa cada minuto si algún consumidor quedó atrás. La URL y el secreto están en Supabase Vault (`notifications_dispatch_url`, `notifications_dispatch_secret`).
+- Push (F8): un aviso al barbero de la cita por cada reserva, cambio, confirmación o cancelación hecha por el cliente (no por el personal). Sin el celular del cliente.
+- Al procesar `appointment.created` se crean los `message_jobs` (F7).
+- Si la cita se cancela o se reprograma, los trabajos pendientes pasan a `skipped` (F7).
 - Justo antes de enviar, se vuelve a leer el estado de la cita.
 
 ## Funciones de Postgres (API de escritura)
@@ -189,6 +193,10 @@ Las funciones internas van en el esquema `private`, que PostgREST no expone; cad
 | `set_working_hours(barber_id, ranges)` | barbero (el suyo) y admin | F6. Módulo `barbers`. Reemplaza el horario semanal completo en una transacción |
 | `staff_create_customer(full_name, phone, email, whatsapp_opt_in, data_policy_version)` | barbero y admin | Módulo `customers`. Cliente sin cuenta; con la versión de la política guarda la hora de la autorización de palabra (F6) |
 | `get_appointment_for_notification(id)` | solo service role | Contrato público para `notifications`: fecha, servicio, barbero, nombre, celular y opt-in |
+| `claim_booking_events(consumer, limit?)` | solo service role | F8. Módulo `notifications`. Toma el turno del consumidor y devuelve sus eventos pendientes en orden, sin pasar un hueco reciente. `BUSY` si otro despacho tiene el turno (vence al minuto) |
+| `ack_booking_events(consumer, last_event_id?)` | solo service role | F8. Avanza el cursor (null: no avanza), suelta el turno y dice si quedan eventos |
+| `save_push_subscription(endpoint, p256dh, auth)` | barbero | F8. Guarda la suscripción push del navegador para la cuenta de la sesión. Si el endpoint ya estaba con otra cuenta (otra persona en el mismo celular), pasa a la de ahora |
+| `list_push_targets(barber_id)` | solo service role | F8. Las suscripciones de la cuenta de un barbero activo y con el rol |
 | `record_charge(appointment_id, amount_cop)` | barbero (su agenda) y admin | Módulo `commissions`. Exige la cita en `completed` y sin cobro previo; copia el porcentaje vigente |
 | `update_charge(id, amount_cop)` | barbero (sus cobros del mismo día) y admin | Corrige el monto; el porcentaje copiado no cambia |
 | `void_charge(id, reason)` | admin | Anula un cobro con motivo; no se borra |
@@ -207,6 +215,7 @@ Los errores salen como excepción con el código en el mensaje (SQLSTATE `P0001`
 | auth | `NOT_AUTHENTICATED`, `FORBIDDEN` (`delete_my_account`); `USER_NOT_FOUND`, `CANNOT_REVOKE_SELF` e `INVALID_INPUT` (roles, F6). Los errores de Supabase Auth (ingreso, registro, contraseña) los traduce `authErrorCode` de `@possos/auth` |
 | customers | `NOT_AUTHENTICATED`, `FORBIDDEN`, `INVALID_CUSTOMER`. En la app, además, `CONSENT_REQUIRED` |
 | commissions | `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `NOT_COMPLETED`, `ALREADY_CHARGED`, `INVALID_AMOUNT`, `NO_COMMISSION_RATE`, `TOO_LATE_TO_EDIT`, `INVALID_STATUS`, `INVALID_PERIOD`, `REASON_REQUIRED` |
+| notifications | `NOT_AUTHENTICATED`, `FORBIDDEN`, `INVALID_INPUT` (`save_push_subscription`); `BUSY` e `INVALID_INPUT` (`claim_booking_events`, solo el servidor) |
 
 Una reserva de un cliente con 2 inasistencias no es un error: entra como `pending_approval` y la interfaz muestra "Tu reserva queda pendiente de que el barbero la apruebe".
 
@@ -227,7 +236,7 @@ RLS está activado en todas las tablas. Resumen:
 | `booking_settings`, `notification_settings` | authenticated | admin |
 | `message_jobs` | barbero (citas de su agenda) y admin | ninguno (solo el servidor) |
 | `booking_events`, `inbound_messages`, `event_cursors` | ninguno | ninguno (solo service role) |
-| `push_subscriptions` | lo propio | lo propio |
+| `push_subscriptions` | lo propio | lo propio (guardar, con `save_push_subscription`, solo un barbero) |
 | `commission_rates` | su barbero y admin | admin |
 | `charges` | su barbero y admin | ninguno (solo funciones) |
 

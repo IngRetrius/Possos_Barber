@@ -66,7 +66,18 @@ export function CancelAppointment({ appointmentId, start, action }: CancelAppoin
   const confirm = () => {
     setError(null);
     startTransition(async () => {
-      const result = await action(appointmentId);
+      let result: Awaited<ReturnType<CancelAppointmentAction>>;
+      try {
+        result = await action(appointmentId);
+      } catch {
+        // La acción no llegó al servidor (sin conexión, F8): la cita sigue igual.
+        setError(
+          navigator.onLine
+            ? "No pudimos completar la acción. Intenta de nuevo"
+            : "Sin conexión. Para cancelar tu cita necesitas conexión",
+        );
+        return;
+      }
       if (!result.ok) {
         setError(result.error);
         return;

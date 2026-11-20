@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSerwist } from "@serwist/turbopack";
 
 /**
  * Las páginas `page.dev.tsx` (como /muestras) solo existen con `next dev`: en el build de
@@ -36,4 +37,6 @@ const nextConfig: NextConfig = {
   ],
 };
 
-export default nextConfig;
+// Serwist (F8): ajusta la configuración para servir el service worker de `app/sw.ts` desde la
+// ruta `app/serwist/[path]`.
+export default withSerwist(nextConfig);

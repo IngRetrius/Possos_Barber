@@ -36,8 +36,10 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Todo menos archivos estáticos e imágenes.
+  // Todo menos archivos estáticos e imágenes, y lo de la PWA que no depende de la sesión: el
+  // service worker, el manifiesto, la pantalla sin conexión (la misma copia sirve a cualquier
+  // cuenta) y la ruta de despacho que llama la base (F8).
   matcher: [
-    "/((?!_next/static|_next/image|icons/|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp|ico|txt|xml)$).*)",
+    "/((?!_next/static|_next/image|icons/|serwist/|api/notifications/|manifest.webmanifest|sin-conexion|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp|ico|txt|xml)$).*)",
   ],
 };

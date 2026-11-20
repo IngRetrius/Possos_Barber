@@ -5,6 +5,7 @@ import { MY_APPOINTMENTS_ROUTES } from "@possos/booking";
 import { MyAppointmentCard } from "@possos/booking/ui";
 import { createClient } from "@possos/supabase/server";
 import { Button } from "@possos/ui";
+import { KeepOffline } from "../../../_components/keep-offline";
 import { param } from "../../../../lib/session";
 import { cancelMyAppointmentAction } from "../actions";
 import { cardContext, loadMyAppointment } from "../_components/my-appointments";
@@ -50,6 +51,7 @@ export default async function MyAppointmentPage({
         />
       </main>
       {aviso && notice ? <NoticeToast id={aviso} message={notice} /> : null}
+      <KeepOffline urls={[MY_APPOINTMENTS_ROUTES.detail(appointment.id)]} />
     </>
   );
 }
