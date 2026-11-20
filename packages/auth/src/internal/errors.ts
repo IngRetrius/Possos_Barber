@@ -1,3 +1,6 @@
+import { DEFAULT_LOCALE, type Locale } from "@possos/config/constants";
+import { messages } from "../messages";
+
 /**
  * Errores de ingreso, registro y cuenta. Supabase Auth responde con su propio código
  * (`invalid_credentials`, `otp_expired`...); aquí se agrupan en los casos que la interfaz
@@ -23,8 +26,7 @@ export const AUTH_ERROR_CODES = [
 
 export type AuthErrorCode = (typeof AUTH_ERROR_CODES)[number] | "UNKNOWN";
 
-/** Contraseña mínima. En local la fija supabase/config.toml; en producción, el panel de Supabase. */
-export const MIN_PASSWORD_LENGTH = 8;
+export { MIN_PASSWORD_LENGTH } from "./password";
 
 const FROM_SUPABASE: Record<string, AuthErrorCode> = {
   invalid_credentials: "INVALID_CREDENTIALS",
@@ -63,24 +65,7 @@ export function authErrorCode(
   return "UNKNOWN";
 }
 
-const MESSAGES: Record<AuthErrorCode, string> = {
-  INVALID_CREDENTIALS: "El correo o la contraseña no coinciden",
-  EMAIL_NOT_CONFIRMED: "Primero activa tu cuenta con el enlace que te enviamos al correo",
-  INVALID_EMAIL: "Escribe un correo válido",
-  WEAK_PASSWORD: `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`,
-  SAME_PASSWORD: "La contraseña nueva debe ser distinta de la anterior",
-  LINK_EXPIRED: "El enlace venció o ya se usó. Pide uno nuevo",
-  GOOGLE_FAILED: "No pudimos ingresar con Google. Intenta de nuevo o usa tu correo",
-  RATE_LIMITED: "Hiciste muchos intentos seguidos. Espera unos minutos e intenta de nuevo",
-  NOT_AUTHENTICATED: "Ingresa para continuar",
-  FORBIDDEN: "No tienes permiso para hacer esto",
-  USER_NOT_FOUND: "No hay una cuenta con ese correo. Pídele que se registre primero",
-  CANNOT_REVOKE_SELF: "No puedes quitarte a ti mismo el rol de administrador",
-  INVALID_INPUT: "Revisa los datos e intenta de nuevo",
-  UNKNOWN: "No pudimos completar la acción. Intenta de nuevo",
-};
-
-/** Texto en español para mostrar al usuario. */
-export function authErrorMessage(code: AuthErrorCode): string {
-  return MESSAGES[code];
+/** Texto para mostrar al usuario, en su idioma. */
+export function authErrorMessage(code: AuthErrorCode, locale: Locale = DEFAULT_LOCALE): string {
+  return messages[locale].errors[code];
 }

@@ -29,9 +29,9 @@ export interface Viewer {
 
 /** Estado que devuelven las acciones de los formularios de ingreso (`useActionState`). */
 export interface AuthFormState {
-  /** Error general, ya en español. */
+  /** Error general, ya en el idioma de la persona. */
   error?: string;
-  /** Errores por campo, ya en español. */
+  /** Errores por campo, ya en el idioma de la persona. */
   fieldErrors?: Partial<Record<"email" | "password", string>>;
   /** Lo que escribió, para no borrarlo si hay error (nunca la contraseña). */
   email?: string;

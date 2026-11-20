@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import {
   startTransition,
   useActionState,
@@ -11,6 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { useFormStatus } from "react-dom";
+import { parseLocale } from "@possos/config/constants";
 import { BottomBar, Button, Field, InlineError, Input } from "@possos/ui";
 import type { AuthFormState } from "../index";
 import { MIN_PASSWORD_LENGTH } from "./errors";
@@ -53,10 +55,11 @@ function Notice({ children }: { children: ReactNode }) {
 }
 
 function GoogleSubmit() {
+  const t = useTranslations("auth.forms");
   const { pending } = useFormStatus();
   return (
     <Button type="submit" variant="secondary" disabled={pending}>
-      {pending ? "Abriendo Google..." : "Continuar con Google"}
+      {pending ? t("googlePending") : t("google")}
     </Button>
   );
 }
@@ -72,9 +75,11 @@ export function GoogleSignIn({ action, next }: { action: RedirectAction; next: s
 }
 
 function OrDivider() {
+  const t = useTranslations("auth.forms");
   return (
     <div className="flex items-center gap-3 text-caption text-fg-muted" aria-hidden="true">
-      <span className="h-px flex-1 bg-border" />o con tu correo
+      <span className="h-px flex-1 bg-border" />
+      {t("orEmail")}
       <span className="h-px flex-1 bg-border" />
     </div>
   );
@@ -82,6 +87,7 @@ function OrDivider() {
 
 /** Revisión en el navegador. Devuelve false (y enfoca el primer campo con error) si no pasa. */
 function useClientValidation(checkLength: boolean, withPassword: boolean) {
+  const locale = parseLocale(useLocale());
   const [errors, setErrors] = useState<AuthFormState["fieldErrors"]>();
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     const form = event.currentTarget;
@@ -91,7 +97,7 @@ function useClientValidation(checkLength: boolean, withPassword: boolean) {
         email: String(data.get("email") ?? ""),
         password: withPassword ? String(data.get("password") ?? "") : undefined,
       },
-      { checkLength },
+      { checkLength, locale },
     );
     setErrors(found);
     if (found) {
@@ -130,6 +136,7 @@ export function SignInForm({
   notice,
   initialError,
 }: SignInFormProps) {
+  const t = useTranslations("auth.forms");
   const formId = useId();
   const [state, formAction, isPending] = useActionState(action, { error: initialError });
   const { clientErrors, onSubmit } = useClientValidation(false, true);
@@ -147,11 +154,9 @@ export function SignInForm({
   return (
     <div className="flex flex-1 flex-col">
       <div className="grid gap-6 px-gutter pt-2 pb-8">
-        <Title intro="Para reservar y ver tus citas.">Ingresa</Title>
+        <Title intro={t("signInIntro")}>{t("signInTitle")}</Title>
         {notice ? <Notice>{notice}</Notice> : null}
-        {state.sent ? (
-          <Notice>Te enviamos otra vez el enlace de activación. Revisa tu correo.</Notice>
-        ) : null}
+        {state.sent ? <Notice>{t("resent")}</Notice> : null}
         {googleAction ? (
           <>
             <GoogleSignIn action={googleAction} next={next} />
@@ -161,7 +166,7 @@ export function SignInForm({
         <form id={formId} action={formAction} onSubmit={onSubmit} noValidate className="grid gap-4">
           <NextInput next={next} />
           <input type="hidden" name="intent" value="signin" />
-          <Field label="Correo" error={fieldErrors?.email}>
+          <Field label={t("email")} error={fieldErrors?.email}>
             <Input
               ref={emailRef}
               name="email"
@@ -174,7 +179,7 @@ export function SignInForm({
               required
             />
           </Field>
-          <Field label="Contraseña" error={fieldErrors?.password}>
+          <Field label={t("password")} error={fieldErrors?.password}>
             <Input name="password" type="password" autoComplete="current-password" required />
           </Field>
         </form>
@@ -183,7 +188,7 @@ export function SignInForm({
             action={
               state.unconfirmed ? (
                 <Button variant="secondary" onClick={resend} disabled={isPending}>
-                  Reenviar el enlace
+                  {t("resend")}
                 </Button>
               ) : undefined
             }
@@ -193,19 +198,22 @@ export function SignInForm({
         ) : null}
         <div className="grid">
           <Link href={resetHref} className={linkClass}>
-            Olvidé mi contraseña
+            {t("forgot")}
           </Link>
           <p className="text-body text-fg-muted">
-            ¿No tienes cuenta?{" "}
-            <Link href={signUpHref} className={linkClass}>
-              Crea una
-            </Link>
+            {t.rich("noAccount", {
+              link: (chunks) => (
+                <Link href={signUpHref} className={linkClass}>
+                  {chunks}
+                </Link>
+              ),
+            })}
           </p>
         </div>
       </div>
       <BottomBar>
         <Button type="submit" form={formId} disabled={isPending}>
-          {isPending ? "Ingresando..." : "Ingresar"}
+          {isPending ? t("signingIn") : t("signIn")}
         </Button>
       </BottomBar>
     </div>
@@ -225,6 +233,7 @@ export interface SignUpFormProps {
 }
 
 export function SignUpForm({ action, googleAction, next, signInHref }: SignUpFormProps) {
+  const t = useTranslations("auth.forms");
   const formId = useId();
   const [state, formAction, isPending] = useActionState(action, {});
   const { clientErrors, onSubmit } = useClientValidation(true, true);
@@ -235,24 +244,23 @@ export function SignUpForm({ action, googleAction, next, signInHref }: SignUpFor
   if (state.sent && dismissed !== state) {
     return (
       <div className="grid gap-6 px-gutter pt-2 pb-8">
-        <Title>Revisa tu correo</Title>
+        <Title>{t("checkEmail")}</Title>
         <p className="text-body">
-          Te enviamos un enlace a <span className="font-medium">{state.email}</span>. Ábrelo para
-          activar tu cuenta y seguir donde ibas.
+          {t.rich("sentTo", {
+            email: () => <span className="font-medium">{state.email}</span>,
+          })}
         </p>
-        <p className="text-body text-fg-muted">
-          Si no llega en unos minutos, revisa la carpeta de spam o pide otro enlace.
-        </p>
+        <p className="text-body text-fg-muted">{t("spam")}</p>
         {state.error ? <InlineError>{state.error}</InlineError> : null}
         <form action={formAction} className="grid gap-2">
           <NextInput next={next} />
           <input type="hidden" name="intent" value="resend" />
           <input type="hidden" name="email" value={state.email ?? ""} />
           <Button type="submit" variant="secondary" disabled={isPending}>
-            {isPending ? "Enviando..." : "Reenviar el enlace"}
+            {isPending ? t("sending") : t("resend")}
           </Button>
           <Button type="button" variant="ghost" onClick={() => setDismissed(state)}>
-            Usar otro correo
+            {t("otherEmail")}
           </Button>
         </form>
       </div>
@@ -262,7 +270,7 @@ export function SignUpForm({ action, googleAction, next, signInHref }: SignUpFor
   return (
     <div className="flex flex-1 flex-col">
       <div className="grid gap-6 px-gutter pt-2 pb-8">
-        <Title intro="Con tu cuenta reservas, cambias y cancelas tus citas.">Crea tu cuenta</Title>
+        <Title intro={t("signUpIntro")}>{t("signUpTitle")}</Title>
         {googleAction ? (
           <>
             <GoogleSignIn action={googleAction} next={next} />
@@ -272,7 +280,7 @@ export function SignUpForm({ action, googleAction, next, signInHref }: SignUpFor
         <form id={formId} action={formAction} onSubmit={onSubmit} noValidate className="grid gap-4">
           <NextInput next={next} />
           <input type="hidden" name="intent" value="signup" />
-          <Field label="Correo" error={fieldErrors?.email}>
+          <Field label={t("email")} error={fieldErrors?.email}>
             <Input
               name="email"
               type="email"
@@ -285,8 +293,8 @@ export function SignUpForm({ action, googleAction, next, signInHref }: SignUpFor
             />
           </Field>
           <Field
-            label="Contraseña"
-            hint={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres.`}
+            label={t("password")}
+            hint={t("passwordHint", { min: MIN_PASSWORD_LENGTH })}
             error={fieldErrors?.password}
           >
             <Input
@@ -300,15 +308,18 @@ export function SignUpForm({ action, googleAction, next, signInHref }: SignUpFor
         </form>
         {state.error ? <InlineError>{state.error}</InlineError> : null}
         <p className="text-body text-fg-muted">
-          ¿Ya tienes cuenta?{" "}
-          <Link href={signInHref} className={linkClass}>
-            Ingresa
-          </Link>
+          {t.rich("haveAccount", {
+            link: (chunks) => (
+              <Link href={signInHref} className={linkClass}>
+                {chunks}
+              </Link>
+            ),
+          })}
         </p>
       </div>
       <BottomBar>
         <Button type="submit" form={formId} disabled={isPending}>
-          {isPending ? "Creando tu cuenta..." : "Crear cuenta"}
+          {isPending ? t("creating") : t("signUp")}
         </Button>
       </BottomBar>
     </div>
@@ -328,6 +339,7 @@ export function PasswordResetForm({
   next: string | null;
   signInHref: string;
 }) {
+  const t = useTranslations("auth.forms");
   const formId = useId();
   const [state, formAction, isPending] = useActionState(action, {});
   const { clientErrors, onSubmit } = useClientValidation(false, false);
@@ -336,13 +348,14 @@ export function PasswordResetForm({
   if (state.sent) {
     return (
       <div className="grid gap-6 px-gutter pt-2 pb-8">
-        <Title>Revisa tu correo</Title>
+        <Title>{t("checkEmail")}</Title>
         <p className="text-body">
-          Si <span className="font-medium">{state.email}</span> tiene una cuenta, te llega un enlace
-          para elegir una contraseña nueva. Vence en una hora.
+          {t.rich("resetSent", {
+            email: () => <span className="font-medium">{state.email}</span>,
+          })}
         </p>
         <Link href={signInHref} className={linkClass}>
-          Volver a ingresar
+          {t("backToSignIn")}
         </Link>
       </div>
     );
@@ -351,12 +364,10 @@ export function PasswordResetForm({
   return (
     <div className="flex flex-1 flex-col">
       <div className="grid gap-6 px-gutter pt-2 pb-8">
-        <Title intro="Te enviamos un enlace para elegir una contraseña nueva.">
-          Cambia tu contraseña
-        </Title>
+        <Title intro={t("resetIntro")}>{t("resetTitle")}</Title>
         <form id={formId} action={formAction} onSubmit={onSubmit} noValidate className="grid gap-4">
           <NextInput next={next} />
-          <Field label="Correo" error={fieldErrors?.email}>
+          <Field label={t("email")} error={fieldErrors?.email}>
             <Input
               name="email"
               type="email"
@@ -371,12 +382,12 @@ export function PasswordResetForm({
         </form>
         {state.error ? <InlineError>{state.error}</InlineError> : null}
         <Link href={signInHref} className={linkClass}>
-          Volver a ingresar
+          {t("backToSignIn")}
         </Link>
       </div>
       <BottomBar>
         <Button type="submit" form={formId} disabled={isPending}>
-          {isPending ? "Enviando..." : "Enviar el enlace"}
+          {isPending ? t("sending") : t("sendLink")}
         </Button>
       </BottomBar>
     </div>
@@ -384,6 +395,8 @@ export function PasswordResetForm({
 }
 
 export function NewPasswordForm({ action, next }: { action: AuthAction; next: string | null }) {
+  const t = useTranslations("auth.forms");
+  const locale = parseLocale(useLocale());
   const formId = useId();
   const [state, formAction, isPending] = useActionState(action, {});
   const [clientError, setClientError] = useState<string>();
@@ -391,7 +404,7 @@ export function NewPasswordForm({ action, next }: { action: AuthAction; next: st
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     const input = event.currentTarget.elements.namedItem("password") as HTMLInputElement;
-    const found = validatePassword(input.value, true);
+    const found = validatePassword(input.value, true, locale);
     setClientError(found);
     if (found) {
       event.preventDefault();
@@ -402,12 +415,12 @@ export function NewPasswordForm({ action, next }: { action: AuthAction; next: st
   return (
     <div className="flex flex-1 flex-col">
       <div className="grid gap-6 px-gutter pt-2 pb-8">
-        <Title>Elige tu contraseña nueva</Title>
+        <Title>{t("newPasswordTitle")}</Title>
         <form id={formId} action={formAction} onSubmit={onSubmit} noValidate className="grid gap-4">
           <NextInput next={next} />
           <Field
-            label="Contraseña nueva"
-            hint={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres.`}
+            label={t("newPassword")}
+            hint={t("passwordHint", { min: MIN_PASSWORD_LENGTH })}
             error={error}
           >
             <Input
@@ -423,7 +436,7 @@ export function NewPasswordForm({ action, next }: { action: AuthAction; next: st
       </div>
       <BottomBar>
         <Button type="submit" form={formId} disabled={isPending}>
-          {isPending ? "Guardando..." : "Guardar contraseña"}
+          {isPending ? t("saving") : t("savePassword")}
         </Button>
       </BottomBar>
     </div>

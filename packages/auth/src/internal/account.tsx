@@ -1,15 +1,17 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { useFormStatus } from "react-dom";
 import { Button, InlineError, Sheet, SheetClose, SheetTrigger } from "@possos/ui";
 import type { AuthAction, RedirectAction } from "./forms";
 
 function SignOutSubmit() {
+  const t = useTranslations("auth.account");
   const { pending } = useFormStatus();
   return (
     <Button type="submit" variant="secondary" disabled={pending}>
-      {pending ? "Cerrando sesión..." : "Cerrar sesión"}
+      {pending ? t("signingOut") : t("signOut")}
     </Button>
   );
 }
@@ -36,6 +38,7 @@ export interface DeleteAccountProps {
  * historial no deshaga la redirección (ver Sheet en @possos/ui).
  */
 export function DeleteAccount({ action, blockedReason }: DeleteAccountProps) {
+  const t = useTranslations("auth.account");
   const [state, formAction, isPending] = useActionState(action, {});
   const [open, setOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -65,24 +68,21 @@ export function DeleteAccount({ action, blockedReason }: DeleteAccountProps) {
   return (
     <section aria-labelledby="borrar-cuenta" className="grid gap-3">
       <h2 id="borrar-cuenta" className="text-heading">
-        Borrar tu cuenta
+        {t("deleteTitle")}
       </h2>
-      <p className="text-body text-fg-muted">
-        Se borran tu nombre, tu celular, tu correo y tus autorizaciones. Las citas pasadas quedan en
-        la agenda del barbero sin tus datos. No se puede deshacer.
-      </p>
+      <p className="text-body text-fg-muted">{t("deleteBody")}</p>
       {blockedReason ? (
         <p className="text-body">{blockedReason}</p>
       ) : (
         <Sheet
           open={open}
           onOpenChange={setOpen}
-          title="¿Borrar tu cuenta?"
-          description="Se borran tus datos y no vas a poder ingresar con este correo hasta crear una cuenta nueva."
+          title={t("confirmTitle")}
+          description={t("confirmBody")}
           trigger={
             <SheetTrigger asChild>
               <Button variant="secondary" disabled={isPending}>
-                {isPending ? "Borrando tu cuenta..." : "Borrar mi cuenta"}
+                {isPending ? t("deleting") : t("delete")}
               </Button>
             </SheetTrigger>
           }
@@ -95,10 +95,10 @@ export function DeleteAccount({ action, blockedReason }: DeleteAccountProps) {
                   setOpen(false);
                 }}
               >
-                Sí, borrar mi cuenta
+                {t("confirm")}
               </Button>
               <SheetClose asChild>
-                <Button variant="secondary">No</Button>
+                <Button variant="secondary">{t("no")}</Button>
               </SheetClose>
             </>
           }
