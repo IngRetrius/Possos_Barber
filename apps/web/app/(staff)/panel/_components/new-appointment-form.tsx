@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useActionState } from "react";
 import { CustomerPicker, type PickerCustomer } from "@possos/customers/ui";
 import { BottomBar, Button, cn, formatDuration, submitKeepingValues } from "@possos/ui";
@@ -34,6 +35,7 @@ export function NewAppointmentForm({
     createAppointmentAction,
     {},
   );
+  const t = useTranslations("web.agenda.newAppointment");
   const errors = state.fieldErrors ?? {};
   return (
     <form
@@ -53,11 +55,9 @@ export function NewAppointmentForm({
           policyHref={policyHref}
         />
         <fieldset className="grid gap-2">
-          <legend className="mb-2 text-heading">Servicio</legend>
+          <legend className="mb-2 text-heading">{t("service")}</legend>
           {services.length === 0 ? (
-            <p className="text-body text-fg-muted">
-              Este barbero no tiene servicios. Asígnalos en Más, Barberos.
-            </p>
+            <p className="text-body text-fg-muted">{t("noServices")}</p>
           ) : (
             <div className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
               {services.map((s, i) => (
@@ -88,7 +88,7 @@ export function NewAppointmentForm({
         summary={state.error ? <span className={cn("text-danger")}>{state.error}</span> : null}
       >
         <Button type="submit" disabled={pending || services.length === 0} aria-busy={pending}>
-          {pending ? "Creando..." : "Crear cita"}
+          {pending ? t("pending") : t("submit")}
         </Button>
       </BottomBar>
     </form>

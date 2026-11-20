@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { cn, Field, formatTime, Input } from "@possos/ui";
+import { cn, Field, Input, useFormat } from "@possos/ui";
 
 export interface TimeFieldsProps {
   /** `YYYY-MM-DD` que se muestra. */
@@ -33,6 +34,8 @@ function hourMinute(iso: string): string {
  * del formulario.
  */
 export function TimeFields({ date, time: initialTime, freeStarts, error }: TimeFieldsProps) {
+  const t = useTranslations("web.agenda.timeFields");
+  const f = useFormat();
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -51,8 +54,8 @@ export function TimeFields({ date, time: initialTime, freeStarts, error }: TimeF
 
   return (
     <fieldset className="grid gap-4">
-      <legend className="mb-2 text-heading">Fecha y hora</legend>
-      <Field label="Fecha">
+      <legend className="mb-2 text-heading">{t("legend")}</legend>
+      <Field label={t("date")}>
         <Input
           type="date"
           name="fecha"
@@ -63,14 +66,12 @@ export function TimeFields({ date, time: initialTime, freeStarts, error }: TimeF
       </Field>
       <div className="grid gap-2" aria-busy={loading}>
         <p id="horas-libres" className="text-label">
-          Horas libres
+          {t("freeTimes")}
         </p>
         {loading ? (
-          <p className="text-caption text-fg-muted">Buscando horas...</p>
+          <p className="text-caption text-fg-muted">{t("searching")}</p>
         ) : freeStarts.length === 0 ? (
-          <p className="text-caption text-fg-muted">
-            Ese día no tiene horas libres en el horario. Puedes escribir otra hora.
-          </p>
+          <p className="text-caption text-fg-muted">{t("none")}</p>
         ) : (
           <div role="group" aria-labelledby="horas-libres" className="grid grid-cols-3 gap-2">
             {freeStarts.map((s) => {
@@ -89,14 +90,14 @@ export function TimeFields({ date, time: initialTime, freeStarts, error }: TimeF
                       : "border-border-strong text-fg hover:bg-surface-2",
                   )}
                 >
-                  {formatTime(s)}
+                  {f.time(s)}
                 </button>
               );
             })}
           </div>
         )}
       </div>
-      <Field label="Hora" hint="Elige una hora libre o escribe otra." error={error}>
+      <Field label={t("time")} hint={t("timeHint")} error={error}>
         <Input
           type="time"
           name="hora"

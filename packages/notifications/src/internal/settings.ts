@@ -16,7 +16,11 @@ export interface ValidReminderSettings {
   send_confirmation: boolean;
 }
 
-export type ReminderSettingsErrors = Partial<Record<"firstHours" | "secondHours", string>>;
+/** Clave del error; la app la traduce (`web.panel.actions.reminders`). */
+export type ReminderSettingsError = "firstInvalid" | "secondInvalid" | "secondNotCloser";
+export type ReminderSettingsErrors = Partial<
+  Record<"firstHours" | "secondHours", ReminderSettingsError>
+>;
 
 function hours(value: string): number | null | undefined {
   const text = value.trim().replace(",", ".");
@@ -33,10 +37,10 @@ export function validateReminderSettings(
   const errors: ReminderSettingsErrors = {};
   const first = hours(input.firstHours);
   const second = hours(input.secondHours);
-  if (first === null || first === undefined) errors.firstHours = "Escribe las horas (1 a 168)";
-  if (second === undefined) errors.secondHours = "Escribe las horas (1 a 168) o déjalo vacío";
+  if (first === null || first === undefined) errors.firstHours = "firstInvalid";
+  if (second === undefined) errors.secondHours = "secondInvalid";
   if (first && second && second >= first) {
-    errors.secondHours = "Debe ser más cerca de la cita que el primero";
+    errors.secondHours = "secondNotCloser";
   }
   if (Object.keys(errors).length) return { ok: false, errors };
   const offsets = [first!, ...(second ? [second] : [])].map((h) => Math.round(h * 60));

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button, Field, InlineError, Textarea } from "@possos/ui";
 
@@ -8,7 +9,7 @@ export function ReasonForm({
   question,
   confirmLabel,
   pendingLabel,
-  backLabel = "Volver",
+  backLabel,
   pending,
   error,
   onBack,
@@ -23,6 +24,7 @@ export function ReasonForm({
   onBack: () => void;
   onConfirm: (reason: string) => void;
 }) {
+  const t = useTranslations("web.panel.reason");
   const [reason, setReason] = useState("");
   const [missing, setMissing] = useState(false);
   return (
@@ -38,7 +40,7 @@ export function ReasonForm({
       }}
     >
       <p className="text-body">{question}</p>
-      <Field label="Motivo" error={missing ? "Escribe el motivo" : undefined}>
+      <Field label={t("label")} error={missing ? t("required") : undefined}>
         <Textarea
           name="motivo"
           value={reason}
@@ -55,7 +57,7 @@ export function ReasonForm({
           {pending ? pendingLabel : confirmLabel}
         </Button>
         <Button type="button" variant="ghost" onClick={onBack}>
-          {backLabel}
+          {backLabel ?? t("back")}
         </Button>
       </div>
     </form>

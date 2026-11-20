@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useActionState } from "react";
 import { BottomBar, Button, submitKeepingValues } from "@possos/ui";
 import { rescheduleAction, type RescheduleFormState } from "../_actions/agenda";
@@ -15,6 +16,7 @@ export function RescheduleForm({
   date: string;
   freeStarts: string[];
 }) {
+  const t = useTranslations("web.agenda.reschedule");
   const [state, action, pending] = useActionState<RescheduleFormState, FormData>(
     rescheduleAction,
     {},
@@ -32,7 +34,7 @@ export function RescheduleForm({
       </div>
       <BottomBar summary={state.error ? <span className="text-danger">{state.error}</span> : null}>
         <Button type="submit" disabled={pending} aria-busy={pending}>
-          {pending ? "Moviendo..." : "Mover la cita"}
+          {pending ? t("pending") : t("submit")}
         </Button>
       </BottomBar>
     </form>

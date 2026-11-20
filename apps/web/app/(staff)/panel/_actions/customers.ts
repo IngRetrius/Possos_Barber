@@ -6,6 +6,11 @@ import { resetNoShows } from "@possos/booking/server";
 import { customersErrorMessage } from "@possos/customers";
 import { addNote, deleteNote } from "@possos/customers/server";
 import { canActOnBarber, loadAdminPanel, loadPanel } from "../../../../lib/panel";
+import { getTranslations } from "next-intl/server";
+import { currentLocale } from "../../../../lib/i18n";
+
+/** Textos de las acciones del panel, en el idioma de la petición. */
+const actionText = () => getTranslations("web.panel.actions");
 
 /*
  * Ficha del cliente: notas privadas del barbero y reiniciar inasistencias (administrador).
@@ -22,10 +27,11 @@ export async function addNoteAction(_prev: NoteFormState, form: FormData): Promi
   const customerId = String(form.get("cliente") ?? "");
   const barberId = String(form.get("barbero") ?? "");
   const body = String(form.get("nota") ?? "");
-  if (!body.trim()) return { error: "Escribe la nota" };
-  if (!canActOnBarber(ctx, barberId)) return { error: customersErrorMessage("FORBIDDEN") };
+  if (!body.trim()) return { error: (await actionText())("noteRequired") };
+  if (!canActOnBarber(ctx, barberId))
+    return { error: customersErrorMessage("FORBIDDEN", await currentLocale()) };
   const result = await addNote(ctx.db, { customerId, barberId, body });
-  if (!result.ok) return { error: customersErrorMessage(result.error) };
+  if (!result.ok) return { error: customersErrorMessage(result.error, await currentLocale()) };
   revalidatePath(`/panel/clientes/${customerId}`);
   return { saved: Date.now() };
 }
@@ -42,5 +48,7 @@ export async function resetNoShowsAction(
   const { db } = await loadAdminPanel("/panel/clientes");
   const result = await resetNoShows(db, customerId);
   revalidatePath(`/panel/clientes/${customerId}`);
-  return result.ok ? { ok: true } : { ok: false, error: bookingErrorMessage(result.error) };
+  return result.ok
+    ? { ok: true }
+    : { ok: false, error: bookingErrorMessage(result.error, await currentLocale()) };
 }

@@ -1,7 +1,9 @@
+import { agenda } from "./web/agenda";
 import { auth } from "./web/auth";
 import { common } from "./web/common";
 import { customer } from "./web/customer";
 import { home } from "./web/home";
+import { panel } from "./web/panel";
 import { policy } from "./web/policy";
 
 /*
@@ -10,6 +12,22 @@ import { policy } from "./web/policy";
  * si falta una clave, TypeScript lo marca.
  */
 export const messages = {
-  es: { common: common.es, home: home.es, policy: policy.es, auth: auth.es, customer: customer.es },
-  en: { common: common.en, home: home.en, policy: policy.en, auth: auth.en, customer: customer.en },
+  es: {
+    common: common.es,
+    home: home.es,
+    policy: policy.es,
+    auth: auth.es,
+    customer: customer.es,
+    panel: panel.es,
+    agenda: agenda.es,
+  },
+  en: {
+    common: common.en,
+    home: home.en,
+    policy: policy.en,
+    auth: auth.en,
+    customer: customer.en,
+    panel: panel.en,
+    agenda: agenda.en,
+  },
 };

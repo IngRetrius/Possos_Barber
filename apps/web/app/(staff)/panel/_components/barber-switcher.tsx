@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { selectBarberAction } from "../_actions/agenda";
 
@@ -15,11 +16,12 @@ export function BarberSwitcher({
   barbers: { id: string; name: string; active: boolean }[];
   value: string;
 }) {
+  const t = useTranslations("web.panel.switcher");
   const router = useRouter();
   const [pending, start] = useTransition();
   return (
     <label className="grid gap-1 px-gutter">
-      <span className="text-caption text-fg-muted">Agenda de</span>
+      <span className="text-caption text-fg-muted">{t("label")}</span>
       <select
         value={value}
         disabled={pending}
@@ -36,7 +38,7 @@ export function BarberSwitcher({
         {barbers.map((b) => (
           <option key={b.id} value={b.id}>
             {b.name}
-            {b.active ? "" : " (inactivo)"}
+            {b.active ? "" : t("inactive")}
           </option>
         ))}
       </select>

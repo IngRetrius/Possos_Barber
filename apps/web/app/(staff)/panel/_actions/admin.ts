@@ -25,13 +25,16 @@ import type { ServiceFormState } from "@possos/catalog/ui";
 import { commissionsErrorMessage } from "@possos/commissions";
 import { setCommissionRate } from "@possos/commissions/server";
 import { loadAdminPanel } from "../../../../lib/panel";
+import { getTranslations } from "next-intl/server";
+import { currentLocale } from "../../../../lib/i18n";
+
+/** Textos de las acciones del panel, en el idioma de la petición. */
+const actionText = () => getTranslations("web.panel.actions");
 
 /*
  * Acciones del administrador: servicios y barberos. Cada una repite la guarda (`requireAdmin`
  * dentro de `loadAdminPanel`: un barbero o un cliente recibe 404) y RLS vuelve a decidir.
  */
-
-const UNKNOWN = "No pudimos completar la acción. Intenta de nuevo";
 
 const text = (form: FormData, key: string) => {
   const value = form.get(key);
@@ -55,7 +58,7 @@ export async function createServiceAction(
   const valid = readService(form);
   if (!valid.ok) return { fieldErrors: valid.errors };
   const created = await createService(db, valid.data);
-  if (!created.ok) return { error: UNKNOWN };
+  if (!created.ok) return { error: (await actionText())("unknown") };
   // Un servicio nuevo lo hacen todos los barberos activos; se ajusta en cada barbero.
   const barbers = await listBarbers(db);
   if (barbers.ok) {
@@ -80,7 +83,7 @@ export async function updateServiceAction(
     ...valid.data,
     active: form.get("activo") === "si",
   });
-  if (!updated.ok) return { error: UNKNOWN };
+  if (!updated.ok) return { error: (await actionText())("unknown") };
   revalidatePath("/", "layout");
   redirect("/panel/servicios");
 }
@@ -114,18 +117,18 @@ export async function createBarberAction(
   const name = text(form, "nombre").trim().replace(/\s+/g, " ");
   const percent = parsePercent(text(form, "porcentaje"));
   const fieldErrors: NewBarberState["fieldErrors"] = {};
-  if (!name) fieldErrors.displayName = "Escribe el nombre";
-  if (percent === null) fieldErrors.percent = "Escribe un porcentaje de 0 a 100";
+  if (!name) fieldErrors.displayName = (await actionText())("nameRequired");
+  if (percent === null) fieldErrors.percent = (await actionText())("percentRange");
   if (Object.keys(fieldErrors).length) return { fieldErrors };
 
   const created = await createBarber(db, { displayName: name });
-  if (!created.ok) return { error: barbersErrorMessage(created.error) };
+  if (!created.ok) return { error: barbersErrorMessage(created.error, await currentLocale()) };
   const rate = await setCommissionRate(db, {
     barberId: created.data.id,
     barberPct: percent!,
     updatedBy: viewer.userId,
   });
-  if (!rate.ok) return { error: commissionsErrorMessage(rate.error) };
+  if (!rate.ok) return { error: commissionsErrorMessage(rate.error, await currentLocale()) };
   const services = await listActiveServices(db);
   if (services.ok) {
     await setBarberServices(
@@ -155,9 +158,9 @@ export async function updateBarberAction(
     ...valid.data,
     active: form.get("activo") === "si",
   });
-  if (!updated.ok) return { error: barbersErrorMessage(updated.error) };
+  if (!updated.ok) return { error: barbersErrorMessage(updated.error, await currentLocale()) };
   const services = await setBarberServices(db, id, form.getAll("servicio").map(String));
-  if (!services.ok) return { error: barbersErrorMessage(services.error) };
+  if (!services.ok) return { error: barbersErrorMessage(services.error, await currentLocale()) };
   revalidatePath("/", "layout");
   return { saved: true };
 }
@@ -168,19 +171,25 @@ export async function setPhotoAction(barberId: string, path: string): Promise<Up
   const { db } = await loadAdminPanel("/panel/barberos");
   const result = await setBarberPhoto(db, { barberId, photoPath: path });
   revalidatePath("/", "layout");
-  return result.ok ? { ok: true } : { ok: false, error: barbersErrorMessage(result.error) };
+  return result.ok
+    ? { ok: true }
+    : { ok: false, error: barbersErrorMessage(result.error, await currentLocale()) };
 }
 
 export async function addPortfolioAction(barberId: string, path: string): Promise<UploadResult> {
   const { db } = await loadAdminPanel("/panel/barberos");
   const result = await addPortfolioItem(db, { barberId, imagePath: path });
   revalidatePath("/", "layout");
-  return result.ok ? { ok: true } : { ok: false, error: barbersErrorMessage(result.error) };
+  return result.ok
+    ? { ok: true }
+    : { ok: false, error: barbersErrorMessage(result.error, await currentLocale()) };
 }
 
 export async function deletePortfolioAction(id: string): Promise<UploadResult> {
   const { db } = await loadAdminPanel("/panel/barberos");
   const result = await deletePortfolioItem(db, id);
   revalidatePath("/", "layout");
-  return result.ok ? { ok: true } : { ok: false, error: barbersErrorMessage(result.error) };
+  return result.ok
+    ? { ok: true }
+    : { ok: false, error: barbersErrorMessage(result.error, await currentLocale()) };
 }

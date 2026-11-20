@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { Button, toast } from "@possos/ui";
 import { deletePortfolioAction } from "../_actions/admin";
@@ -9,6 +10,7 @@ import { deletePortfolioAction } from "../_actions/admin";
  * formulario del perfil del barbero (no se anidan formularios).
  */
 export function RemoveWorkButton({ id }: { id: string }) {
+  const t = useTranslations("web.panel.removeWork");
   const [pending, start] = useTransition();
   const [failed, setFailed] = useState(false);
   return (
@@ -22,12 +24,12 @@ export function RemoveWorkButton({ id }: { id: string }) {
         start(async () => {
           const result = await deletePortfolioAction(id);
           setFailed(!result.ok);
-          if (!result.ok) toast.error(result.error ?? "No pudimos quitar la foto");
+          if (!result.ok) toast.error(result.error ?? t("failed"));
         })
       }
     >
-      {pending ? "Quitando..." : failed ? "Reintentar" : "Quitar"}
-      <span className="sr-only"> esta foto</span>
+      {pending ? t("pending") : failed ? t("retry") : t("remove")}
+      <span className="sr-only">{t("hint")}</span>
     </Button>
   );
 }

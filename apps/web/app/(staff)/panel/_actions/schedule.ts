@@ -16,9 +16,15 @@ import {
   type BookingErrorCode,
 } from "@possos/booking";
 import { blockTime } from "@possos/booking/server";
-import { formatDate, formatTime, toDateKey } from "@possos/ui";
+import type { Locale } from "@possos/config/constants";
+import { formatters, toDateKey } from "@possos/ui";
 import { canActOnBarber, loadPanel } from "../../../../lib/panel";
 import { parseDay } from "../../../../lib/panel-dates";
+import { getTranslations } from "next-intl/server";
+import { currentLocale } from "../../../../lib/i18n";
+
+/** Textos de las acciones del panel, en el idioma de la petición. */
+const actionText = () => getTranslations("web.panel.actions");
 
 /*
  * Horario y bloqueos. El barbero, los suyos; el administrador, los de cualquiera (docs/06).
@@ -31,10 +37,10 @@ const text = (form: FormData, key: string) => {
 };
 
 const BARBERS_CODES = new Set(["HOURS_OVERLAP", "TIME_OFF_OVERLAP"]);
-const scheduleError = (code: string) =>
+const scheduleError = (code: string, locale: Locale) =>
   BARBERS_CODES.has(code)
-    ? barbersErrorMessage(code as "HOURS_OVERLAP" | "TIME_OFF_OVERLAP")
-    : bookingErrorMessage(code as BookingErrorCode);
+    ? barbersErrorMessage(code as "HOURS_OVERLAP" | "TIME_OFF_OVERLAP", locale)
+    : bookingErrorMessage(code as BookingErrorCode, locale);
 
 export async function saveHoursAction(
   _prev: WeeklyHoursState,
@@ -42,11 +48,13 @@ export async function saveHoursAction(
 ): Promise<WeeklyHoursState> {
   const ctx = await loadPanel("/panel/horario");
   const barberId = text(form, "barbero");
-  if (!canActOnBarber(ctx, barberId)) return { error: barbersErrorMessage("FORBIDDEN") };
+  if (!canActOnBarber(ctx, barberId))
+    return { error: barbersErrorMessage("FORBIDDEN", await currentLocale()) };
   const ranges = parseWeeklyRanges(form.getAll("rango").map(String));
-  if (validateWeeklyRanges(ranges).size) return { error: barbersErrorMessage("INVALID_INPUT") };
+  if (validateWeeklyRanges(ranges).size)
+    return { error: barbersErrorMessage("INVALID_INPUT", await currentLocale()) };
   const result = await setWorkingHours(ctx.db, barberId, ranges);
-  if (!result.ok) return { error: barbersErrorMessage(result.error) };
+  if (!result.ok) return { error: barbersErrorMessage(result.error, await currentLocale()) };
   revalidatePath("/panel", "layout");
   return { saved: true };
 }
@@ -57,21 +65,22 @@ export async function createTimeOffAction(
 ): Promise<TimeOffFormState> {
   const ctx = await loadPanel("/panel/bloqueos");
   const barberId = text(form, "barbero");
-  if (!canActOnBarber(ctx, barberId)) return { error: barbersErrorMessage("FORBIDDEN") };
+  if (!canActOnBarber(ctx, barberId))
+    return { error: barbersErrorMessage("FORBIDDEN", await currentLocale()) };
 
   const from = parseDay(text(form, "desde"));
   const to = parseDay(text(form, "hasta")) ?? from;
-  if (!from) return { fieldErrors: { from: "Elige la fecha" } };
-  if (!to || to < from) return { fieldErrors: { to: "Debe ser el mismo día o después" } };
+  if (!from) return { fieldErrors: { from: (await actionText())("dateRequired") } };
+  if (!to || to < from) return { fieldErrors: { to: (await actionText())("toInvalid") } };
   const allDay = form.get("todo_el_dia") === "si";
   const startTime = allDay ? "00:00" : text(form, "inicio");
   const endTime = allDay ? "00:00" : text(form, "fin");
   if (!allDay && (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime))) {
-    return { fieldErrors: { time: "Escribe la hora de inicio y la de fin" } };
+    return { fieldErrors: { time: (await actionText())("timesRequired") } };
   }
   const startsAt = bogotaInstant(from, startTime);
   const endsAt = bogotaInstant(allDay ? addDays(to, 1) : to, endTime);
-  if (endsAt <= startsAt) return { fieldErrors: { time: "El fin debe ser después del inicio" } };
+  if (endsAt <= startsAt) return { fieldErrors: { time: (await actionText())("endAfterStart") } };
 
   const result = await blockTime(ctx.db, {
     barberId,
@@ -79,13 +88,14 @@ export async function createTimeOffAction(
     endsAt,
     reason: text(form, "motivo").trim() || undefined,
   });
-  if (!result.ok) return { error: scheduleError(result.error) };
+  if (!result.ok) return { error: scheduleError(result.error, await currentLocale()) };
   revalidatePath("/panel", "layout");
+  const f = formatters(await currentLocale());
   return {
     created: true,
     conflicts: result.data.conflicts.map((c) => ({
       id: c.id,
-      label: `${formatDate(c.start_at)}, ${formatTime(c.start_at)} · ${c.customer_name}`,
+      label: `${f.date(c.start_at)}, ${f.time(c.start_at)} · ${c.customer_name}`,
       href: `/panel?dia=${toDateKey(c.start_at)}&cita=${c.id}`,
     })),
   };

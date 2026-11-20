@@ -1,22 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState, useTransition, type ReactNode } from "react";
 import type { AgendaAppointment, AgendaItem } from "@possos/booking";
 import { AgendaList, AppointmentDetail, useLiveAgenda } from "@possos/booking/ui";
 import { servicePriceLabel } from "@possos/catalog";
 import { formatPercent, type Charge } from "@possos/commissions";
 import { ChargeForm } from "@possos/commissions/ui";
-import {
-  Button,
-  formatDate,
-  formatPrice,
-  formatTime,
-  InlineError,
-  Sheet,
-  toast,
-  toDateKey,
-} from "@possos/ui";
+import { Button, InlineError, Sheet, toast, toDateKey, useFormat } from "@possos/ui";
 import {
   attendAction,
   cancelAction,
@@ -58,10 +50,8 @@ export interface AgendaViewProps {
   today: string;
 }
 
-const NOTICES: Record<string, string> = {
-  "cita-creada": "Creaste la cita",
-  "cita-movida": "Moviste la cita",
-};
+/** Avisos que llegan en la URL (`?aviso=`) y su texto en `web.agenda.notices`. */
+const NOTICES = { "cita-creada": "created", "cita-movida": "moved" } as const;
 
 type Mode = "detail" | "cancel" | "attend" | "record" | "correct" | "void";
 
@@ -98,6 +88,8 @@ export function AgendaView({
   isAdmin,
   today,
 }: AgendaViewProps) {
+  const t = useTranslations("web.agenda");
+  const f = useFormat();
   const router = useRouter();
   const now = useNow(serverNow);
   const nowMs = new Date(now).getTime();
@@ -122,14 +114,15 @@ export function AgendaView({
 
   // Avisos que llegan en la URL: se muestran una vez y se quitan de la URL.
   useEffect(() => {
-    const message = notice ? NOTICES[notice] : null;
-    if (!message) return;
+    const key = notice ? NOTICES[notice as keyof typeof NOTICES] : undefined;
+    if (!key) return;
+    const message = t(`notices.${key}`);
     // Con id: el modo estricto de React corre el efecto dos veces y Sonner no lo repite.
     toast(message, { id: notice! });
     const url = new URL(window.location.href);
     url.searchParams.delete("aviso");
     window.history.replaceState(window.history.state, "", url);
-  }, [notice]);
+  }, [notice, t]);
 
   // La cita que se abrió desde la URL: al cerrar la hoja, sale de la URL.
   useEffect(() => {
@@ -171,7 +164,7 @@ export function AgendaView({
   return (
     <>
       {isToday && toClose.length + uncharged.length > 0 ? (
-        <Section title={`Por cerrar (${toClose.length + uncharged.length})`}>
+        <Section title={t("toClose", { count: toClose.length + uncharged.length })}>
           {toClose.map((a) => (
             <Card
               key={a.id}
@@ -184,7 +177,7 @@ export function AgendaView({
                 disabled={pendingAction}
                 onClick={() => open(a.id, "attend")}
               >
-                Vino
+                {t("came")}
               </Button>
               <Button
                 variant="secondary"
@@ -192,7 +185,7 @@ export function AgendaView({
                 disabled={pendingAction}
                 onClick={() => run(() => noShowAction(a.id), false)}
               >
-                No vino
+                {t("noShow")}
               </Button>
             </Card>
           ))}
@@ -202,7 +195,7 @@ export function AgendaView({
               appointment={a}
               onOpen={() => open(a.id)}
               showDate
-              note="Falta registrar el cobro"
+              note={t("chargeMissing")}
             >
               <Button
                 variant="secondary"
@@ -210,7 +203,7 @@ export function AgendaView({
                 disabled={pendingAction}
                 onClick={() => open(a.id, "record")}
               >
-                Registrar cobro
+                {t("recordCharge")}
               </Button>
             </Card>
           ))}
@@ -218,7 +211,7 @@ export function AgendaView({
       ) : null}
 
       {isToday && pending.length > 0 ? (
-        <Section title={`Pendientes de aprobar (${pending.length})`}>
+        <Section title={t("pending", { count: pending.length })}>
           {pending.map((a) => (
             <Card key={a.id} appointment={a} onOpen={() => open(a.id)} showDate>
               <Button
@@ -226,7 +219,7 @@ export function AgendaView({
                 disabled={pendingAction}
                 onClick={() => run(() => decideAction(a.id, true), false)}
               >
-                Aprobar
+                {t("approve")}
               </Button>
               <Button
                 variant="secondary"
@@ -234,7 +227,7 @@ export function AgendaView({
                 disabled={pendingAction}
                 onClick={() => run(() => decideAction(a.id, false), false)}
               >
-                Rechazar
+                {t("reject")}
               </Button>
             </Card>
           ))}
@@ -243,7 +236,7 @@ export function AgendaView({
 
       {items.length === 0 ? (
         <p className="mx-gutter rounded-card border border-border px-4 py-6 text-body text-fg-muted">
-          Este día no tiene horario de atención ni citas. Puedes cambiar el horario en Más.
+          {t("emptyDay")}
         </p>
       ) : (
         <AgendaList
@@ -262,16 +255,16 @@ export function AgendaView({
         }}
         title={
           CHARGE_MODES.includes(mode)
-            ? "Cobro"
+            ? t("sheet.charge")
             : mode === "void"
-              ? "Anular cobro"
-              : (selected?.customerName ?? "Cita")
+              ? t("sheet.void")
+              : (selected?.customerName ?? t("sheet.appointment"))
         }
         description={
           selected
             ? CHARGE_MODES.includes(mode) || mode === "void"
               ? `${selected.customerName} · ${selected.serviceName}`
-              : `${selected.serviceName} · ${formatDate(selected.start)}, ${formatTime(selected.start)}`
+              : `${selected.serviceName} · ${f.date(selected.start)}, ${f.time(selected.start)}`
             : undefined
         }
       >
@@ -289,9 +282,9 @@ export function AgendaView({
                   ? (chargeOf.get(selected.id)?.barber_pct ?? null)
                   : (rates[selected.barberId] ?? null)
               }
-              barberLabel={selected.barberId === viewerBarberId ? "Para ti" : "Para el barbero"}
-              submitLabel={mode === "correct" ? "Guardar el valor" : "Guardar cobro"}
-              pendingLabel="Guardando..."
+              barberLabel={selected.barberId === viewerBarberId ? t("forYou") : t("forBarber")}
+              submitLabel={mode === "correct" ? t("saveValue") : t("saveCharge")}
+              pendingLabel={t("saving")}
               pending={pendingAction}
               error={error}
               onCancel={() => toMode("detail")}
@@ -304,9 +297,9 @@ export function AgendaView({
             />
           ) : mode === "void" ? (
             <ReasonForm
-              question="¿Anular este cobro? Deja de contar en la liquidación, pero no se borra."
-              confirmLabel="Sí, anular el cobro"
-              pendingLabel="Anulando..."
+              question={t("voidQuestion")}
+              confirmLabel={t("voidConfirm")}
+              pendingLabel={t("voiding")}
               pending={pendingAction}
               error={error}
               onBack={() => toMode("detail")}
@@ -317,10 +310,10 @@ export function AgendaView({
             />
           ) : mode === "cancel" ? (
             <ReasonForm
-              question="¿Cancelar esta cita? La hora queda libre para otros clientes."
-              confirmLabel="Sí, cancelar la cita"
-              pendingLabel="Cancelando..."
-              backLabel="No, volver"
+              question={t("cancelQuestion")}
+              confirmLabel={t("cancelConfirm")}
+              pendingLabel={t("cancelling")}
+              backLabel={t("cancelBack")}
               pending={pendingAction}
               error={error}
               onBack={() => toMode("detail")}
@@ -329,7 +322,7 @@ export function AgendaView({
           ) : (
             <AppointmentDetail
               appointment={selected}
-              priceLabel={servicePriceLabel(selected.priceCop)}
+              priceLabel={servicePriceLabel(selected.priceCop, f.locale)}
               toClose={isToClose(selected)}
             >
               {selected.status === "completed" ? (
@@ -394,12 +387,13 @@ function Card({
   note?: string;
   children: ReactNode;
 }) {
+  const f = useFormat();
   return (
     <li className="grid gap-3 rounded-card border border-border bg-surface p-4">
       <button type="button" onClick={onOpen} className="grid gap-0.5 text-left">
         <span className="text-label tabular-nums">
-          {showDate ? `${formatDate(a.start)}, ` : ""}
-          {formatTime(a.start)} · {a.customerName}
+          {showDate ? `${f.date(a.start)}, ` : ""}
+          {f.time(a.start)} · {a.customerName}
         </span>
         <span className="text-caption text-fg-muted">{a.serviceName}</span>
         {note ? <span className="text-caption text-warning">{note}</span> : null}
@@ -430,6 +424,7 @@ function Actions({
   onMove: () => void;
   onCancel: () => void;
 }) {
+  const t = useTranslations("web.agenda");
   const open = a.status === "pending_approval" || a.status === "booked" || a.status === "confirmed";
   if (!open) return null;
   return (
@@ -437,7 +432,7 @@ function Actions({
       {a.status === "pending_approval" ? (
         <>
           <Button variant="secondary" disabled={disabled} onClick={onApprove}>
-            Aprobar
+            {t("approve")}
           </Button>
           <Button
             variant="secondary"
@@ -445,13 +440,13 @@ function Actions({
             disabled={disabled}
             onClick={onReject}
           >
-            Rechazar
+            {t("reject")}
           </Button>
         </>
       ) : started ? (
         <>
           <Button disabled={disabled} onClick={onAttend}>
-            Vino
+            {t("came")}
           </Button>
           <Button
             variant="secondary"
@@ -459,15 +454,15 @@ function Actions({
             disabled={disabled}
             onClick={onNoShow}
           >
-            No vino
+            {t("noShow")}
           </Button>
         </>
       ) : null}
       <Button variant="secondary" disabled={disabled} onClick={onMove}>
-        Mover
+        {t("move")}
       </Button>
       <Button variant="secondary" className="text-danger" disabled={disabled} onClick={onCancel}>
-        Cancelar
+        {t("cancel")}
       </Button>
     </div>
   );
@@ -491,12 +486,14 @@ function ChargeSummary({
   onCorrect: () => void;
   onVoid: () => void;
 }) {
+  const t = useTranslations("web.agenda");
+  const f = useFormat();
   if (!charge) {
     return (
       <div className="grid gap-3 rounded-card border border-border bg-surface p-4">
-        <p className="text-body text-warning">Falta registrar el cobro</p>
+        <p className="text-body text-warning">{t("chargeMissing")}</p>
         <Button variant="secondary" disabled={disabled} onClick={onRecord}>
-          Registrar cobro
+          {t("recordCharge")}
         </Button>
       </div>
     );
@@ -504,11 +501,11 @@ function ChargeSummary({
   const voided = Boolean(charge.voided_at);
   return (
     <section
-      aria-label="Cobro"
+      aria-label={t("charge")}
       className="grid gap-3 rounded-card border border-border bg-surface p-4"
     >
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-label">Cobro</h3>
+        <h3 className="text-label">{t("charge")}</h3>
         <span
           className={
             voided
@@ -516,22 +513,27 @@ function ChargeSummary({
               : "text-label tabular-nums"
           }
         >
-          {formatPrice(charge.amount_cop)}
+          {f.price(charge.amount_cop)}
         </span>
       </div>
       {voided ? (
-        <p className="text-caption text-fg-muted">Anulado: {charge.void_reason}</p>
+        <p className="text-caption text-fg-muted">
+          {t("voided", { reason: charge.void_reason ?? "" })}
+        </p>
       ) : (
         <p className="text-caption text-fg-muted tabular-nums">
-          Barbero {formatPrice(charge.barber_amount_cop ?? 0)} ({formatPercent(charge.barber_pct)})
-          · Barbería {formatPrice(charge.business_amount_cop ?? 0)}
+          {t("split", {
+            barber: f.price(charge.barber_amount_cop ?? 0),
+            pct: formatPercent(charge.barber_pct, f.locale),
+            business: f.price(charge.business_amount_cop ?? 0),
+          })}
         </p>
       )}
       {!voided && (canCorrect(charge) || isAdmin) ? (
         <div className="grid grid-cols-2 gap-2">
           {canCorrect(charge) ? (
             <Button variant="secondary" disabled={disabled} onClick={onCorrect}>
-              Corregir valor
+              {t("correct")}
             </Button>
           ) : null}
           {isAdmin ? (
@@ -541,7 +543,7 @@ function ChargeSummary({
               disabled={disabled}
               onClick={onVoid}
             >
-              Anular cobro
+              {t("sheet.void")}
             </Button>
           ) : null}
         </div>
@@ -551,6 +553,8 @@ function ChargeSummary({
 }
 
 function Notes({ customerId, barberId }: { customerId: string; barberId: string }) {
+  const t = useTranslations("web.agenda");
+  const f = useFormat();
   const [notes, setNotes] = useState<{ id: string; body: string; created_at: string }[] | null>(
     null,
   );
@@ -564,20 +568,18 @@ function Notes({ customerId, barberId }: { customerId: string; barberId: string 
     };
   }, [customerId, barberId]);
   return (
-    <section className="grid gap-2" aria-label="Notas del barbero">
-      <h3 className="text-label">Notas sobre el cliente</h3>
+    <section className="grid gap-2" aria-label={t("notesLabel")}>
+      <h3 className="text-label">{t("notesTitle")}</h3>
       {notes === null ? (
-        <p className="text-caption text-fg-muted">Cargando...</p>
+        <p className="text-caption text-fg-muted">{t("loading")}</p>
       ) : notes.length === 0 ? (
-        <p className="text-caption text-fg-muted">Sin notas.</p>
+        <p className="text-caption text-fg-muted">{t("noNotes")}</p>
       ) : (
         <ul className="grid gap-2">
           {notes.map((n) => (
             <li key={n.id} className="rounded-card border border-border p-3 text-body">
               {n.body}
-              <span className="mt-1 block text-caption text-fg-muted">
-                {formatDate(n.created_at)}
-              </span>
+              <span className="mt-1 block text-caption text-fg-muted">{f.date(n.created_at)}</span>
             </li>
           ))}
         </ul>
