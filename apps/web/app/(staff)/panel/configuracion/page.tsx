@@ -4,6 +4,7 @@ import { getBookingSettings } from "@possos/booking/server";
 import { offsetToHours } from "@possos/notifications";
 import { getNotificationSettings } from "@possos/notifications/server";
 import { loadAdminPanel } from "../../../../lib/panel";
+import { whatsappRemindersEnabled } from "../../../../lib/whatsapp";
 import { PanelHeader } from "../_components/panel-header";
 import { BookingSettingsForm, ReminderSettingsForm } from "../_components/settings-forms";
 
@@ -39,12 +40,15 @@ export default async function SettingsPage() {
           <h2 id="recordatorios" className="text-heading">
             {t("reminders")}
           </h2>
-          <p className="text-body text-fg-muted">{t("remindersIntro")}</p>
+          <p className="text-body text-fg-muted">
+            {whatsappRemindersEnabled() ? t("remindersActive") : t("remindersIntro")}
+          </p>
           {reminders.ok ? (
             <ReminderSettingsForm
               first={offsetToHours(reminders.data.reminder_offsets_min[0])}
               second={offsetToHours(reminders.data.reminder_offsets_min[1])}
               sendConfirmation={reminders.data.send_confirmation}
+              sendCancellation={reminders.data.send_cancellation}
             />
           ) : (
             <p role="alert" className="text-body text-danger">

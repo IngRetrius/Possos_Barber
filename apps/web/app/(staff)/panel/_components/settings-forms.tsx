@@ -144,10 +144,12 @@ export function ReminderSettingsForm({
   first,
   second,
   sendConfirmation,
+  sendCancellation,
 }: {
   first: string;
   second: string;
   sendConfirmation: boolean;
+  sendCancellation: boolean;
 }) {
   const t = useTranslations("web.admin.settings");
   return (
@@ -166,6 +168,14 @@ export function ReminderSettingsForm({
           </Field>
           <Checkbox name="confirmacion" value="si" defaultChecked={sendConfirmation}>
             {t("confirmation")}
+          </Checkbox>
+          <Checkbox
+            name="aviso_cancelacion"
+            value="si"
+            defaultChecked={sendCancellation}
+            hint={t("cancellationHint")}
+          >
+            {t("cancellation")}
           </Checkbox>
         </>
       )}

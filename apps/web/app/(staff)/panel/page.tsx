@@ -10,6 +10,8 @@ import {
   listToClose,
 } from "@possos/booking/server";
 import { listChargesForAppointments, listCommissionRates } from "@possos/commissions/server";
+import { reminderSummary, type ReminderSummary } from "@possos/notifications";
+import { listMessageJobs } from "@possos/notifications/server";
 import { Button, EmptyState } from "@possos/ui";
 import { currentFormatters } from "../../../lib/i18n";
 import { LocaleSwitch } from "../../_components/locale-switch";
@@ -88,6 +90,24 @@ export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
   if (selectedId && !appointments.some((a) => a.id === selectedId)) {
     const found = await getAgendaAppointment(ctx.db, selectedId);
     extra = found.ok ? found.data : null;
+  }
+
+  // F7: el WhatsApp de las citas que se ven (RLS: las de la agenda de este barbero).
+  const shownIds = [
+    ...new Set([
+      ...appointments.map((a) => a.id),
+      ...(toClose?.ok ? toClose.data.map((a) => a.id) : []),
+      ...(pending?.ok ? pending.data.map((a) => a.id) : []),
+      ...(extra ? [extra.id] : []),
+    ]),
+  ];
+  const jobs = await listMessageJobs(ctx.db, shownIds);
+  const reminders: Record<string, ReminderSummary> = {};
+  for (const id of shownIds) {
+    const summary = reminderSummary(
+      (jobs.ok ? jobs.data : []).filter((j) => j.appointment_id === id),
+    );
+    if (summary) reminders[id] = summary;
   }
 
   const count = appointments.length;
@@ -177,6 +197,7 @@ export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
         viewerBarberId={ctx.viewer.barberId}
         isAdmin={ctx.viewer.isAdmin}
         today={today}
+        reminders={reminders}
       />
     </main>
   );

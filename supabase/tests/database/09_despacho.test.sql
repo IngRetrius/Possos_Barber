@@ -158,8 +158,11 @@ select set_config('request.jwt.claims', '{}', true);
 -- ---------------------------------------------------------------------------------------------
 -- Respaldo de pg_cron
 -- ---------------------------------------------------------------------------------------------
+-- Desde F7 hay dos consumidores (push y whatsapp) y el respaldo también mira los message_jobs
+-- vencidos: todos al día para empezar.
 update public.event_cursors set last_event_id = (select max(id) from public.booking_events)
-where consumer = 'push';
+where consumer = any (private.notifications_consumers());
+delete from public.message_jobs where status in ('scheduled', 'sending');
 select tests.dispatch_requests() as before_backstop \gset
 select private.notifications_backstop();
 select is(tests.dispatch_requests(), :before_backstop,

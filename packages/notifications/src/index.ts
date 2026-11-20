@@ -3,7 +3,7 @@
  * Solo se exporta lo que otros módulos necesitan. Lo interno va en src/internal/ (docs/08).
  *
  * F6: configuración de los recordatorios. F8: despacho de booking_events y push al barbero.
- * WhatsApp (plantillas, envío y webhook) es de F7.
+ * F7: WhatsApp (plantillas, envío y webhook en `./server`; aquí, lo que muestra el panel).
  */
 import type { Tables } from "@possos/supabase";
 
@@ -30,3 +30,24 @@ export {
   type PushKind,
   type PushMessage,
 } from "./internal/push-message";
+
+export {
+  WHATSAPP_PRICE_COP,
+  errorCodeOf,
+  reminderFailed,
+  reminderSummary,
+  whatsappCostEstimate,
+  type MessageJobView,
+  type MessageKind,
+  type MessageState,
+  type ReminderSummary,
+  type WhatsappUsage,
+} from "./internal/whatsapp-status";
+
+export {
+  TEMPLATES,
+  TEMPLATE_LANGUAGE,
+  type MessageContext,
+  type TemplateName,
+  type WhatsappAppointment,
+} from "./internal/whatsapp-templates";

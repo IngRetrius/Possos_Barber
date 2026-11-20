@@ -158,20 +158,21 @@ Reemplaza las "facturas" de Beunik, que según el dueño (19/11/2026) solo repar
 
 | Tabla | Columnas principales |
 |---|---|
-| `notification_settings` | Una sola fila: `reminder_offsets_min` (`{1440, 120}`), `send_confirmation` (true) |
-| `message_jobs` | `id`, `appointment_id`, `kind` (`confirmation` \| `reminder` \| `cancellation`), `offset_min`, `channel` (`whatsapp` \| `push`), `send_at`, `status` (`scheduled` \| `sending` \| `sent` \| `delivered` \| `read` \| `failed` \| `skipped`), `provider_message_id` (único), `attempts`, `last_error`. Único (`appointment_id`, `kind`, `offset_min`, `channel`) |
+| `notification_settings` | Una sola fila: `reminder_offsets_min` (`{1440, 120}`), `send_confirmation` (true), `send_cancellation` (F7, false: aviso `cita_cancelada` cuando el personal cancela, decisión 7 de [10](10-riesgos-decisiones-abiertas.md)) |
+| `message_jobs` | `id`, `appointment_id`, `kind` (`confirmation` \| `reminder` \| `cancellation`), `offset_min`, `channel` (`whatsapp` \| `push`), `send_at`, `status` (`scheduled` \| `sending` \| `sent` \| `delivered` \| `read` \| `failed` \| `skipped`), `provider_message_id` (único), `attempts`, `last_error`. Desde F7: `template` (la plantilla de Meta que se manda), `sent_at` (cuando la Cloud API aceptó el mensaje), `status_at` (último estado del webhook) y `pricing_category` (categoría con que Meta lo cobró). Único (`appointment_id`, `kind`, `offset_min`, `channel`) |
 | `inbound_messages` | `id`, `provider_message_id` (único, para no procesar dos veces), `from_phone`, `button_payload`, `appointment_id`, `payload`, `received_at` |
 | `push_subscriptions` | `id`, `user_id`, `endpoint` (único), `p256dh`, `auth`, `created_at` |
-| `event_cursors` | `consumer` (PK: `push` desde F8, `whatsapp` en F7), `last_event_id`, `lease_until` (turno del despacho que lo procesa), `updated_at` |
+| `event_cursors` | `consumer` (PK: `push` desde F8, `whatsapp` desde F7), `last_event_id`, `lease_until` (turno del despacho que lo procesa), `updated_at` |
 
 Reglas del despacho:
 - Cada consumidor lee `booking_events` con su propio cursor: `claim_booking_events` toma el turno y los eventos pendientes, `ack_booking_events` avanza el cursor y suelta el turno. Entrega al menos una vez y en orden; un consumidor debe tolerar ver un evento dos veces.
 - El cursor no salta un id que falta si el evento siguiente tiene menos de 2 minutos: puede ser una reserva que todavía no termina (los ids salen al insertar, pero las transacciones terminan en otro orden). Pasados 2 minutos, el hueco es una transacción deshecha y se salta.
 - El despacho lo dispara la base (F8, ver [07](07-stack.md#decisiones-y-alternativas-descartadas)): un trigger de `notifications` sobre `booking_events` hace un POST con `pg_net` a `/api/notifications/dispatch` con cada transacción que publica eventos, y `pg_cron` revisa cada minuto si algún consumidor quedó atrás. La URL y el secreto están en Supabase Vault (`notifications_dispatch_url`, `notifications_dispatch_secret`).
 - Push (F8): un aviso al barbero de la cita por cada reserva, cambio, confirmación o cancelación hecha por el cliente (no por el personal). Sin el celular del cliente.
-- Al procesar `appointment.created` se crean los `message_jobs` (F7).
-- Si la cita se cancela o se reprograma, los trabajos pendientes pasan a `skipped` (F7).
-- Justo antes de enviar, se vuelve a leer el estado de la cita.
+- WhatsApp (F7): el consumidor `whatsapp` crea los `message_jobs` al procesar `appointment.created` (o la aprobación de una pendiente, o la cita nueva de una reprogramación): la confirmación ya y un recordatorio por cada minuto de `reminder_offsets_min` cuya hora no haya pasado. Solo si el cliente aceptó WhatsApp y tiene celular, y solo con Meta configurado.
+- Si la cita se cancela, se reprograma, se rechaza o se cierra, los trabajos pendientes pasan a `skipped` (F7).
+- `pg_cron` también pide un despacho si hay `message_jobs` de WhatsApp vencidos; la ruta los toma con `claim_message_jobs` (`for update skip locked`: ninguno sale dos veces) y, justo antes de enviar, vuelve a leer la cita. Reintentos con límite; el detalle está en [F7-entrega](../fases/F7-entrega.md).
+- Los estados (`sent`, `delivered`, `read`, `failed`) llegan por el webhook de Meta y solo avanzan. Cada mensaje entrante se registra en `inbound_messages` por su id antes de procesarlo, así que un reintento de Meta no confirma ni contesta dos veces.
 
 ## Funciones de Postgres (API de escritura)
 
@@ -201,6 +202,10 @@ Las funciones internas van en el esquema `private`, que PostgREST no expone; cad
 | `ack_booking_events(consumer, last_event_id?)` | solo service role | F8. Avanza el cursor (null: no avanza), suelta el turno y dice si quedan eventos |
 | `save_push_subscription(endpoint, p256dh, auth)` | barbero | F8. Guarda la suscripción push del navegador para la cuenta de la sesión. Si el endpoint ya estaba con otra cuenta (otra persona en el mismo celular), pasa a la de ahora |
 | `list_push_targets(barber_id)` | solo service role | F8. Las suscripciones de la cuenta de un barbero activo y con el rol |
+| `claim_message_jobs(limit?)` | solo service role | F7. Módulo `notifications`. Toma los trabajos de WhatsApp vencidos (y los colgados en `sending` más de 5 minutos) con `for update skip locked` y los pasa a `sending` con un intento más |
+| `finish_message_job(id, outcome, provider_message_id?, error?, retry_at?)` | solo service role | F7. `sent`, `retry` (vuelve a `scheduled`), `failed` o `skipped`. Solo cambia filas en `sending` |
+| `record_message_status(provider_message_id, status, at?, error?, pricing_category?)` | solo service role | F7. Estado del webhook; solo avanza. Devuelve la cita del mensaje o null |
+| `find_appointment_for_phone(phone)` | solo service role | F7. Módulo `booking`. La próxima cita activa de un celular `+57...` o, si no tiene, la última: para contestar un texto libre con el WhatsApp de su barbero |
 | `record_charge(appointment_id, amount_cop)` | barbero (su agenda) y admin | Módulo `commissions`. Exige la cita en `completed` y sin cobro previo; copia el porcentaje vigente |
 | `update_charge(id, amount_cop)` | barbero (sus cobros del mismo día) y admin | Corrige el monto; el porcentaje copiado no cambia |
 | `void_charge(id, reason)` | admin | Anula un cobro con motivo; no se borra |
@@ -219,7 +224,7 @@ Los errores salen como excepción con el código en el mensaje (SQLSTATE `P0001`
 | auth | `NOT_AUTHENTICATED`, `FORBIDDEN` (`delete_my_account`); `USER_NOT_FOUND`, `CANNOT_REVOKE_SELF` e `INVALID_INPUT` (roles, F6). Los errores de Supabase Auth (ingreso, registro, contraseña) los traduce `authErrorCode` de `@possos/auth` |
 | customers | `NOT_AUTHENTICATED`, `FORBIDDEN`, `INVALID_CUSTOMER`. En la app, además, `CONSENT_REQUIRED` |
 | commissions | `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `NOT_COMPLETED`, `ALREADY_CHARGED`, `INVALID_AMOUNT`, `NO_COMMISSION_RATE`, `TOO_LATE_TO_EDIT`, `INVALID_STATUS`, `INVALID_PERIOD`, `REASON_REQUIRED` |
-| notifications | `NOT_AUTHENTICATED`, `FORBIDDEN`, `INVALID_INPUT` (`save_push_subscription`); `BUSY` e `INVALID_INPUT` (`claim_booking_events`, solo el servidor) |
+| notifications | `NOT_AUTHENTICATED`, `FORBIDDEN`, `INVALID_INPUT` (`save_push_subscription`); `BUSY` e `INVALID_INPUT` (`claim_booking_events`, solo el servidor); `INVALID_INPUT` (`finish_message_job` y `record_message_status`, F7, solo el servidor) |
 
 Una reserva de un cliente con 2 inasistencias no es un error: entra como `pending_approval` y la interfaz muestra "Tu reserva queda pendiente de que el barbero la apruebe".
 
@@ -279,7 +284,7 @@ Envolver `auth.uid()` y las funciones en `(select ...)` hace que Postgres las ev
 
 ## Pruebas obligatorias (pgTAP)
 
-Están en `supabase/tests/database/` (`02_booking`, `03_rls`, `04_commissions` y, desde F3, `05_accounts`: perfil, autorización y borrar la cuenta; F4 agregó `06_reserva`, F5 `08_mis_citas` y F6 `07_panel`: Realtime, horario semanal, cliente creado por el personal, roles y la matriz de docs/06 del barbero frente al administrador; el 20/11/2026, `10_adicionales`: suma de precio y minutos, horas libres con la barba, la restricción de exclusión sobre el tiempo extra, reprogramar con los mismos adicionales y RLS), con el fixture compartido `supabase/tests/fixtures/setup.psql`. Cada prueba obligatoria lleva su número al inicio de la descripción.
+Están en `supabase/tests/database/` (`02_booking`, `03_rls`, `04_commissions` y, desde F3, `05_accounts`: perfil, autorización y borrar la cuenta; F4 agregó `06_reserva`, F5 `08_mis_citas` y F6 `07_panel`: Realtime, horario semanal, cliente creado por el personal, roles y la matriz de docs/06 del barbero frente al administrador; el 20/11/2026, `10_adicionales`: suma de precio y minutos, horas libres con la barba, la restricción de exclusión sobre el tiempo extra, reprogramar con los mismos adicionales y RLS; y F7, `11_whatsapp`: las funciones del despacho y `get_appointment_for_notification` solo para la service role, RLS de las tablas que cambiaron, `claim_message_jobs` sin dobles, los estados que solo avanzan y el respaldo de `pg_cron`), con el fixture compartido `supabase/tests/fixtures/setup.psql`. Cada prueba obligatoria lleva su número al inicio de la descripción.
 
 1. Dos `book_appointment` a la misma hora para el mismo barbero: uno pasa y el otro falla con `SLOT_TAKEN`.
 2. Una cita cancelada libera la hora.

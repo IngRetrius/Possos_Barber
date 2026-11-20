@@ -99,6 +99,7 @@ export async function saveReminderSettingsAction(
     firstHours: text(form, "primero"),
     secondHours: text(form, "segundo"),
     sendConfirmation: form.get("confirmacion") === "si",
+    sendCancellation: form.get("aviso_cancelacion") === "si",
   });
   if (!valid.ok) {
     const t = await getTranslations("web.panel.actions.reminders");

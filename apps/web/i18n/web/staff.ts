@@ -105,6 +105,18 @@ const es = {
     settingsDetail: "Reglas de la agenda y recordatorios",
     roles: "Roles",
     rolesDetail: "Barberos y administradores",
+    whatsapp: "WhatsApp",
+    whatsappMonth: "{month}: unos {cost}",
+    whatsappCount:
+      "{delivered, plural, =0 {Ningún mensaje entregado} one {# mensaje entregado} other {# mensajes entregados}}",
+    whatsappFailed: "{count, plural, one {# falló} other {# fallaron}}",
+    whatsappRate:
+      "Estimado con unos {price} por mensaje de utilidad, la tarifa de Meta para Colombia que falta confirmar con la tabla oficial.",
+    whatsappMarketing:
+      "{count, plural, one {# mensaje se cobró} other {# mensajes se cobraron}} como marketing: revisa la categoría de las plantillas en Meta.",
+    whatsappOff: "Los recordatorios todavía no salen: falta conectar el número con Meta.",
+    whatsappLoadError:
+      "No pudimos cargar los mensajes del mes. Revisa tu conexión e intenta de nuevo",
   },
   admin: {
     meta: {
@@ -210,6 +222,8 @@ const es = {
       reminders: "Recordatorios",
       remindersIntro:
         "Los recordatorios por WhatsApp empiezan a salir cuando se active la conexión con Meta. Mientras tanto, esto solo queda guardado.",
+      remindersActive:
+        "Salen por WhatsApp a los clientes que lo aceptaron. Un cambio aplica a las citas que se reserven después.",
       remindersLoadError:
         "No pudimos cargar los recordatorios. Revisa tu conexión e intenta de nuevo",
     },
@@ -347,6 +361,18 @@ const en: typeof es = {
     settingsDetail: "Schedule rules and reminders",
     roles: "Roles",
     rolesDetail: "Barbers and administrators",
+    whatsapp: "WhatsApp",
+    whatsappMonth: "{month}: about {cost}",
+    whatsappCount:
+      "{delivered, plural, =0 {No messages delivered} one {# message delivered} other {# messages delivered}}",
+    whatsappFailed: "{count, plural, one {# failed} other {# failed}}",
+    whatsappRate:
+      "Estimated at about {price} per utility message, Meta's rate for Colombia, still to be confirmed with the official table.",
+    whatsappMarketing:
+      "{count, plural, one {# message was charged} other {# messages were charged}} as marketing: check the template category in Meta.",
+    whatsappOff: "Reminders don't go out yet: the number still has to be connected to Meta.",
+    whatsappLoadError:
+      "We couldn't load this month's messages. Check your connection and try again",
   },
   admin: {
     meta: {
@@ -451,6 +477,8 @@ const en: typeof es = {
       reminders: "Reminders",
       remindersIntro:
         "WhatsApp reminders start going out once the connection with Meta is turned on. Until then, this is only saved.",
+      remindersActive:
+        "They go out by WhatsApp to customers who accepted them. A change applies to appointments booked afterwards.",
       remindersLoadError: "We couldn't load the reminders. Check your connection and try again",
     },
     settlement: {

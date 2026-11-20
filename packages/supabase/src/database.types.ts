@@ -587,9 +587,13 @@ export type Database = {
           kind: string;
           last_error: string | null;
           offset_min: number;
+          pricing_category: string | null;
           provider_message_id: string | null;
           send_at: string;
+          sent_at: string | null;
           status: string;
+          status_at: string | null;
+          template: string | null;
           updated_at: string;
         };
         ComputedFields: never;
@@ -602,9 +606,13 @@ export type Database = {
           kind: string;
           last_error?: string | null;
           offset_min?: number;
+          pricing_category?: string | null;
           provider_message_id?: string | null;
           send_at: string;
+          sent_at?: string | null;
           status?: string;
+          status_at?: string | null;
+          template?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -616,9 +624,13 @@ export type Database = {
           kind?: string;
           last_error?: string | null;
           offset_min?: number;
+          pricing_category?: string | null;
           provider_message_id?: string | null;
           send_at?: string;
+          sent_at?: string | null;
           status?: string;
+          status_at?: string | null;
+          template?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -635,6 +647,7 @@ export type Database = {
         Row: {
           id: boolean;
           reminder_offsets_min: number[];
+          send_cancellation: boolean;
           send_confirmation: boolean;
           updated_at: string;
         };
@@ -642,12 +655,14 @@ export type Database = {
         Insert: {
           id?: boolean;
           reminder_offsets_min?: number[];
+          send_cancellation?: boolean;
           send_confirmation?: boolean;
           updated_at?: string;
         };
         Update: {
           id?: boolean;
           reminder_offsets_min?: number[];
+          send_cancellation?: boolean;
           send_confirmation?: boolean;
           updated_at?: string;
         };
@@ -977,6 +992,33 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      claim_message_jobs: {
+        Args: { p_limit?: number };
+        Returns: {
+          appointment_id: string;
+          attempts: number;
+          channel: string;
+          created_at: string;
+          id: string;
+          kind: string;
+          last_error: string | null;
+          offset_min: number;
+          pricing_category: string | null;
+          provider_message_id: string | null;
+          send_at: string;
+          sent_at: string | null;
+          status: string;
+          status_at: string | null;
+          template: string | null;
+          updated_at: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "message_jobs";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
       confirm_appointment: {
         Args: { p_id: string; p_via?: string };
         Returns: {
@@ -1052,6 +1094,17 @@ export type Database = {
         };
       };
       delete_my_account: { Args: Record<PropertyKey, never>; Returns: undefined };
+      find_appointment_for_phone: { Args: { p_phone: string }; Returns: string };
+      finish_message_job: {
+        Args: {
+          p_error?: string;
+          p_id: string;
+          p_outcome: string;
+          p_provider_message_id?: string;
+          p_retry_at?: string;
+        };
+        Returns: boolean;
+      };
       get_appointment_for_notification: {
         Args: { p_id: string };
         Returns: {
@@ -1210,6 +1263,16 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      record_message_status: {
+        Args: {
+          p_at?: string;
+          p_error?: string;
+          p_pricing_category?: string;
+          p_provider_message_id: string;
+          p_status: string;
+        };
+        Returns: string;
       };
       reschedule_appointment: {
         Args: { p_id: string; p_new_barber_id?: string; p_new_start_at: string };

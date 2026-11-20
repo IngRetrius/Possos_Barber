@@ -34,6 +34,22 @@ const es = {
   notesTitle: "Notas sobre el cliente",
   loading: "Cargando...",
   noNotes: "Sin notas.",
+  reminder: {
+    title: "WhatsApp al cliente",
+    sending:
+      "{kind, select, confirmation {Enviando la confirmación} cancellation {Enviando el aviso de cancelación} other {Enviando el recordatorio}}",
+    sent: "{kind, select, confirmation {Confirmación enviada} cancellation {Aviso de cancelación enviado} other {Recordatorio enviado}}",
+    delivered:
+      "{kind, select, confirmation {Confirmación entregada} cancellation {Aviso de cancelación entregado} other {Recordatorio entregado}}",
+    read: "{kind, select, confirmation {Confirmación leída} cancellation {Aviso de cancelación leído} other {Recordatorio leído}}",
+    failed:
+      "{kind, select, confirmation {La confirmación falló} cancellation {El aviso de cancelación falló} other {El recordatorio falló}}",
+    failedPhone:
+      "{kind, select, confirmation {La confirmación falló: revisa el número} cancellation {El aviso de cancelación falló: revisa el número} other {El recordatorio falló: revisa el número}}",
+    at: "{when}",
+    next: "{kind, select, confirmation {Confirmación} cancellation {Aviso de cancelación} other {Próximo recordatorio}}: {when}",
+    flag: "El recordatorio falló",
+  },
   chargeDetail: {
     date: "Fecha",
     amount: "Valor cobrado",
@@ -94,6 +110,22 @@ const en: typeof es = {
   notesTitle: "Notes about the customer",
   loading: "Loading...",
   noNotes: "No notes.",
+  reminder: {
+    title: "WhatsApp to the customer",
+    sending:
+      "{kind, select, confirmation {Sending the confirmation} cancellation {Sending the cancellation notice} other {Sending the reminder}}",
+    sent: "{kind, select, confirmation {Confirmation sent} cancellation {Cancellation notice sent} other {Reminder sent}}",
+    delivered:
+      "{kind, select, confirmation {Confirmation delivered} cancellation {Cancellation notice delivered} other {Reminder delivered}}",
+    read: "{kind, select, confirmation {Confirmation read} cancellation {Cancellation notice read} other {Reminder read}}",
+    failed:
+      "{kind, select, confirmation {The confirmation failed} cancellation {The cancellation notice failed} other {The reminder failed}}",
+    failedPhone:
+      "{kind, select, confirmation {The confirmation failed: check the number} cancellation {The cancellation notice failed: check the number} other {The reminder failed: check the number}}",
+    at: "{when}",
+    next: "{kind, select, confirmation {Confirmation} cancellation {Cancellation notice} other {Next reminder}}: {when}",
+    flag: "The reminder failed",
+  },
   chargeDetail: {
     date: "Date",
     amount: "Amount charged",

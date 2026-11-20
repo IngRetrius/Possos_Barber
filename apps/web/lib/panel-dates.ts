@@ -31,3 +31,14 @@ export function bogotaHourMinute(iso: string): string {
 export function isoDaysAgo(days: number): string {
   return new Date(new Date().getTime() - days * 86_400_000).toISOString();
 }
+
+/** El mes de Bogotá que contiene `day` (`YYYY-MM-DD`): del día 1 a las 0:00 al día 1 siguiente. */
+export function bogotaMonthRange(day: string): { from: string; to: string } {
+  const [year, month] = day.split("-").map(Number) as [number, number];
+  const next = month === 12 ? [year + 1, 1] : [year, month + 1];
+  const key = (y: number, m: number) => `${y}-${String(m).padStart(2, "0")}-01`;
+  return {
+    from: bogotaInstant(key(year, month), "00:00"),
+    to: bogotaInstant(key(next[0]!, next[1]!), "00:00"),
+  };
+}

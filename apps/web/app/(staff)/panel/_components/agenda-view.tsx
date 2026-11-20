@@ -8,6 +8,7 @@ import { AgendaList, AppointmentDetail, useLiveAgenda } from "@possos/booking/ui
 import { servicePriceLabel } from "@possos/catalog";
 import { formatPercent, type Charge } from "@possos/commissions";
 import { ChargeForm } from "@possos/commissions/ui";
+import { reminderFailed, type ReminderSummary } from "@possos/notifications";
 import { Button, InlineError, Sheet, toast, toDateKey, useFormat } from "@possos/ui";
 import {
   attendAction,
@@ -22,6 +23,7 @@ import {
 } from "../_actions/agenda";
 import { useCloseThenNavigate } from "./close-then-navigate";
 import { ReasonForm } from "./reason-form";
+import { ReminderStatus } from "./reminder-status";
 
 export interface AgendaViewProps {
   barberId: string;
@@ -48,6 +50,8 @@ export interface AgendaViewProps {
   isAdmin: boolean;
   /** Hoy en Bogotá (`YYYY-MM-DD`): el barbero corrige solo los cobros de hoy. */
   today: string;
+  /** El WhatsApp de cada cita que se muestra (F7); sin entrada, la cita no tiene mensajes. */
+  reminders: Record<string, ReminderSummary>;
 }
 
 /** Avisos que llegan en la URL (`?aviso=`) y su texto en `web.agenda.notices`. */
@@ -87,6 +91,7 @@ export function AgendaView({
   viewerBarberId,
   isAdmin,
   today,
+  reminders,
 }: AgendaViewProps) {
   const t = useTranslations("web.agenda");
   const f = useFormat();
@@ -104,6 +109,16 @@ export function AgendaView({
     return map;
   }, [items, toClose, pending, uncharged, extra]);
   const chargeOf = useMemo(() => new Map(charges.map((c) => [c.appointment_id, c])), [charges]);
+  // Marca en la agenda las citas cuyo último WhatsApp falló (riesgo 4 de docs/10).
+  const warnings = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(reminders)
+          .filter(([, summary]) => reminderFailed(summary))
+          .map(([id]) => [id, t("reminder.flag")]),
+      ),
+    [reminders, t],
+  );
 
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
   const [mode, setMode] = useState<Mode>("detail");
@@ -244,6 +259,7 @@ export function AgendaView({
           now={isToday ? now : null}
           onSelect={open}
           freeHref={(start) => `/panel/cita/nueva?hora=${encodeURIComponent(start)}`}
+          warnings={warnings}
           className="border-y border-border"
         />
       )}
@@ -325,6 +341,7 @@ export function AgendaView({
               priceLabel={servicePriceLabel(selected.priceCop, f.locale)}
               toClose={isToClose(selected)}
             >
+              <ReminderStatus summary={reminders[selected.id] ?? null} />
               {selected.status === "completed" ? (
                 <ChargeSummary
                   charge={chargeOf.get(selected.id) ?? null}

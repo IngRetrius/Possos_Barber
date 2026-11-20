@@ -24,8 +24,8 @@ async function handle(request: Request): Promise<Response> {
   if (!authorized(request, secret)) {
     return Response.json({ ok: false, error: "UNAUTHORIZED" }, { status: 401 });
   }
-  const consumers = await runDispatch();
-  return Response.json({ ok: true, consumers });
+  const report = await runDispatch();
+  return Response.json({ ok: true, ...report });
 }
 
 export const GET = handle;

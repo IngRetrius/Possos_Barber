@@ -1,6 +1,6 @@
 /*
  * Configuración de los recordatorios que fija el administrador (notification_settings, docs/03).
- * El despacho es de F7: hasta entonces, cambiar esto no envía nada.
+ * La usa el consumidor whatsapp (F7) al programar los mensajes de cada cita nueva.
  */
 
 export interface ReminderSettingsInput {
@@ -9,11 +9,14 @@ export interface ReminderSettingsInput {
   /** Horas antes del segundo, o vacío para no mandarlo ("2"). */
   secondHours: string;
   sendConfirmation: boolean;
+  /** Avisar al cliente cuando el personal cancela su cita (plantilla cita_cancelada, F7). */
+  sendCancellation: boolean;
 }
 
 export interface ValidReminderSettings {
   reminder_offsets_min: number[];
   send_confirmation: boolean;
+  send_cancellation: boolean;
 }
 
 /** Clave del error; la app la traduce (`web.panel.actions.reminders`). */
@@ -46,7 +49,11 @@ export function validateReminderSettings(
   const offsets = [first!, ...(second ? [second] : [])].map((h) => Math.round(h * 60));
   return {
     ok: true,
-    data: { reminder_offsets_min: offsets, send_confirmation: input.sendConfirmation },
+    data: {
+      reminder_offsets_min: offsets,
+      send_confirmation: input.sendConfirmation,
+      send_cancellation: input.sendCancellation,
+    },
   };
 }
 

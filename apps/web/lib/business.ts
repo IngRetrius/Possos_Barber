@@ -66,12 +66,6 @@ export function mapsEmbedUrl(locale: Locale = DEFAULT_LOCALE): string | null {
   return `https://www.google.com/maps?q=${query}&ll=${latitude},${longitude}&z=17&hl=${locale}&output=embed`;
 }
 
-/**
- * Recordatorios por WhatsApp activos. Se prende en F7, cuando el despacho funcione: antes de eso
- * "Te llega un WhatsApp para confirmar" sería falso.
- */
-export const WHATSAPP_REMINDERS_ENABLED = false;
-
 /** URL pública del sitio para metadatos, datos estructurados y el .ics. */
 export function siteUrl(): string {
   const production = process.env.VERCEL_PROJECT_PRODUCTION_URL;

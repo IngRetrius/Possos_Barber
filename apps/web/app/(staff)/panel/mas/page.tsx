@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { SignOutButton } from "@possos/auth/ui";
+import { WHATSAPP_PRICE_COP, whatsappCostEstimate } from "@possos/notifications";
+import { getWhatsappUsage } from "@possos/notifications/server";
 import { List, ListRow } from "@possos/ui";
 import { signOutAction } from "../../../(auth)/actions";
+import { currentFormatters } from "../../../../lib/i18n";
 import { loadPanel } from "../../../../lib/panel";
+import { bogotaMonthRange, todayKey } from "../../../../lib/panel-dates";
+import { whatsappRemindersEnabled } from "../../../../lib/whatsapp";
 import { LocaleSwitch } from "../../../_components/locale-switch";
 import { PushSettings } from "../_components/push-settings";
 
@@ -14,12 +19,16 @@ export async function generateMetadata(): Promise<Metadata> {
 /**
  * "Más" (docs/11): lo que no se usa todos los días. Lo del administrador solo lo ve él.
  * "Avisos" (F8) va primero y solo para quien es barbero: es lo único que se hace una vez por
- * celular y el dueño lo busca al instalar la app.
+ * celular y el dueño lo busca al instalar la app. "WhatsApp" (F7, solo el administrador) muestra
+ * el costo estimado del mes, calculado con el registro de mensajes (riesgo 3 de docs/10).
  */
 export default async function MorePage() {
   const ctx = await loadPanel("/panel/mas");
   const { viewer } = ctx;
   const t = await getTranslations("web.staff.more");
+  const f = await currentFormatters();
+  const range = bogotaMonthRange(todayKey());
+  const usage = viewer.isAdmin ? await getWhatsappUsage(ctx.db, range) : null;
   const roles = [viewer.isAdmin ? t("admin") : null, viewer.barberId ? t("barber") : null]
     .filter(Boolean)
     .join(t("and"));
@@ -64,6 +73,46 @@ export default async function MorePage() {
           <ListRow title={t("timeOff")} detail={t("timeOffDetail")} href="/panel/bloqueos" />
         </List>
       </section>
+
+      {usage ? (
+        <section className="grid gap-3" aria-labelledby="whatsapp">
+          <h2 id="whatsapp" className="text-heading">
+            {t("whatsapp")}
+          </h2>
+          <div className="grid gap-1.5 rounded-card border border-border bg-surface p-4">
+            {usage.ok ? (
+              <>
+                <p className="text-label tabular-nums">
+                  {t("whatsappMonth", {
+                    month: f.monthYear(range.from).replace(/^./, (c) => c.toUpperCase()),
+                    cost: f.price(whatsappCostEstimate(usage.data)),
+                  })}
+                </p>
+                <p className="text-body text-fg-muted tabular-nums">
+                  {t("whatsappCount", { delivered: usage.data.delivered })}
+                  {usage.data.failed > 0
+                    ? ` · ${t("whatsappFailed", { count: usage.data.failed })}`
+                    : ""}
+                </p>
+                {usage.data.marketing > 0 ? (
+                  <p className="text-caption text-warning">
+                    {t("whatsappMarketing", { count: usage.data.marketing })}
+                  </p>
+                ) : null}
+                <p className="text-caption text-fg-muted">
+                  {whatsappRemindersEnabled()
+                    ? t("whatsappRate", { price: f.price(WHATSAPP_PRICE_COP.utility) })
+                    : t("whatsappOff")}
+                </p>
+              </>
+            ) : (
+              <p role="alert" className="text-body text-danger">
+                {t("whatsappLoadError")}
+              </p>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       {viewer.isAdmin ? (
         <section className="grid gap-3">

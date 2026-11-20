@@ -318,6 +318,11 @@ export async function todaySettlement(): Promise<{
   };
 }
 
+/** Una variable de la app: en CI, del entorno; en local, de apps/web/.env.local. */
+export function appEnv(name: string): string | undefined {
+  return process.env[name] ?? fromEnvFile(name);
+}
+
 /** Secreto de la ruta de despacho (F8): en local, el de apps/web/.env.local; en CI, del entorno. */
 export function dispatchSecret(): string {
   const secret = process.env.CRON_SECRET ?? fromEnvFile("CRON_SECRET");

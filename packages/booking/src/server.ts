@@ -246,6 +246,15 @@ export async function getAppointmentForNotification(
 }
 
 /**
+ * La próxima cita activa de un celular (`+57...`) o, si no tiene, la última. La usa el WhatsApp
+ * de F7 para contestar un texto libre con el contacto del barbero. Exige la clave secreta.
+ */
+export async function findAppointmentForPhone(db: DbClient, phone: string): R<string | null> {
+  const { data, error } = await db.rpc("find_appointment_for_phone", { p_phone: phone });
+  return error ? fail(error) : { ok: true, data: data ?? null };
+}
+
+/**
  * La próxima cita de un cliente que todavía no pasa (pendiente, reservada o confirmada), o null.
  * La usa F3 para no borrar una cuenta con una cita pendiente, y F5 para "Mis citas".
  */

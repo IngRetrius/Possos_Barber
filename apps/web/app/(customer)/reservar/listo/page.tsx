@@ -10,7 +10,8 @@ import { servicePriceLabel } from "@possos/catalog";
 import { listActiveServices } from "@possos/catalog/server";
 import { createClient } from "@possos/supabase/server";
 import { Button, Logo } from "@possos/ui";
-import { addressLabel, WHATSAPP_REMINDERS_ENABLED } from "../../../../lib/business";
+import { addressLabel } from "../../../../lib/business";
+import { whatsappRemindersEnabled } from "../../../../lib/whatsapp";
 import { currentFormatters } from "../../../../lib/i18n";
 import { param, requireCustomer } from "../../../../lib/session";
 import { InstallHint } from "../../../_components/install-hint";
@@ -62,7 +63,7 @@ export default async function DonePage({ searchParams }: PageProps<"/reservar/li
         <div className="grid gap-2">
           <h1 className="text-title">{pending ? t("done.pendingTitle") : t("done.title")}</h1>
           {pending ? <p className="text-body text-warning">{t("approval")}</p> : null}
-          {WHATSAPP_REMINDERS_ENABLED && profile.whatsapp_opt_in && !pending ? (
+          {whatsappRemindersEnabled() && profile.whatsapp_opt_in && !pending ? (
             <p className="text-body text-fg-muted">{t("done.whatsapp")}</p>
           ) : null}
         </div>

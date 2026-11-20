@@ -65,7 +65,12 @@ Reserva creada ─▶ [utilidad] cita_confirmada         (inmediato)
                    └─ Sin respuesta      → la cita sigue booked y la agenda la marca "sin confirmar"
 
 2 h antes ──────▶ [utilidad] recordatorio_2h   (solo si la cita sigue activa)
-                   "Te esperamos a las 3:00 p. m. Dirección: [PENDIENTE]"
+                   "Tu cita en Possos Barber es a las 3:00 p. m. Dirección: ..."
+
+El personal cancela ▶ [utilidad] cita_cancelada  (opcional, decisión 7; apagado por omisión)
+
+El cliente escribe ▶ respuesta de servicio (una cada 12 h): este número no lee mensajes,
+                   con el enlace al WhatsApp del barbero
 
 Al barbero: notificación push en la PWA (sin costo) por cada reserva, cambio o confirmación.
 ```
@@ -73,12 +78,23 @@ Al barbero: notificación push en la PWA (sin costo) por cada reserva, cambio o 
 - Los momentos del recordatorio (24 h y 2 h) quedan en la configuración y el dueño los puede cambiar.
 - Si una reserva se hace con menos de 24 h de anticipación, no se manda el recordatorio de 24 h.
 - Cada mensaje queda registrado con su estado (en cola, enviado, entregado, leído, falló), que llega por webhook. La cita muestra si el recordatorio llegó. Un teléfono que falla se marca para que el barbero lo corrija.
-- Un cliente puede pedir no recibir WhatsApp (`whatsapp_opt_in = false`). En ese caso solo recibe la notificación push, si instaló la app.
+- Un cliente puede pedir no recibir WhatsApp (`whatsapp_opt_in = false`). En ese caso no recibe mensajes (los avisos push de F8 son solo para el barbero).
+- El borrador de las plantillas, para que el dueño lo revise antes de enviarlo a Meta, está en [F7-plantillas](../fases/F7-plantillas.md).
+
+## Cómo está construido (F7)
+
+Terminado en código el 20/11/2026 y probado contra una Graph API falsa; el detalle está en [F7-entrega](../fases/F7-entrega.md).
+
+- **Sin intermediarios ni Vercel Cron.** El consumidor `whatsapp` del despacho de `booking_events` (F8) programa los mensajes en `message_jobs`; `pg_cron` revisa cada minuto si hay alguno vencido y llama a la ruta de despacho, que los manda por HTTP a la Cloud API (Graph API `v24.0`). Un recordatorio sale con un desfase de 1 minuto como máximo.
+- **Ningún mensaje sale dos veces** aunque dos despachos corran a la vez (`for update skip locked`), y antes de mandar se vuelve a leer la cita: una cancelada, movida o pasada no recibe nada.
+- **Webhook** en `/api/whatsapp/webhook`: verificación con token, firma `X-Hub-Signature-256`, estados, "Confirmo" (confirma la cita por la API de booking) y "Necesito cambiarla" (enlace a `/mis-citas/<id>`), sin duplicados.
+- **En el panel:** el estado del último mensaje en la hoja de la cita, "El recordatorio falló" en la agenda y, en "Más", el costo estimado del mes con los mensajes entregados y su categoría de cobro.
+- **Variables de entorno** (solo en Vercel, regla 6): `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_APP_SECRET` y `WHATSAPP_WEBHOOK_VERIFY_TOKEN`. Sin las dos primeras no se programa ni se manda nada, y la app no promete "Te llega un WhatsApp".
 
 ## Requisitos de Meta antes de enviar el primer mensaje
 
 1. Un portafolio de negocio en Meta Business, de la barbería, con un método de pago y la moneda en COP.
 2. Una cuenta de WhatsApp Business Platform con el número (opción A o B) y el nombre visible "Possos Barber" aprobado.
-3. Las tres plantillas aprobadas en español: `cita_confirmada`, `recordatorio_24h` y `recordatorio_2h`.
-4. El webhook configurado en la ruta `apps/web/app/api/whatsapp/webhook` (ver [07](07-stack.md)), que recibe los estados de los mensajes y las respuestas de los botones y valida la firma `X-Hub-Signature-256`.
+3. Las tres plantillas aprobadas en español: `cita_confirmada`, `recordatorio_24h` y `recordatorio_2h` (y `cita_cancelada`, si el dueño la quiere). Borrador en [F7-plantillas](../fases/F7-plantillas.md).
+4. El webhook configurado en la ruta `apps/web/app/api/whatsapp/webhook` (ver [07](07-stack.md)), que recibe los estados de los mensajes y las respuestas de los botones y valida la firma `X-Hub-Signature-256`. La ruta existe desde F7; los pasos para conectarla están en [F7-entrega](../fases/F7-entrega.md#configurar-en-producción-cuando-meta-esté-listo).
 5. Verificar el negocio con Meta. Sin verificación hay un límite de mensajes iniciados por el negocio al día; según la documentación anterior, unos 250 clientes distintos en 24 horas, que alcanzan de sobra para un barbero. **Pendiente:** confirmar el límite actual.

@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { cn, StatusBadge, useFormat } from "@possos/ui";
@@ -12,6 +12,11 @@ export interface AgendaListProps {
   onSelect: (appointmentId: string) => void;
   /** A dónde lleva una hora libre ("Nueva cita" con esa hora). */
   freeHref: (start: string) => string;
+  /**
+   * Avisos por cita (id → texto), por ejemplo "El recordatorio falló" (F7). Los arma la app:
+   * booking no conoce los mensajes de notifications.
+   */
+  warnings?: Record<string, string>;
   className?: string;
 }
 
@@ -22,7 +27,14 @@ const time = "w-[5.75rem] shrink-0 text-label tabular-nums";
  * Agenda del día como lista por hora (docs/11, "Hoy"): citas, horas libres y bloqueos, con la
  * línea amarilla de "ahora". Tocar una cita la abre; tocar una hora libre crea una cita.
  */
-export function AgendaList({ items, now, onSelect, freeHref, className }: AgendaListProps) {
+export function AgendaList({
+  items,
+  now,
+  onSelect,
+  freeHref,
+  warnings,
+  className,
+}: AgendaListProps) {
   const t = useTranslations("booking.agenda");
   const f = useFormat();
   const nowMs = now ? new Date(now).getTime() : null;
@@ -63,6 +75,16 @@ export function AgendaList({ items, now, onSelect, freeHref, className }: Agenda
                   <span className="truncate text-caption text-fg-muted">
                     {t("until", { service: a.serviceName, time: f.time(a.end) })}
                   </span>
+                  {warnings?.[a.id] ? (
+                    <span className="flex items-center gap-1 text-caption text-danger">
+                      <TriangleAlert
+                        aria-hidden="true"
+                        strokeWidth={1.5}
+                        className="size-3.5 shrink-0"
+                      />
+                      <span className="truncate">{warnings[a.id]}</span>
+                    </span>
+                  ) : null}
                 </span>
                 <StatusBadge tone={display.tone} className="shrink-0">
                   {display.label}
