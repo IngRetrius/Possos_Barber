@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -223,23 +224,24 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
 
         {works.length > 0 || SHOW_PENDING ? (
           <section aria-labelledby="trabajos" className="grid gap-3">
-            <div className="flex items-baseline justify-between gap-3">
-              <h2 id="trabajos" className="text-heading">
-                {t("works")}
-              </h2>
-              <a
-                href={BUSINESS.instagram.url}
-                className={`text-label ${linkClass}`}
-                rel="noopener noreferrer"
-              >
-                {t("worksMore")}
-              </a>
-            </div>
+            <h2 id="trabajos" className="text-heading">
+              {t("works")}
+            </h2>
             {works.length > 0 ? (
               <PortfolioStrip items={works} labelledBy="trabajos" />
             ) : (
               <p className="text-caption text-fg-muted">{t("worksPending")}</p>
             )}
+            {/* Abajo a la derecha, después de ver las fotos (pedido de Juan, 20/11/2026). 48 px de
+                alto para el dedo, como el resto de enlaces sueltos. */}
+            <a
+              href={BUSINESS.instagram.url}
+              className={`-mt-2 inline-flex min-h-12 items-center gap-1 justify-self-end text-label ${linkClass}`}
+              rel="noopener noreferrer"
+            >
+              {t("worksMore")}
+              <ChevronRight aria-hidden="true" strokeWidth={1.5} className="size-5" />
+            </a>
           </section>
         ) : null}
 
