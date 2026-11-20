@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_LOCALE, HTML_LANG, LOCALE, parseLocale, TIMEZONE } from "./constants";
+import {
+  DEFAULT_LOCALE,
+  HTML_LANG,
+  LOCALE,
+  negotiateLocale,
+  parseLocale,
+  TIMEZONE,
+} from "./constants";
 
 describe("constantes compartidas", () => {
   it("usa la zona horaria de Bogotá", () => {
@@ -24,5 +31,23 @@ describe("constantes compartidas", () => {
     expect(parseLocale("es")).toBe("es");
     expect(parseLocale("fr")).toBe("es");
     expect(parseLocale(undefined)).toBe("es");
+  });
+
+  it("toma el idioma del dispositivo del encabezado Accept-Language", () => {
+    expect(negotiateLocale("en-US,en;q=0.9")).toBe("en");
+    expect(negotiateLocale("es-CO,es;q=0.9,en;q=0.8")).toBe("es");
+    expect(negotiateLocale("en-GB")).toBe("en");
+    expect(negotiateLocale("es-MX")).toBe("es");
+    // Gana el primero que tenga la interfaz, en el orden de preferencia.
+    expect(negotiateLocale("fr-FR,fr;q=0.9,en;q=0.8,es;q=0.7")).toBe("en");
+    expect(negotiateLocale("es;q=0.5,en;q=0.9")).toBe("en");
+    expect(negotiateLocale("EN-us")).toBe("en");
+    // q=0 quiere decir "no lo quiero".
+    expect(negotiateLocale("en;q=0,fr")).toBe("es");
+    // Sin idioma conocido o sin encabezado: español.
+    expect(negotiateLocale("fr-FR,de;q=0.8")).toBe("es");
+    expect(negotiateLocale("*")).toBe("es");
+    expect(negotiateLocale("")).toBe("es");
+    expect(negotiateLocale(null)).toBe("es");
   });
 });

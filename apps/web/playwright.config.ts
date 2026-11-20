@@ -25,6 +25,9 @@ export default defineConfig({
     // El service worker de la PWA (F8) solo corre en pwa.spec, que lo permite. En las demás,
     // las navegaciones van directo a la red, como antes de F8.
     serviceWorkers: "block",
+    // Un celular en español de Colombia: sin cookie, la app toma el idioma del dispositivo
+    // (docs/11, "Idiomas"), y Chromium por omisión dice inglés.
+    locale: "es-CO",
   },
   projects: [
     {

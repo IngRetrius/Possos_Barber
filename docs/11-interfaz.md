@@ -322,9 +322,13 @@ Solo aparece si hay más de un servicio activo. Lista de filas de 64 px: nombre,
 
 Pedido de Juan el 20/11/2026: la app también en inglés, para quien no lee español.
 
-- **Botón ES/EN** arriba a la derecha en todas las pantallas (inicio, cuentas, pasos de la reserva, Mis citas y panel). Dice el idioma al que cambia, escrito en ese idioma ("EN" en español, "ES" en inglés), con su `lang` para el lector de pantalla. Es un formulario con una acción de servidor: funciona sin JavaScript.
-- **El idioma va en una cookie** (`NEXT_LOCALE`, un año), no en la URL. Así los enlaces de WhatsApp, de los correos y de los avisos sirven igual en los dos idiomas. Por omisión, español. `<html lang>` es `es-CO` o `en`.
+- **Botón ES/EN**. Dice el idioma al que cambia, escrito en ese idioma, con su `lang` para el lector de pantalla. Es un formulario con una acción de servidor: funciona sin JavaScript.
+  - **Inicio**: en el pie, debajo de Contacto, con el ícono de idiomas y el nombre completo ("English" en español, "Español" en inglés). No va en el encabezado, para que arriba solo queden el logo y la cuenta (pedido de Juan, 20/11/2026). La barra "Reservar" es sticky: al final de la página queda debajo del pie y no lo tapa.
+  - **Demás pantallas** (cuentas, pasos de la reserva, Mis citas y panel): arriba a la derecha, corto ("EN" o "ES").
+- **Idioma automático**. Sin cookie, la app sale en el idioma del dispositivo (encabezado `Accept-Language` del navegador): el primero de la lista de preferencias que sea español o inglés, sin mirar la región. Si el dispositivo no está en ninguno de los dos, español. El botón manda sobre el dispositivo.
+- **El idioma elegido va en una cookie** (`NEXT_LOCALE`, un año), no en la URL. Así los enlaces de WhatsApp, de los correos y de los avisos sirven igual en los dos idiomas. `<html lang>` es `es-CO` o `en`.
 - **Textos**: next-intl. Cada paquete trae los suyos en `src/messages.ts` (entrada `./messages` de `exports`) y la app los junta en `apps/web/i18n/`. El inglés tiene el tipo del español, así que una clave que falta es un error de TypeScript, y una clave que no existe también.
+- **Peso**: los componentes de servidor leen todos los textos; al navegador solo viajan los que usan los componentes de cliente. Fuera del panel son `ui`, `auth`, `booking`, `customers.profile` y `web.common` (`SITE_CLIENT_MESSAGES` en `apps/web/i18n/messages.ts`); el layout del panel entrega todos. Así el inicio pesa un 34 % menos (de 24 a 16 KB comprimido). Un componente de cliente nuevo fuera del panel con otro namespace se agrega a esa lista.
 - **Formatos** en inglés: "Fri, Nov 20", "3:00 PM", "$35,000" (pesos con coma de miles), "50%". Los datos del dueño sin confirmar dicen [PENDING].
 - **Quedan en español**: los datos del negocio (nombres de servicios, dirección, descripciones), los nombres de los festivos, el manifiesto de la PWA, los correos de Supabase, los recordatorios de WhatsApp y los avisos push al barbero (el servidor los manda sin saber el idioma de la persona). La política de datos tiene traducción, pero rige la versión en español y la página lo dice.
 

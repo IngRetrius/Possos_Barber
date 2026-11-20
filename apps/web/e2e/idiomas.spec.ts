@@ -3,8 +3,10 @@ import { expect, test, type Page } from "@playwright/test";
 import { SEED } from "./support/supabase";
 
 /*
- * Idiomas (docs/11, "Idiomas"): español por omisión y el botón ES/EN arriba a la derecha. El
- * idioma va en una cookie, así que cada prueba (un contexto nuevo) empieza en español.
+ * Idiomas (docs/11, "Idiomas"): sin cookie, el idioma del dispositivo (español si no es ni español
+ * ni inglés); el botón ES/EN, en el pie del inicio y arriba a la derecha en las demás pantallas,
+ * lo cambia y queda en una cookie. Las pruebas corren con un dispositivo en es-CO
+ * (playwright.config.ts), así que cada una (un contexto nuevo) empieza en español.
  */
 
 const WCAG = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
@@ -55,6 +57,44 @@ test("el inicio está en español y el botón lo pasa a inglés y de vuelta", as
   await expect(
     page.getByRole("heading", { level: 1, name: "Política de tratamiento de datos personales" }),
   ).toBeVisible();
+});
+
+test("en el inicio, el botón de idioma va en el pie y no en el encabezado", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator('header [data-slot="locale-switch"]')).toHaveCount(0);
+  const footerSwitch = page.locator('footer [data-slot="locale-switch"]');
+  await expect(footerSwitch).toHaveText("English");
+  await expect(footerSwitch).toHaveAttribute("lang", "en");
+  // Al final de la página, la barra "Reservar" no lo tapa: se puede tocar.
+  await footerSwitch.scrollIntoViewIfNeeded();
+  await footerSwitch.click();
+  await expect(page.locator('footer [data-slot="locale-switch"]')).toHaveText("Español");
+  await expect(page.getByRole("heading", { name: "Services" })).toBeVisible();
+});
+
+test("sin cookie, la app sale en el idioma del dispositivo", async ({ browser }) => {
+  const open = async (locale: string) => {
+    const context = await browser.newContext({ locale, viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+    await page.goto("/");
+    return { context, page };
+  };
+
+  const english = await open("en-US");
+  await expect(english.page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(english.page.getByRole("heading", { name: "Services" })).toBeVisible();
+  // El botón manda sobre el dispositivo y se recuerda.
+  await toSpanish(english.page).click();
+  await expect(english.page.getByRole("heading", { name: "Servicios" })).toBeVisible();
+  await english.page.reload();
+  await expect(english.page.locator("html")).toHaveAttribute("lang", "es-CO");
+  await english.context.close();
+
+  // Un dispositivo en un idioma que la app no tiene sale en español.
+  const french = await open("fr-FR");
+  await expect(french.page.locator("html")).toHaveAttribute("lang", "es-CO");
+  await expect(french.page.getByRole("heading", { name: "Servicios" })).toBeVisible();
+  await french.context.close();
 });
 
 test("el botón de idioma funciona sin JavaScript", async ({ browser }) => {

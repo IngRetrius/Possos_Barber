@@ -166,23 +166,22 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           <Logo label="" />
           <h1 className="truncate text-heading text-brand">{BUSINESS.name}</h1>
         </div>
-        <div className="flex shrink-0 items-center">
-          <nav aria-label={t("nav.label")} className="flex items-center">
-            {viewer && !viewer.isStaff ? (
-              <Button asChild variant="ghost" className="px-2">
-                <Link href={MY_APPOINTMENTS_PATH}>{t("nav.myAppointments")}</Link>
-              </Button>
-            ) : null}
+        {/* El botón de idioma va en el pie, no aquí: el encabezado queda con lo de la cuenta
+            (pedido de Juan, 20/11/2026). */}
+        <nav aria-label={t("nav.label")} className="flex shrink-0 items-center">
+          {viewer && !viewer.isStaff ? (
             <Button asChild variant="ghost" className="px-2">
-              <Link
-                href={viewer ? (viewer.isStaff ? STAFF_HOME : PROFILE_PATH) : AUTH_ROUTES.signIn}
-              >
-                {viewer ? (viewer.isStaff ? t("nav.panel") : t("nav.profile")) : t("nav.signIn")}
-              </Link>
+              <Link href={MY_APPOINTMENTS_PATH}>{t("nav.myAppointments")}</Link>
             </Button>
-          </nav>
-          <LocaleSwitch />
-        </div>
+          ) : null}
+          <Button asChild variant="ghost" className="px-2">
+            <Link
+              href={viewer ? (viewer.isStaff ? STAFF_HOME : PROFILE_PATH) : AUTH_ROUTES.signIn}
+            >
+              {viewer ? (viewer.isStaff ? t("nav.panel") : t("nav.profile")) : t("nav.signIn")}
+            </Link>
+          </Button>
+        </nav>
       </header>
 
       <main className="grid flex-1 content-start gap-10 px-gutter pt-4 pb-10 md:mx-auto md:w-full md:max-w-2xl">
@@ -328,6 +327,14 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           </p>
         </section>
       </main>
+
+      {/* Pie con el botón de idioma (docs/11, "Idiomas"). La barra "Reservar" es sticky, así
+          que al final de la página queda debajo del pie y no lo tapa. */}
+      <footer className="px-gutter pb-6 md:mx-auto md:w-full md:max-w-2xl">
+        <div className="border-t border-border pt-2">
+          <LocaleSwitch variant="full" className="-ml-2" />
+        </div>
+      </footer>
 
       <HomeBookBar
         href={bookHref}

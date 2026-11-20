@@ -25,5 +25,31 @@ export function parseLocale(value: string | null | undefined): Locale {
   return (LOCALES as readonly string[]).includes(value ?? "") ? (value as Locale) : DEFAULT_LOCALE;
 }
 
+/**
+ * El idioma del dispositivo, a partir del encabezado `Accept-Language` del navegador
+ * ("en-US,en;q=0.9,es;q=0.8"). Recorre los idiomas en el orden de preferencia (`q`) y devuelve el
+ * primero que tiene la interfaz, sin mirar la región ("en-GB" es inglés, "es-MX" es español). Si
+ * ninguno coincide, o no hay encabezado, el español.
+ */
+export function negotiateLocale(acceptLanguage: string | null | undefined): Locale {
+  if (!acceptLanguage) return DEFAULT_LOCALE;
+  const ranked = acceptLanguage
+    .split(",")
+    .map((entry, index) => {
+      const [tag = "", ...params] = entry.trim().split(";");
+      const q = params.map((p) => p.trim()).find((p) => p.startsWith("q="));
+      const weight = q ? Number(q.slice(2)) : 1;
+      return {
+        language: tag.trim().toLowerCase().split("-")[0] ?? "",
+        weight: Number.isFinite(weight) ? weight : 0,
+        index,
+      };
+    })
+    .filter((e) => e.weight > 0)
+    .sort((a, b) => b.weight - a.weight || a.index - b.index);
+  const match = ranked.find((e) => (LOCALES as readonly string[]).includes(e.language));
+  return match ? (match.language as Locale) : DEFAULT_LOCALE;
+}
+
 /** Idioma de la interfaz por omisión y del atributo `lang`. */
 export const LOCALE = HTML_LANG[DEFAULT_LOCALE];
