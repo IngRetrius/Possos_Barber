@@ -179,6 +179,22 @@ export async function cleanPanelTestData(): Promise<void> {
   });
 }
 
+/**
+ * Crea un servicio activo `E2E...` como administrador (al final del orden). Con él hay más de un
+ * servicio y el flujo muestra el paso del servicio; `cleanPanelTestData` lo desactiva.
+ */
+export async function addTestService(name: string): Promise<{ id: string }> {
+  if (!name.startsWith(E2E_PREFIX)) throw new Error(`El nombre debe empezar por ${E2E_PREFIX}`);
+  const token = await signInApi(SEED.admin);
+  const [row] = await rest<{ id: string }[]>("services?select=id", {
+    method: "POST",
+    token,
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify({ name, duration_min: 30, sort_order: 999 }),
+  });
+  return row!;
+}
+
 /** Reserva del cliente con un día y hora libres; devuelve la cita. */
 export async function bookFreeSlot(
   email: string,

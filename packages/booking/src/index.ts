@@ -74,6 +74,13 @@ export {
   googleCalendarUrl,
   type IcsEvent,
 } from "./internal/ics";
+export {
+  groupQuickSlots,
+  pickQuickDays,
+  QUICK_SLOTS_DAYS,
+  QUICK_SLOTS_LIMIT,
+  type QuickSlotDay,
+} from "./internal/quick-slots";
 export { APPOINTMENT_STATUS_DISPLAY, TO_CLOSE_DISPLAY } from "./internal/status";
 export {
   canChange,

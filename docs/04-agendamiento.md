@@ -24,6 +24,8 @@ Contiene las reglas de la agenda, con los valores que decidió el dueño el 18/1
 
 Al reservar se muestra la cita creada, un botón para agregarla al calendario (en iPhone, iPad y Mac, el archivo .ics, que se abre en Calendario; en Android y lo demás, Google Calendar con la cita llena) y, si la app no está instalada, la invitación a instalarla.
 
+**Desde el inicio:** cada servicio muestra sus próximas horas libres; tocar una lleva directo a "Confirmar", así que la reserva toma 3 toques (abrir el servicio, la hora y "Reservar"). Para otro día, "Ver todas las horas" abre el paso de horario.
+
 **Volver a reservar:** en "Mis citas", cada cita pasada tiene un botón que abre el flujo con el servicio y el barbero ya elegidos.
 
 ## Cualquiera disponible

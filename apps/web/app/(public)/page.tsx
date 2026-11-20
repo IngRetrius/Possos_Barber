@@ -16,17 +16,18 @@ import {
   MY_APPOINTMENTS_ROUTES,
   parsePeriod,
   parseSelection,
-  selectionHref,
 } from "@possos/booking";
 import { getNextAppointment } from "@possos/booking/server";
 import { ServiceList } from "@possos/catalog/ui";
 import { needsConsent } from "@possos/customers";
 import { getMyProfile } from "@possos/customers/server";
 import { createClient } from "@possos/supabase/server";
-import { BottomBar, Button, formatDate, formatTime, Logo, StatusBadge } from "@possos/ui";
+import { Button, formatDate, formatTime, Logo, StatusBadge } from "@possos/ui";
 import { BUSINESS, mapsEmbedUrl, mapsUrl, PENDING, siteUrl } from "../../lib/business";
-import { loadBookingFlow, timeStepHref } from "../../lib/booking-flow";
+import { loadBookingFlow, loadServiceEntries, timeStepHref } from "../../lib/booking-flow";
 import { MY_APPOINTMENTS_PATH, PROFILE_PATH, STAFF_HOME } from "../../lib/session";
+import { HomeBookBar } from "../_components/home-book-bar";
+import { ServiceBooking } from "../_components/service-booking";
 
 export const metadata: Metadata = {
   title: `${BUSINESS.name} · ${BUSINESS.kind}`,
@@ -69,10 +70,13 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     getViewer(db),
   ]);
   const barberList = barbers.ok ? barbers.data : [];
-  const portfolio = await listPortfolio(
-    db,
-    barberList.map((b) => b.id),
-  );
+  const [portfolio, entries] = await Promise.all([
+    listPortfolio(
+      db,
+      barberList.map((b) => b.id),
+    ),
+    loadServiceEntries(db, flow.services),
+  ]);
   const ranges = hours.ok ? hours.data : [];
   const groups = groupOpeningHours(ranges);
 
@@ -193,16 +197,23 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           )}
         </section>
 
-        <section aria-labelledby="servicios" className="grid gap-3">
-          <h2 id="servicios" className="text-heading">
+        <section
+          id="lista-servicios"
+          aria-labelledby="servicios"
+          className="grid scroll-mt-4 gap-3"
+        >
+          <h2 id="servicios" tabIndex={-1} data-scroll-focus className="text-heading">
             Servicios
           </h2>
           {flow.services.length ? (
             <ServiceList
               services={flow.services}
-              bookHrefFor={(service) =>
-                selectionHref(BOOKING_ROUTES.barber, { serviceId: service.id })
-              }
+              bookingFor={(service) => {
+                const entry = entries.get(service.id);
+                return entry ? (
+                  <ServiceBooking db={db} serviceId={service.id} entry={entry} />
+                ) : null;
+              }}
             />
           ) : (
             <p className="text-body text-fg-muted">{`Servicios ${PENDING}`}</p>
@@ -301,11 +312,11 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         </section>
       </main>
 
-      <BottomBar>
-        <Button asChild>
-          <Link href={bookHref}>Reservar</Link>
-        </Button>
-      </BottomBar>
+      <HomeBookBar
+        href={bookHref}
+        targetId="lista-servicios"
+        scrollToTarget={flow.services.length > 1}
+      />
     </div>
   );
 }

@@ -2,12 +2,15 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { linkFromEmail } from "./support/mailpit";
 import {
+  addTestService,
   appointmentStatus,
   availableDays,
   availableStarts,
   bookAs,
   cancelTestAppointments,
+  cleanPanelTestData,
   dayWithSlots,
+  E2E_PREFIX,
   SEED,
 } from "./support/supabase";
 
@@ -25,6 +28,17 @@ const TIME_PATH = "/reservar/horario";
 const CONFIRM_PATH = "/reservar/confirmar";
 
 const bottomBar = (page: Page) => page.locator('[data-slot="bottom-bar"]');
+const servicesSection = (page: Page) => page.locator('section[aria-labelledby="servicios"]');
+const openService = (page: Page, name = "Corte normal") =>
+  servicesSection(page).locator("summary", { hasText: name }).click();
+const quickSlots = (page: Page) => servicesSection(page).locator('[data-slot="quick-slots"]');
+
+/** Las primeras horas libres de la semilla, como las calcula el inicio (dos días con horas). */
+async function firstFreeStarts(): Promise<string[]> {
+  const days = (await availableDays()).filter((d) => d.slots > 0).slice(0, 2);
+  const starts = await Promise.all(days.map((d) => availableStarts(d.day)));
+  return starts.flat().slice(0, 6);
+}
 const slotLabel = (page: Page, startAt: string) =>
   page.locator('[data-slot="slot-grid"] label', {
     has: page.locator(`input[value="${startAt}"]`),
@@ -129,7 +143,8 @@ test("la página pública se lee sin JavaScript", async ({ browser }) => {
   await expect(page.getByText("Lunes a sábado")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Ubicación" })).toBeVisible();
   await expect(page.getByText("Girardot, Cundinamarca")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Reservar" })).toBeVisible();
+  // Sin JavaScript la barra no se esconde: "Reservar" queda fija abajo.
+  await expect(bottomBar(page).getByRole("link", { name: "Reservar" })).toBeVisible();
 
   const jsonLd = await page.locator('script[type="application/ld+json"]').textContent();
   expect(JSON.parse(jsonLd ?? "{}")).toMatchObject({
@@ -140,52 +155,102 @@ test("la página pública se lee sin JavaScript", async ({ browser }) => {
   await context.close();
 });
 
-test("un servicio del inicio se despliega y reserva directo, también sin JavaScript", async ({
+test("un servicio del inicio muestra sus próximas horas y va directo al horario, también sin JavaScript", async ({
   browser,
 }) => {
+  const starts = await firstFreeStarts();
   for (const javaScriptEnabled of [true, false]) {
     const context = await browser.newContext({
       javaScriptEnabled,
       viewport: { width: 390, height: 844 },
     });
     const page = await context.newPage();
+    const visited: string[] = [];
+    page.on("request", (request) => visited.push(new URL(request.url()).pathname));
     await page.goto("/");
-    const services = page.locator('section[aria-labelledby="servicios"]');
-    const book = services.getByRole("link", { name: "Reservar este servicio" });
-    await expect(book).toBeHidden();
-    await services.locator("summary", { hasText: "Corte normal" }).click();
-    await expect(book).toBeVisible();
-    if (javaScriptEnabled) await expectAccessible(page);
-    await book.click();
+    const more = servicesSection(page).getByRole("link", { name: "Ver todas las horas" });
+    await expect(more).toBeHidden();
+    await openService(page);
+    await expect(more).toBeVisible();
+
+    if (javaScriptEnabled) {
+      // Las horas llegan en streaming: las mismas que da la base, la primera lleva a "Confirmar".
+      await expect(quickSlots(page).getByText("Próximas horas")).toBeVisible();
+      const links = quickSlots(page).getByRole("group").getByRole("link");
+      await expect(links).toHaveCount(starts.length);
+      const first = new URL((await links.first().getAttribute("href"))!, "http://x");
+      expect(first.pathname).toBe(CONFIRM_PATH);
+      expect(first.searchParams.get("hora")).toBe(starts[0]);
+      expect(first.searchParams.get("barbero")).toBe(SEED.barberId);
+      await expect(links.first()).toHaveAccessibleName(/^\d{1,2}:\d{2}\s(a|p)\.\sm\., \S/);
+      await expectAccessible(page);
+    } else {
+      // Sin JavaScript no llega el reemplazo del streaming: queda "Ver todas las horas".
+      await expect(quickSlots(page).getByText("Próximas horas")).toHaveCount(0);
+    }
+
+    await more.click();
     await expect(page).toHaveURL(new RegExp(`^[^?]+${TIME_PATH}\\?.*servicio=${SEED.serviceId}`));
+    await expect(page.getByRole("heading", { name: "Elige tu hora" })).toBeVisible();
+    // Directo al horario, sin el salto por el paso del barbero.
+    expect(visited).not.toContain("/reservar/barbero");
     await context.close();
   }
 });
 
-test("cliente con sesión reserva en 4 toques desde el inicio", async ({ page }) => {
+test("la barra Reservar se esconde mientras se ven los servicios", async ({ page }) => {
+  await page.goto("/");
+  const bar = bottomBar(page);
+  await expect(bar).toHaveAttribute("data-state", "hidden");
+  await expect(bar).toHaveAttribute("inert", "");
+  await expect(bar.getByRole("link", { name: "Reservar" })).toBeHidden();
+
+  // Al bajar al mapa, los servicios salen de la pantalla y la barra vuelve.
+  await page.getByRole("heading", { name: "Ubicación" }).scrollIntoViewIfNeeded();
+  await page.getByRole("heading", { name: "Contacto" }).scrollIntoViewIfNeeded();
+  await expect(bar).toHaveAttribute("data-state", "visible");
+  await expect(bar).not.toHaveAttribute("inert", "");
+  await expectAccessible(page);
+
+  // Con un solo servicio, lleva directo al horario.
+  await bar.getByRole("link", { name: "Reservar" }).tap();
+  await expect(page.getByRole("heading", { name: "Elige tu hora" })).toBeVisible();
+});
+
+test("con varios servicios, Reservar de la barra sube a la lista", async ({ page }) => {
+  try {
+    await addTestService(`${E2E_PREFIX} servicio de la barra`);
+    await page.goto("/");
+    await expect(
+      servicesSection(page).getByText(`${E2E_PREFIX} servicio de la barra`),
+    ).toBeVisible();
+    await page.getByRole("heading", { name: "Contacto" }).scrollIntoViewIfNeeded();
+    const bar = bottomBar(page);
+    await expect(bar).toHaveAttribute("data-state", "visible");
+
+    await bar.getByRole("link", { name: "Reservar" }).tap();
+    await expect(page).toHaveURL("/");
+    await expect(page.getByRole("heading", { name: "Servicios" })).toBeInViewport();
+    await expect(page.getByRole("heading", { name: "Servicios" })).toBeFocused();
+    await expect(bar).toHaveAttribute("data-state", "hidden");
+  } finally {
+    await cleanPanelTestData();
+  }
+});
+
+test("cliente con sesión reserva en 3 toques desde el inicio", async ({ page }) => {
   await signIn(page, SEED.customer, "/");
   await expect(page).toHaveURL("/");
   await expectAccessible(page);
+  const [startAt] = await firstFreeStarts();
 
-  // 1. Reservar: con un servicio y un barbero, el flujo empieza en el horario.
-  await bottomBar(page).getByRole("link", { name: "Reservar" }).tap();
-  await expect(page).toHaveURL(new RegExp(`^[^?]+${TIME_PATH}\\?`));
-  await expect(page.getByText("Paso 1 de 2")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Elige tu hora" })).toBeVisible();
-  await expectAccessible(page);
+  // 1. Abrir el servicio.
+  await openService(page);
 
-  // La primera hora libre del día que se muestra (hoy, o el primer día con horas).
-  const firstSlot = page.locator('[data-slot="slot-grid"] input').first();
-  const startAt = await firstSlot.getAttribute("value");
-
-  // 2. Una hora.
-  await slotLabel(page, startAt!).tap();
-  await expect(bottomBar(page)).toContainText(/\d{1,2}:\d{2}\s(a|p)\.\sm\./);
-  await expect(page).toHaveURL(/hora=/);
-
-  // 3. Continuar.
-  await bottomBar(page).getByRole("link", { name: "Continuar" }).tap();
+  // 2. La primera de sus próximas horas: va directo a "Confirmar".
+  await quickSlots(page).getByRole("group").getByRole("link").first().tap();
   await expect(page).toHaveURL(/\/reservar\/confirmar\?/);
+  expect(new URL(page.url()).searchParams.get("hora")).toBe(startAt);
   await expect(page.getByText("Paso 2 de 2")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Revisa tu cita" })).toBeVisible();
   await expect(
@@ -194,7 +259,7 @@ test("cliente con sesión reserva en 4 toques desde el inicio", async ({ page })
   await expect(page.getByText("Total en la barbería")).toBeVisible();
   await expectAccessible(page);
 
-  // 4. Reservar.
+  // 3. Reservar.
   await bottomBar(page).getByRole("button", { name: "Reservar" }).tap();
   await expect(page).toHaveURL(/\/reservar\/listo\?cita=/);
   await expect(page.getByRole("heading", { name: "Tu cita quedó reservada" })).toBeVisible();
@@ -342,7 +407,8 @@ test("el botón atrás del navegador recorre los pasos en orden", async ({ page 
   const [startAt] = await availableStarts(day);
 
   await page.goto("/");
-  await bottomBar(page).getByRole("link", { name: "Reservar" }).tap();
+  await openService(page);
+  await servicesSection(page).getByRole("link", { name: "Ver todas las horas" }).tap();
   await expect(page.getByRole("heading", { name: "Elige tu hora" })).toBeVisible();
   // Cambiar de día no agrega pasos al historial.
   await page

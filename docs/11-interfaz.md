@@ -42,7 +42,8 @@ Son reglas que se pueden revisar en cada pantalla:
 | Resumen antes de confirmar | Fresha muestra servicio, fecha y hora, profesional, precio total e información del negocio en la revisión final | El resumen de "Confirmar" lleva lo mismo más la política de cancelación de 2 h |
 | Reserva dentro de la marca | Squire dice que su reserva vive en la página de marca del negocio y critica que otros redirigen a una página de la plataforma (afirmación de un competidor) | Todo el flujo vive en el dominio de Possos Barber, con su logo. Es la razón de ser del proyecto |
 | Hojas inferiores | NN/g (2023): cerrar con el gesto atrás y con un botón visible; no apilar hojas; usarlas solo para interacciones cortas; no reemplazar con ellas el paso de una página a otra | Detalle de cita, "¿Cancelar esta cita?" y filtros del barbero. El flujo de reserva usa páginas |
-| Carga | NN/g (*Skeleton Screens*): los esqueletos indican la estructura mientras carga; no reemplazan la optimización | Esqueleto de la cuadrícula de horas al cambiar de día. Si la respuesta tarda menos de 300 ms, no se muestra nada |
+| Carga | NN/g (*Skeleton Screens*): los esqueletos indican la estructura mientras carga; no reemplazan la optimización | Esqueleto de la cuadrícula de horas al cambiar de día. Los enlaces que abren un paso se cubren con un pulso suave mientras llega la página (`LinkPending`). En los dos casos, si la respuesta tarda menos de 300 ms no se muestra nada. Sin `loading.tsx` en la reserva: sin JavaScript dejaría la página en "Cargando" |
+| Una o varias páginas | Baymard (*one-page checkout*): una sola página no rinde más que varios pasos bien hechos; las comparaciones que la favorecen suelen enfrentarla a un flujo sin optimizar. Guías de diseño (Visa, Comisión Europea): no meter contenido largo ni interactivo en un acordeón | El inicio no carga la agenda completa: cada servicio muestra sus próximas horas, que llevan directo a "Confirmar". La agenda completa sigue en su paso |
 | Tamaño táctil | WCAG 2.2, criterio 2.5.8 (AA): 24 × 24 px como mínimo. Apple: 44 × 44 pt. Material: 48 × 48 dp | Mínimo de diseño: 48 px de alto para horas, filas y botones; 44 px para íconos sueltos (con área táctil ampliada) |
 | Modo oscuro | NN/g: la gente elige el modo en el sistema, no en cada app. El contraste excesivo produce halo al leer; hay que cuidar que el foco del teclado se vea | Solo modo oscuro en el MVP (decisión de marca). Texto `#F5F5F5` en vez de blanco puro y fondo `#0B0B0B` en vez de negro puro. Anillo de foco amarillo de 2 px |
 
@@ -124,7 +125,12 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 │ │ Corte              $25.000 ˄ │ │  abierta
 │ │ 60 min                       │ │
 │ │ Servicio de corte que…       │ │
-│ │ [ Reservar este servicio ]   │ │
+│ │ Próximas horas               │ │
+│ │ Hoy · jue 20 nov             │ │
+│ │ [3:00 p.m.][4:00 p.m.][5:00…]│ │  enlaces a "Confirmar"
+│ │ Mañana · vie 21 nov          │ │
+│ │ [9:00 a.m.][10:00 a.m.]      │ │
+│ │ [   Ver todas las horas    ] │ │
 │ ├──────────────────────────────┤ │
 │ │ Corte con barba    $40.000 ˅ │ │
 │ │ 2 h                          │ │
@@ -133,13 +139,17 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 │ Ubicación · mapa · horario       │
 │ Instagram · WhatsApp             │
 ├──────────────────────────────────┤
-│ [          Reservar          ]   │  barra fija, botón amarillo
+│ [          Reservar          ]   │  barra fija; escondida mientras se ven los servicios
 └──────────────────────────────────┘
 ```
 
 - Si el cliente ya tiene una cita próxima, la primera tarjeta es esa cita ("Tu cita: jue 20 nov, 3:00 p. m.") en vez de la frase.
 - La página se renderiza en el servidor para búsquedas locales ([05](05-alcance.md)).
-- Cada servicio es una fila que se despliega en el sitio (acordeón con `<details>`; abrir una cierra la otra): muestra la descripción completa y "Reservar este servicio" (botón secundario, porque el amarillo ya está en la barra fija), que abre el flujo con ese servicio elegido. No es hoja inferior (principio 6) y funciona sin JavaScript. Pedido de Juan el 19/11/2026: la descripción cortada no se leía y desde el inicio no se podía reservar un servicio concreto.
+- Cada servicio es una fila que se despliega en el sitio (acordeón con `<details>`; abrir una cierra la otra) con la descripción completa. No es hoja inferior (principio 6) y se abre sin JavaScript. Pedido de Juan el 19/11/2026: la descripción cortada no se leía y desde el inicio no se podía reservar un servicio concreto.
+- **Próximas horas** (pedido de Juan el 19/11/2026, para reservar más rápido): al abrir un servicio con un solo barbero aparecen hasta 6 horas libres de sus dos primeros días con horas, agrupadas por día ("Hoy · jue 20 nov", "Mañana · vie 21 nov" o "sáb 22 nov"; la fecha evita confundir "Mañana" con la franja de la mañana). Cada hora va completa ("3:00 p. m.") en una cuadrícula de 3 columnas de 48 px y es un enlace a "Confirmar": desde el inicio se reserva en 3 toques (abrir el servicio, la hora y "Reservar"). El lector de pantalla oye la hora y el día ("3:00 p. m., hoy, jue 20 nov"). Debajo, "Ver todas las horas" (botón secundario) abre el paso de horario de ese servicio sin pasar por el del barbero. Sin horas en la ventana: "No hay horas libres en los próximos días."
+- Las horas llegan en streaming: el inicio no las espera. Hasta que llegan, y sin JavaScript (que no recibe el reemplazo), queda solo "Ver todas las horas". Si alguien toma la hora antes, "Confirmar" ya lo maneja: vuelve al horario con "Esa hora se acaba de ocupar, elige otra".
+- Un servicio con varios barberos no muestra horas: "Reservar este servicio" lleva a elegir barbero.
+- **La barra "Reservar" se esconde mientras la lista de servicios está en pantalla**, para que no se vean dos acciones de reservar a la vez, y aparece al bajar al barbero, al mapa o al contacto. Con un servicio lleva al horario; con varios, sube a la lista y pone el foco en "Servicios". Entra en 200 ms con *ease-out* (con `prefers-reduced-motion`, solo opacidad) y escondida es `inert` e invisible. Sin JavaScript queda fija y lleva al flujo, como antes.
 
 ### Paso: Servicio
 
@@ -396,7 +406,7 @@ Los textos de la tabla de arriba (paso de horario, hora tomada, política, aprob
 
 | Lugar | Texto |
 |---|---|
-| Inicio | Nombre, "Barbería en Girardot" y la frase del dueño (**[PENDIENTE]**). Secciones "Servicios" (cada fila se despliega con la descripción y "Reservar este servicio"), "El barbero", "Ubicación", "Horario" y "Contacto". Con una cita próxima: "Tu próxima cita" con fecha, hora, servicio y estado |
+| Inicio | Nombre, "Barbería en Girardot" y la frase del dueño (**[PENDIENTE]**). Secciones "Servicios" (cada fila se despliega con la descripción, "Próximas horas" y "Ver todas las horas"; con varios barberos, "Reservar este servicio"), "El barbero", "Ubicación", "Horario" y "Contacto". Con una cita próxima: "Tu próxima cita" con fecha, hora, servicio y estado |
 | Paso "Servicio" | "¿Qué servicio quieres?". Sin servicios: "Todavía no hay servicios para reservar" |
 | Paso "Barbero" | "¿Con quién?". Primera fila "Cualquiera disponible", con "El que esté libre a la hora que elijas" |
 | Horario sin hora elegida | La barra inferior dice "Elige una hora" y "Continuar" está apagado |
