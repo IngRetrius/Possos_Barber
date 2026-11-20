@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appointmentIcs, escapeIcsText } from "./ics";
+import { appointmentIcs, calendarTarget, escapeIcsText, googleCalendarUrl } from "./ics";
 
 describe("appointmentIcs", () => {
   const ics = appointmentIcs({
@@ -80,5 +80,52 @@ describe("appointmentIcs", () => {
 describe("escapeIcsText", () => {
   it("escapa comas, punto y coma, barras y saltos de línea", () => {
     expect(escapeIcsText("a,b;c\\d\ne")).toBe("a\\,b\\;c\\\\d\\ne");
+  });
+});
+
+describe("googleCalendarUrl", () => {
+  const url = new URL(
+    googleCalendarUrl({
+      id: "x",
+      start: "2026-11-21T00:00:00.000Z",
+      end: "2026-11-21T01:00:00.000Z",
+      title: "Corte normal en Possos Barber",
+      description: "Con Barbero de prueba.",
+      location: "Calle 1, Girardot",
+      url: "https://possos-web.vercel.app/mis-citas/x",
+    }),
+  );
+
+  it("abre el formulario de evento de Google Calendar", () => {
+    expect(url.origin + url.pathname).toBe("https://calendar.google.com/calendar/render");
+    expect(url.searchParams.get("action")).toBe("TEMPLATE");
+  });
+
+  it("lleva las horas en UTC y los datos de la cita", () => {
+    expect(url.searchParams.get("dates")).toBe("20261121T000000Z/20261121T010000Z");
+    expect(url.searchParams.get("text")).toBe("Corte normal en Possos Barber");
+    expect(url.searchParams.get("location")).toBe("Calle 1, Girardot");
+    expect(url.searchParams.get("details")).toBe(
+      "Con Barbero de prueba.\n\nhttps://possos-web.vercel.app/mis-citas/x",
+    );
+  });
+});
+
+describe("calendarTarget", () => {
+  it("usa el .ics en iPhone, iPad y Mac", () => {
+    expect(
+      calendarTarget("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15"),
+    ).toBe("ics");
+    expect(
+      calendarTarget("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15"),
+    ).toBe("ics");
+  });
+
+  it("usa Google Calendar en Android, en lo demás y sin user agent", () => {
+    expect(
+      calendarTarget("Mozilla/5.0 (Linux; Android 14; SM-A146M) AppleWebKit/537.36 Chrome/130"),
+    ).toBe("google");
+    expect(calendarTarget("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130")).toBe("google");
+    expect(calendarTarget(null)).toBe("google");
   });
 });

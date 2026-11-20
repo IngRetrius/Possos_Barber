@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { listActiveBarbers } from "@possos/barbers/server";
-import { BOOKING_ROUTES, parsePeriod } from "@possos/booking";
+import { BOOKING_ROUTES, MY_APPOINTMENTS_ROUTES, parsePeriod } from "@possos/booking";
 import { getAppointment } from "@possos/booking/server";
 import { AppointmentSummary } from "@possos/booking/ui";
 import { servicePriceLabel } from "@possos/catalog";
@@ -76,9 +76,7 @@ export default async function DonePage({ searchParams }: PageProps<"/reservar/li
         </p>
         <div className="grid gap-3">
           <Button asChild variant="secondary">
-            <a href={`/mis-citas/${id}/calendario.ics`} download="cita-possos-barber.ics">
-              Agregar al calendario
-            </a>
+            <a href={MY_APPOINTMENTS_ROUTES.calendar(id)}>Agregar al calendario</a>
           </Button>
           <InstallHint />
           <Button asChild variant="ghost">

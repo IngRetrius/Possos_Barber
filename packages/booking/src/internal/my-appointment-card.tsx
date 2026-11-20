@@ -139,12 +139,7 @@ export function MyAppointmentCard({
           {actions}
           {upcoming ? (
             <Button asChild variant="ghost">
-              <a
-                href={MY_APPOINTMENTS_ROUTES.calendar(appointment.id)}
-                download="cita-possos-barber.ics"
-              >
-                Agregar al calendario
-              </a>
+              <a href={MY_APPOINTMENTS_ROUTES.calendar(appointment.id)}>Agregar al calendario</a>
             </Button>
           ) : null}
         </div>

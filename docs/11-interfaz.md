@@ -213,7 +213,7 @@ Solo aparece si hay más de un servicio activo. Lista de filas de 64 px: nombre,
 
 - Título "Tu cita quedó reservada" y el mismo resumen.
 - "Te llega un WhatsApp para confirmar un día antes." (Solo si aceptó WhatsApp).
-- Botones secundarios: "Agregar al calendario" (.ics) y, si la app no está instalada, "Instalar la app" con la guía de iOS.
+- Botones secundarios: "Agregar al calendario" (.ics en iPhone, iPad y Mac; Google Calendar en Android y lo demás) y, si la app no está instalada, "Instalar la app" con la guía de iOS.
 
 ### Mis citas
 

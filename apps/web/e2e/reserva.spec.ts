@@ -202,7 +202,9 @@ test("cliente con sesión reserva en 4 toques desde el inicio", async ({ page })
 
   // Agregar al calendario.
   const href = await page.getByRole("link", { name: "Agregar al calendario" }).getAttribute("href");
-  const ics = await page.request.get(href!);
+  const ics = await page.request.get(href!, {
+    headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)" },
+  });
   expect(ics.headers()["content-type"]).toContain("text/calendar");
   const body = await ics.text();
   expect(body).toContain("BEGIN:VCALENDAR");

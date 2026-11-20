@@ -22,7 +22,7 @@ Contiene las reglas de la agenda, con los valores que decidió el dueño el 18/1
 3. **Horario.** Una tira de días (hoy y los siguientes) y debajo las horas libres de ese día. Las horas las calcula la función `get_available_slots` en la base de datos y se actualizan con Realtime si alguien toma una mientras el cliente mira.
 4. **Confirmar.** Muestra el resumen y **la política de cancelación**, y tiene el botón "Reservar". Si el cliente no ha iniciado sesión, en este paso se le pide registrarse y después vuelve al resumen sin perder lo que eligió.
 
-Al reservar se muestra la cita creada, un botón para agregarla al calendario (archivo .ics) y, si la app no está instalada, la invitación a instalarla.
+Al reservar se muestra la cita creada, un botón para agregarla al calendario (en iPhone, iPad y Mac, el archivo .ics, que se abre en Calendario; en Android y lo demás, Google Calendar con la cita llena) y, si la app no está instalada, la invitación a instalarla.
 
 **Volver a reservar:** en "Mis citas", cada cita pasada tiene un botón que abre el flujo con el servicio y el barbero ya elegidos.
 

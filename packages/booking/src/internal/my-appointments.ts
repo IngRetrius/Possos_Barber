@@ -94,5 +94,7 @@ export const MY_APPOINTMENTS_ROUTES = {
   detail: (id: string) => `/mis-citas/${id}`,
   reschedule: (id: string) => `/mis-citas/${id}/cambiar`,
   rescheduleConfirm: (id: string) => `/mis-citas/${id}/cambiar/confirmar`,
-  calendar: (id: string) => `/mis-citas/${id}/calendario.ics`,
+  /** "Agregar al calendario": manda al .ics o a Google Calendar según el teléfono. */
+  calendar: (id: string) => `/mis-citas/${id}/calendario`,
+  calendarFile: (id: string) => `/mis-citas/${id}/calendario.ics`,
 } as const;

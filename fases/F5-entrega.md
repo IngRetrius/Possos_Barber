@@ -72,6 +72,7 @@ const url = new URL(MY_APPOINTMENTS_ROUTES.detail(appointmentId), siteUrl());
 
 ### .ics
 
+- "Agregar al calendario" lleva a `/mis-citas/[id]/calendario`, que mira el user agent (`calendarTarget`). En iPhone, iPad y Mac redirige al `.ics`, que Safari abre en Calendario. En Android el `.ics` solo se descargaba y Google Calendar no lo importa desde el celular, así que ahí y en lo demás redirige a Google Calendar (`googleCalendarUrl`) con la cita llena; el cliente toca "Guardar" y el evento queda en su cuenta de Google. Google no recibe el aviso de 1 hora: usa los recordatorios por omisión de la cuenta.
 - Las horas van en UTC (`20261121T000000Z`), que todos los calendarios convierten a la hora del teléfono; no se usa `TZID`, que obliga a incluir la definición de la zona. Vitest prueba que las 7:00 p. m. de Bogotá salen como las 00:00 UTC del día siguiente.
 - `LOCATION` lleva la dirección y la ciudad; la referencia ("Casa esquinera naranja") va en la descripción, junto con el enlace a la cita.
 - Solo el cliente dueño de la cita lo descarga; otra cuenta recibe 404. Antes el personal también podía (por RLS); no lo usaba.

@@ -67,7 +67,13 @@ export {
   type BookingSelection,
   type BookingStep,
 } from "./internal/selection";
-export { appointmentIcs, escapeIcsText, type IcsEvent } from "./internal/ics";
+export {
+  appointmentIcs,
+  calendarTarget,
+  escapeIcsText,
+  googleCalendarUrl,
+  type IcsEvent,
+} from "./internal/ics";
 export { APPOINTMENT_STATUS_DISPLAY, TO_CLOSE_DISPLAY } from "./internal/status";
 export {
   canChange,

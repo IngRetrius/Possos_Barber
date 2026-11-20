@@ -112,10 +112,27 @@ test("enlace directo: sin sesión pide ingresar y vuelve; otra cuenta recibe 404
   await expect(page.getByRole("link", { name: "Cambiar hora" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Agregar al calendario" })).toHaveAttribute(
     "href",
-    `/mis-citas/${id}/calendario.ics`,
+    `/mis-citas/${id}/calendario`,
   );
   await expect(page).toHaveTitle("Tu cita · Possos Barber");
   await expectAccessible(page);
+
+  // "Agregar al calendario": Android va a Google Calendar con la cita; iPhone, al .ics.
+  const android = await page.request.get(`/mis-citas/${id}/calendario`, {
+    headers: { "User-Agent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/130" },
+    maxRedirects: 0,
+  });
+  expect(android.status()).toBe(302);
+  const google = new URL(android.headers()["location"]!);
+  expect(google.hostname).toBe("calendar.google.com");
+  expect(google.searchParams.get("location")).toMatch(/Girardot/);
+  expect(google.searchParams.get("details")).toContain(`/mis-citas/${id}`);
+  const iphone = await page.request.get(`/mis-citas/${id}/calendario`, {
+    headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)" },
+    maxRedirects: 0,
+  });
+  expect(iphone.status()).toBe(302);
+  expect(iphone.headers()["location"]).toBe(`/mis-citas/${id}/calendario.ics`);
 
   // El .ics es de la cita y lleva la dirección.
   const ics = await page.request.get(`/mis-citas/${id}/calendario.ics`);
@@ -143,6 +160,11 @@ test("enlace directo: sin sesión pide ingresar y vuelve; otra cuenta recibe 404
   }
   const otherIcs = await otherPage.request.get(`/mis-citas/${id}/calendario.ics`);
   expect(otherIcs.status()).toBe(404);
+  const otherGoogle = await otherPage.request.get(`/mis-citas/${id}/calendario`, {
+    headers: { "User-Agent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/130" },
+    maxRedirects: 0,
+  });
+  expect(otherGoogle.status()).toBe(404);
   await other.close();
 
   // El personal va a la cita en su panel.

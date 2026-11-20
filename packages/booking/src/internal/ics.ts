@@ -1,6 +1,6 @@
 /*
- * Archivo .ics de una cita, para "Agregar al calendario" (docs/04). Sin dependencias: el formato
- * es texto (RFC 5545) y lo abren Calendario de iOS, Google Calendar y Outlook.
+ * "Agregar al calendario" (docs/04): el archivo .ics de una cita y el enlace que abre Google
+ * Calendar con la cita ya llena. Sin dependencias: el .ics es texto (RFC 5545).
  */
 
 export interface IcsEvent {
@@ -84,4 +84,29 @@ export function appointmentIcs(event: IcsEvent): string {
   }
   lines.push("END:VEVENT", "END:VCALENDAR");
   return `${lines.map(fold).join("\r\n")}\r\n`;
+}
+
+/**
+ * Enlace de Google Calendar con el evento listo para guardar. Las horas van en UTC, como en el
+ * .ics. Google no recibe el aviso: el evento usa los recordatorios por omisión de la cuenta.
+ */
+export function googleCalendarUrl(event: IcsEvent): string {
+  const details = [event.description, event.url].filter(Boolean).join("\n\n");
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: event.title,
+    dates: `${stamp(event.start)}/${stamp(event.end)}`,
+  });
+  if (details) params.set("details", details);
+  if (event.location) params.set("location", event.location);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+/**
+ * Qué calendario abre "Agregar al calendario". En iPhone, iPad y Mac, Safari abre el .ics
+ * directo en Calendario. En Android el .ics solo se descarga (Google Calendar no lo importa
+ * desde el celular), así que ahí y en lo demás va a Google Calendar. El iPad se presenta como Mac.
+ */
+export function calendarTarget(userAgent: string | null): "ics" | "google" {
+  return userAgent && /iPhone|iPad|iPod|Macintosh/.test(userAgent) ? "ics" : "google";
 }
