@@ -3,7 +3,7 @@
 -- barbero (B, sin administrador) frente al administrador (owner, barbero A).
 begin;
 \ir ../fixtures/setup.psql
-select plan(42);
+select plan(52);
 
 -- ---------------------------------------------------------------------------------------------
 -- Realtime
@@ -331,6 +331,65 @@ select lives_ok(
 select lives_ok(
   $$ select public.reset_no_shows('c1000000-0000-0000-0000-000000000001') $$,
   'El administrador reinicia inasistencias'
+);
+reset role;
+
+-- ---------------------------------------------------------------------------------------------
+-- Roles desde el panel (list_staff, grant_role, revoke_role)
+-- ---------------------------------------------------------------------------------------------
+select ok(
+  not has_function_privilege('anon', 'public.grant_role(text, public.staff_role)', 'execute'),
+  'anon no puede llamar grant_role'
+);
+
+select tests.login('b0000000-0000-0000-0000-000000000001');
+select throws_ok(
+  $$ select public.grant_role('cust1@pruebas.test', 'admin') $$,
+  'P0001', 'FORBIDDEN',
+  'El barbero no da roles (ni se da el de administrador)'
+);
+select throws_ok(
+  $$ select * from public.list_staff() $$,
+  'P0001', 'FORBIDDEN',
+  'El barbero no lista el personal'
+);
+select throws_ok(
+  $$ select public.revoke_role('a0000000-0000-0000-0000-000000000001', 'admin') $$,
+  'P0001', 'FORBIDDEN',
+  'El barbero no quita roles'
+);
+reset role;
+
+select tests.login('a0000000-0000-0000-0000-000000000001');
+select results_eq(
+  $$ select email, roles::text[] from public.list_staff()
+     where user_id = 'a0000000-0000-0000-0000-000000000001' $$,
+  $$ values ('owner@pruebas.test'::text, array['admin', 'barber']) $$,
+  'El administrador lista el personal con su correo y sus roles'
+);
+select is(
+  public.grant_role(' CUST1@pruebas.test ', 'barber'),
+  'c0000000-0000-0000-0000-000000000001'::uuid,
+  'El administrador da un rol por correo, sin importar mayúsculas ni espacios'
+);
+select lives_ok(
+  $$ select public.grant_role('cust1@pruebas.test', 'barber') $$,
+  'Dar dos veces el mismo rol no es error'
+);
+select throws_ok(
+  $$ select public.grant_role('nadie@pruebas.test', 'barber') $$,
+  'P0001', 'USER_NOT_FOUND',
+  'Un correo sin cuenta da USER_NOT_FOUND'
+);
+select throws_ok(
+  $$ select public.revoke_role('a0000000-0000-0000-0000-000000000001', 'admin') $$,
+  'P0001', 'CANNOT_REVOKE_SELF',
+  'El administrador no se quita a sí mismo el rol de administrador'
+);
+select public.revoke_role('c0000000-0000-0000-0000-000000000001', 'barber');
+select is_empty(
+  $$ select 1 from public.staff_roles where user_id = 'c0000000-0000-0000-0000-000000000001' $$,
+  'El administrador quita un rol'
 );
 reset role;
 

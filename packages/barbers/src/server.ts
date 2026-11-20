@@ -7,8 +7,12 @@ import { BARBERS_ERROR_CODES, type BarbersErrorCode } from "./internal/errors";
 
 type R<T> = Promise<Result<T, BarbersErrorCode>>;
 
-const fail = (error: { message?: string } | null) =>
-  ({ ok: false, error: errorCode(error, BARBERS_ERROR_CODES) }) as const;
+const fail = (error: { code?: string; message?: string } | null) =>
+  ({
+    ok: false,
+    // 23505: user_id repetido al enlazar una cuenta que ya tiene perfil.
+    error: error?.code === "23505" ? "ALREADY_LINKED" : errorCode(error, BARBERS_ERROR_CODES),
+  }) as const;
 
 /** Barberos activos, por nombre. RLS deja verlos a cualquiera, con o sin sesión. */
 export async function listActiveBarbers(db: DbClient): R<Barber[]> {
@@ -147,11 +151,20 @@ export async function createBarber(db: DbClient, input: { displayName: string })
 export type BarberPatch = Partial<
   Pick<
     Barber,
-    "display_name" | "bio" | "whatsapp_url" | "slot_interval_min" | "active" | "photo_path"
+    | "display_name"
+    | "bio"
+    | "whatsapp_url"
+    | "slot_interval_min"
+    | "active"
+    | "photo_path"
+    | "user_id"
   >
 >;
 
-/** Cambia el perfil. `active` y `slot_interval_min` solo los cambia el administrador (trigger). */
+/**
+ * Cambia el perfil. `active`, `slot_interval_min` y `user_id` (enlazar la cuenta) solo los cambia
+ * el administrador (trigger). Una cuenta solo puede tener un perfil (`user_id` es único).
+ */
 export async function updateBarber(db: DbClient, id: string, patch: BarberPatch): R<Barber> {
   const { data, error } = await db
     .from("barbers")

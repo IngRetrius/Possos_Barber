@@ -7,6 +7,7 @@ export const BARBERS_ERROR_CODES = [
   "TIME_OFF_OVERLAP",
   "HOURS_OVERLAP",
   "INVALID_INPUT",
+  "ALREADY_LINKED",
 ] as const;
 
 export type BarbersErrorCode = (typeof BARBERS_ERROR_CODES)[number] | "UNKNOWN";
@@ -19,6 +20,7 @@ const MESSAGES: Record<BarbersErrorCode, string> = {
   TIME_OFF_OVERLAP: "Ya tienes un bloqueo en ese horario",
   HOURS_OVERLAP: "Dos rangos del mismo día se cruzan. Revisa las horas",
   INVALID_INPUT: "Revisa los datos e intenta de nuevo",
+  ALREADY_LINKED: "Esa cuenta ya tiene otro perfil de barbero",
   UNKNOWN: "No pudimos completar la acción. Intenta de nuevo",
 };
 

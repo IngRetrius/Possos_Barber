@@ -44,6 +44,7 @@ export const SEED = {
   /** Barbero sin rol de administrador e inactivo (F6). */
   barber2: "barbero2@ejemplo.test",
   barber2Id: "5eedba00-0000-0000-0000-000000000002",
+  customer2UserId: "5eed0000-0000-0000-0000-000000000003",
 } as const;
 
 /** Prefijo de lo que crean las pruebas del panel (clientes, servicios, bloqueos). */
@@ -167,6 +168,9 @@ export async function cancelTestAppointments(): Promise<void> {
  */
 export async function cleanPanelTestData(): Promise<void> {
   const token = await signInApi(SEED.admin);
+  // La prueba de roles le da a cliente2 el rol de administrador y se lo quita; si falló a mitad,
+  // se lo quita aquí. Si no lo tenía, revoke_role no hace nada.
+  await rpc("revoke_role", { p_user_id: SEED.customer2UserId, p_role: "admin" }, token);
   await rest(`time_off?reason=like.${E2E_PREFIX}*`, { method: "DELETE", token });
   await rest(`services?name=like.${E2E_PREFIX}*`, {
     method: "PATCH",
@@ -186,4 +190,64 @@ export async function bookFreeSlot(
   if (!startAt) throw new Error(`No hay hora libre número ${index} el ${day}`);
   const { id } = await bookAs(email, startAt);
   return { id, startAt };
+}
+
+/** "$30.000", como `formatPrice` de @possos/ui. */
+export function pesos(amount: number): string {
+  return `$${String(amount).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
+}
+
+/**
+ * Una cita pasada, sin marcar, de un cliente sin cuenta nuevo (`E2E Cobro ...`), creada por el
+ * administrador: sirve para "Vino" con su cobro. Busca hacia atrás un día con horario y una hora
+ * libre (las citas atendidas de corridas anteriores ocupan las suyas).
+ */
+export async function pastWalkInAppointment(name: string): Promise<{ id: string }> {
+  const token = await signInApi(SEED.admin);
+  const customer = await rpc<{ id: string }>(
+    "staff_create_customer",
+    { p_full_name: name, p_phone: "+573005550000", p_data_policy_version: "e2e" },
+    token,
+  );
+  const today = new Date(Date.now() - 5 * 3_600_000);
+  for (let back = 1; back <= 20; back++) {
+    const day = new Date(today.getTime() - back * 86_400_000).toISOString().slice(0, 10);
+    for (let hour = 9; hour <= 17; hour++) {
+      const startAt = new Date(`${day}T${String(hour).padStart(2, "0")}:00:00-05:00`).toISOString();
+      try {
+        return await rpc<{ id: string }>(
+          "staff_create_appointment",
+          {
+            p_customer_id: customer.id,
+            p_service_id: SEED.serviceId,
+            p_barber_id: SEED.barberId,
+            p_start_at: startAt,
+          },
+          token,
+        );
+      } catch {
+        // Fuera de horario, bloqueada u ocupada: la siguiente.
+      }
+    }
+  }
+  throw new Error("No hay horas pasadas libres en los últimos 20 días");
+}
+
+/** Liquidación de hoy del barbero de la semilla, según la base. */
+export async function todaySettlement(): Promise<{
+  amount: number;
+  barber: number;
+  business: number;
+}> {
+  const token = await signInApi(SEED.admin);
+  const day = new Date(Date.now() - 5 * 3_600_000).toISOString().slice(0, 10);
+  const rows = await rpc<
+    { amount_cop: number; barber_amount_cop: number; business_amount_cop: number }[]
+  >("get_settlement", { p_from: day, p_to: day, p_barber_id: SEED.barberId }, token);
+  const row = rows[0];
+  return {
+    amount: Number(row?.amount_cop ?? 0),
+    barber: Number(row?.barber_amount_cop ?? 0),
+    business: Number(row?.business_amount_cop ?? 0),
+  };
 }

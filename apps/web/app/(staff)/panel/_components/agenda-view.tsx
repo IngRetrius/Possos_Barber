@@ -5,24 +5,31 @@ import { useEffect, useMemo, useState, useTransition, type ReactNode } from "rea
 import type { AgendaAppointment, AgendaItem } from "@possos/booking";
 import { AgendaList, AppointmentDetail, useLiveAgenda } from "@possos/booking/ui";
 import { servicePriceLabel } from "@possos/catalog";
+import { formatPercent, type Charge } from "@possos/commissions";
+import { ChargeForm } from "@possos/commissions/ui";
 import {
   Button,
-  Field,
   formatDate,
+  formatPrice,
   formatTime,
   InlineError,
   Sheet,
-  Textarea,
   toast,
+  toDateKey,
 } from "@possos/ui";
 import {
+  attendAction,
   cancelAction,
   decideAction,
   noShowAction,
   notesAction,
+  recordChargeAction,
+  updateChargeAction,
+  voidChargeAction,
   type ActionResult,
 } from "../_actions/agenda";
 import { useCloseThenNavigate } from "./close-then-navigate";
+import { ReasonForm } from "./reason-form";
 
 export interface AgendaViewProps {
   barberId: string;
@@ -39,6 +46,16 @@ export interface AgendaViewProps {
   initialSelectedId: string | null;
   /** Aviso que llega en la URL después de crear o mover una cita. */
   notice: string | null;
+  /** Cobros de las citas completadas que se muestran. */
+  charges: Charge[];
+  /** Citas atendidas sin cobro: "Falta registrar el cobro". */
+  uncharged: AgendaAppointment[];
+  /** Porcentaje vigente de cada barbero que la sesión ve. */
+  rates: Record<string, number>;
+  viewerBarberId: string | null;
+  isAdmin: boolean;
+  /** Hoy en Bogotá (`YYYY-MM-DD`): el barbero corrige solo los cobros de hoy. */
+  today: string;
 }
 
 const NOTICES: Record<string, string> = {
@@ -46,7 +63,9 @@ const NOTICES: Record<string, string> = {
   "cita-movida": "Moviste la cita",
 };
 
-type Mode = "detail" | "cancel";
+type Mode = "detail" | "cancel" | "attend" | "record" | "correct" | "void";
+
+const CHARGE_MODES: Mode[] = ["attend", "record", "correct"];
 
 /**
  * Hora actual: la del servidor, y cada minuto la del reloj. Sin leer el reloj al renderizar (el
@@ -72,6 +91,12 @@ export function AgendaView({
   extra,
   initialSelectedId,
   notice,
+  charges,
+  uncharged,
+  rates,
+  viewerBarberId,
+  isAdmin,
+  today,
 }: AgendaViewProps) {
   const router = useRouter();
   const now = useNow(serverNow);
@@ -82,10 +107,11 @@ export function AgendaView({
     const map = new Map<string, AgendaAppointment>();
     for (const item of items)
       if (item.kind === "appointment") map.set(item.appointment.id, item.appointment);
-    for (const a of [...toClose, ...pending]) map.set(a.id, a);
+    for (const a of [...toClose, ...pending, ...uncharged]) map.set(a.id, a);
     if (extra) map.set(extra.id, extra);
     return map;
-  }, [items, toClose, pending, extra]);
+  }, [items, toClose, pending, uncharged, extra]);
+  const chargeOf = useMemo(() => new Map(charges.map((c) => [c.appointment_id, c])), [charges]);
 
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
   const [mode, setMode] = useState<Mode>("detail");
@@ -114,10 +140,14 @@ export function AgendaView({
     window.history.replaceState(window.history.state, "", url);
   }, [selectedId, initialSelectedId]);
 
-  const open = (id: string) => {
+  const open = (id: string, nextMode: Mode = "detail") => {
     setError(null);
-    setMode("detail");
+    setMode(nextMode);
     setSelectedId(id);
+  };
+  const toMode = (nextMode: Mode) => {
+    setError(null);
+    setMode(nextMode);
   };
 
   const run = (action: () => Promise<ActionResult>, closeAfter = true) => {
@@ -140,8 +170,8 @@ export function AgendaView({
 
   return (
     <>
-      {isToday && toClose.length > 0 ? (
-        <Section title={`Por cerrar (${toClose.length})`}>
+      {isToday && toClose.length + uncharged.length > 0 ? (
+        <Section title={`Por cerrar (${toClose.length + uncharged.length})`}>
           {toClose.map((a) => (
             <Card
               key={a.id}
@@ -149,8 +179,12 @@ export function AgendaView({
               onOpen={() => open(a.id)}
               showDate={a.start.slice(0, 10) !== day}
             >
-              <Button variant="secondary" onClick={() => open(a.id)}>
-                Ver
+              <Button
+                variant="secondary"
+                disabled={pendingAction}
+                onClick={() => open(a.id, "attend")}
+              >
+                Vino
               </Button>
               <Button
                 variant="secondary"
@@ -159,6 +193,24 @@ export function AgendaView({
                 onClick={() => run(() => noShowAction(a.id), false)}
               >
                 No vino
+              </Button>
+            </Card>
+          ))}
+          {uncharged.map((a) => (
+            <Card
+              key={a.id}
+              appointment={a}
+              onOpen={() => open(a.id)}
+              showDate
+              note="Falta registrar el cobro"
+            >
+              <Button
+                variant="secondary"
+                className="col-span-2"
+                disabled={pendingAction}
+                onClick={() => open(a.id, "record")}
+              >
+                Registrar cobro
               </Button>
             </Card>
           ))}
@@ -208,23 +260,71 @@ export function AgendaView({
         onOpenChange={(next) => {
           if (!next) setSelectedId(null);
         }}
-        title={selected?.customerName ?? "Cita"}
+        title={
+          CHARGE_MODES.includes(mode)
+            ? "Cobro"
+            : mode === "void"
+              ? "Anular cobro"
+              : (selected?.customerName ?? "Cita")
+        }
         description={
           selected
-            ? `${selected.serviceName} · ${formatDate(selected.start)}, ${formatTime(selected.start)}`
+            ? CHARGE_MODES.includes(mode) || mode === "void"
+              ? `${selected.customerName} · ${selected.serviceName}`
+              : `${selected.serviceName} · ${formatDate(selected.start)}, ${formatTime(selected.start)}`
             : undefined
         }
       >
         {selected ? (
-          mode === "cancel" ? (
-            <CancelForm
+          CHARGE_MODES.includes(mode) ? (
+            <ChargeForm
+              key={`${selected.id}-${mode}`}
+              defaultAmount={
+                mode === "correct"
+                  ? (chargeOf.get(selected.id)?.amount_cop ?? null)
+                  : selected.priceCop
+              }
+              barberPct={
+                mode === "correct"
+                  ? (chargeOf.get(selected.id)?.barber_pct ?? null)
+                  : (rates[selected.barberId] ?? null)
+              }
+              barberLabel={selected.barberId === viewerBarberId ? "Para ti" : "Para el barbero"}
+              submitLabel={mode === "correct" ? "Guardar el valor" : "Guardar cobro"}
+              pendingLabel="Guardando..."
               pending={pendingAction}
               error={error}
-              onBack={() => {
-                setError(null);
-                setMode("detail");
+              onCancel={() => toMode("detail")}
+              onSubmit={(amount) => {
+                const charge = chargeOf.get(selected.id);
+                if (mode === "attend") run(() => attendAction(selected.id, amount));
+                else if (mode === "record") run(() => recordChargeAction(selected.id, amount));
+                else if (charge) run(() => updateChargeAction(charge.id, amount));
               }}
-              onCancel={(reason) => run(() => cancelAction(selected.id, reason))}
+            />
+          ) : mode === "void" ? (
+            <ReasonForm
+              question="¿Anular este cobro? Deja de contar en la liquidación, pero no se borra."
+              confirmLabel="Sí, anular el cobro"
+              pendingLabel="Anulando..."
+              pending={pendingAction}
+              error={error}
+              onBack={() => toMode("detail")}
+              onConfirm={(reason) => {
+                const charge = chargeOf.get(selected.id);
+                if (charge) run(() => voidChargeAction(charge.id, reason));
+              }}
+            />
+          ) : mode === "cancel" ? (
+            <ReasonForm
+              question="¿Cancelar esta cita? La hora queda libre para otros clientes."
+              confirmLabel="Sí, cancelar la cita"
+              pendingLabel="Cancelando..."
+              backLabel="No, volver"
+              pending={pendingAction}
+              error={error}
+              onBack={() => toMode("detail")}
+              onConfirm={(reason) => run(() => cancelAction(selected.id, reason))}
             />
           ) : (
             <AppointmentDetail
@@ -232,6 +332,17 @@ export function AgendaView({
               priceLabel={servicePriceLabel(selected.priceCop)}
               toClose={isToClose(selected)}
             >
+              {selected.status === "completed" ? (
+                <ChargeSummary
+                  charge={chargeOf.get(selected.id) ?? null}
+                  canCorrect={(c) => !c.voided_at && (isAdmin || toDateKey(c.charged_at) === today)}
+                  isAdmin={isAdmin}
+                  disabled={pendingAction}
+                  onRecord={() => toMode("record")}
+                  onCorrect={() => toMode("correct")}
+                  onVoid={() => toMode("void")}
+                />
+              ) : null}
               {error ? <InlineError>{error}</InlineError> : null}
               <Actions
                 appointment={selected}
@@ -239,6 +350,7 @@ export function AgendaView({
                 disabled={pendingAction}
                 onApprove={() => run(() => decideAction(selected.id, true))}
                 onReject={() => run(() => decideAction(selected.id, false))}
+                onAttend={() => toMode("attend")}
                 onNoShow={() => run(() => noShowAction(selected.id))}
                 onMove={() => navigate(`/panel/cita/${selected.id}/mover`)}
                 onCancel={() => {
@@ -272,11 +384,14 @@ function Card({
   appointment: a,
   onOpen,
   showDate,
+  note,
   children,
 }: {
   appointment: AgendaAppointment;
   onOpen: () => void;
   showDate?: boolean;
+  /** Aviso en ámbar ("Falta registrar el cobro"). */
+  note?: string;
   children: ReactNode;
 }) {
   return (
@@ -287,6 +402,7 @@ function Card({
           {formatTime(a.start)} · {a.customerName}
         </span>
         <span className="text-caption text-fg-muted">{a.serviceName}</span>
+        {note ? <span className="text-caption text-warning">{note}</span> : null}
       </button>
       <div className="grid grid-cols-2 gap-2">{children}</div>
     </li>
@@ -299,6 +415,7 @@ function Actions({
   disabled,
   onApprove,
   onReject,
+  onAttend,
   onNoShow,
   onMove,
   onCancel,
@@ -308,6 +425,7 @@ function Actions({
   disabled: boolean;
   onApprove: () => void;
   onReject: () => void;
+  onAttend: () => void;
   onNoShow: () => void;
   onMove: () => void;
   onCancel: () => void;
@@ -331,14 +449,19 @@ function Actions({
           </Button>
         </>
       ) : started ? (
-        <Button
-          variant="secondary"
-          className="col-span-2 text-danger"
-          disabled={disabled}
-          onClick={onNoShow}
-        >
-          No vino
-        </Button>
+        <>
+          <Button disabled={disabled} onClick={onAttend}>
+            Vino
+          </Button>
+          <Button
+            variant="secondary"
+            className="text-danger"
+            disabled={disabled}
+            onClick={onNoShow}
+          >
+            No vino
+          </Button>
+        </>
       ) : null}
       <Button variant="secondary" disabled={disabled} onClick={onMove}>
         Mover
@@ -350,53 +473,80 @@ function Actions({
   );
 }
 
-function CancelForm({
-  pending,
-  error,
-  onBack,
-  onCancel,
+/** El cobro de una cita completada: valor y reparto, o "Registrar cobro" si falta. */
+function ChargeSummary({
+  charge,
+  canCorrect,
+  isAdmin,
+  disabled,
+  onRecord,
+  onCorrect,
+  onVoid,
 }: {
-  pending: boolean;
-  error: string | null;
-  onBack: () => void;
-  onCancel: (reason: string) => void;
+  charge: Charge | null;
+  canCorrect: (charge: Charge) => boolean;
+  isAdmin: boolean;
+  disabled: boolean;
+  onRecord: () => void;
+  onCorrect: () => void;
+  onVoid: () => void;
 }) {
-  const [reason, setReason] = useState("");
-  const [missing, setMissing] = useState(false);
-  return (
-    <form
-      className="grid gap-4"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (!reason.trim()) {
-          setMissing(true);
-          return;
-        }
-        onCancel(reason);
-      }}
-    >
-      <p className="text-body">¿Cancelar esta cita? La hora queda libre para otros clientes.</p>
-      <Field label="Motivo" error={missing ? "Escribe el motivo" : undefined}>
-        <Textarea
-          name="motivo"
-          value={reason}
-          maxLength={200}
-          onChange={(e) => {
-            setReason(e.target.value);
-            setMissing(false);
-          }}
-        />
-      </Field>
-      {error ? <InlineError>{error}</InlineError> : null}
-      <div className="grid gap-2">
-        <Button type="submit" variant="danger" disabled={pending} aria-busy={pending}>
-          {pending ? "Cancelando..." : "Sí, cancelar la cita"}
-        </Button>
-        <Button type="button" variant="ghost" onClick={onBack}>
-          No, volver
+  if (!charge) {
+    return (
+      <div className="grid gap-3 rounded-card border border-border bg-surface p-4">
+        <p className="text-body text-warning">Falta registrar el cobro</p>
+        <Button variant="secondary" disabled={disabled} onClick={onRecord}>
+          Registrar cobro
         </Button>
       </div>
-    </form>
+    );
+  }
+  const voided = Boolean(charge.voided_at);
+  return (
+    <section
+      aria-label="Cobro"
+      className="grid gap-3 rounded-card border border-border bg-surface p-4"
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 className="text-label">Cobro</h3>
+        <span
+          className={
+            voided
+              ? "text-label tabular-nums line-through text-fg-muted"
+              : "text-label tabular-nums"
+          }
+        >
+          {formatPrice(charge.amount_cop)}
+        </span>
+      </div>
+      {voided ? (
+        <p className="text-caption text-fg-muted">Anulado: {charge.void_reason}</p>
+      ) : (
+        <p className="text-caption text-fg-muted tabular-nums">
+          Barbero {formatPrice(charge.barber_amount_cop ?? 0)} ({formatPercent(charge.barber_pct)})
+          · Barbería {formatPrice(charge.business_amount_cop ?? 0)}
+        </p>
+      )}
+      {!voided && (canCorrect(charge) || isAdmin) ? (
+        <div className="grid grid-cols-2 gap-2">
+          {canCorrect(charge) ? (
+            <Button variant="secondary" disabled={disabled} onClick={onCorrect}>
+              Corregir valor
+            </Button>
+          ) : null}
+          {isAdmin ? (
+            <Button
+              variant="secondary"
+              className="text-danger"
+              disabled={disabled}
+              onClick={onVoid}
+            >
+              Anular cobro
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+    </section>
   );
 }
 

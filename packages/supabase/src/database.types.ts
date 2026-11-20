@@ -989,6 +989,10 @@ export type Database = {
           services_count: number;
         }[];
       };
+      grant_role: {
+        Args: { p_email: string; p_role: Database["public"]["Enums"]["staff_role"] };
+        Returns: string;
+      };
       has_role: { Args: { p_role: Database["public"]["Enums"]["staff_role"] }; Returns: boolean };
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       link_customer_to_barber: {
@@ -1004,6 +1008,14 @@ export type Database = {
           id: string;
           start_at: string;
           status: Database["public"]["Enums"]["appointment_status"];
+        }[];
+      };
+      list_staff: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          email: string;
+          roles: Database["public"]["Enums"]["staff_role"][];
+          user_id: string;
         }[];
       };
       mark_attendance: {
@@ -1088,6 +1100,10 @@ export type Database = {
         };
       };
       reset_no_shows: { Args: { p_customer_id: string }; Returns: undefined };
+      revoke_role: {
+        Args: { p_role: Database["public"]["Enums"]["staff_role"]; p_user_id: string };
+        Returns: undefined;
+      };
       set_working_hours: {
         Args: { p_barber_id: string; p_ranges: Json };
         Returns: {

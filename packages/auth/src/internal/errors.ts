@@ -15,6 +15,10 @@ export const AUTH_ERROR_CODES = [
   "RATE_LIMITED",
   "NOT_AUTHENTICATED",
   "FORBIDDEN",
+  // Roles desde el panel (F6): grant_role y revoke_role.
+  "USER_NOT_FOUND",
+  "CANNOT_REVOKE_SELF",
+  "INVALID_INPUT",
 ] as const;
 
 export type AuthErrorCode = (typeof AUTH_ERROR_CODES)[number] | "UNKNOWN";
@@ -70,6 +74,9 @@ const MESSAGES: Record<AuthErrorCode, string> = {
   RATE_LIMITED: "Hiciste muchos intentos seguidos. Espera unos minutos e intenta de nuevo",
   NOT_AUTHENTICATED: "Ingresa para continuar",
   FORBIDDEN: "No tienes permiso para hacer esto",
+  USER_NOT_FOUND: "No hay una cuenta con ese correo. Pídele que se registre primero",
+  CANNOT_REVOKE_SELF: "No puedes quitarte a ti mismo el rol de administrador",
+  INVALID_INPUT: "Revisa los datos e intenta de nuevo",
   UNKNOWN: "No pudimos completar la acción. Intenta de nuevo",
 };
 

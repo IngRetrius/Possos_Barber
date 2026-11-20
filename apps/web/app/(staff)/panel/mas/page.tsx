@@ -25,6 +25,17 @@ export default async function MorePage() {
       </header>
 
       <section className="grid gap-3">
+        <h2 className="text-heading">Cobros</h2>
+        <List>
+          <ListRow
+            title="Liquidación"
+            detail="Lo cobrado por periodo y el reparto con la barbería"
+            href="/panel/liquidacion"
+          />
+        </List>
+      </section>
+
+      <section className="grid gap-3">
         <h2 className="text-heading">Agenda</h2>
         <List>
           <ListRow
@@ -54,6 +65,17 @@ export default async function MorePage() {
               detail="Perfil, foto, portafolio y servicios"
               href="/panel/barberos"
             />
+            <ListRow
+              title="Porcentajes"
+              detail="El reparto de cada barbero"
+              href="/panel/porcentajes"
+            />
+            <ListRow
+              title="Configuración"
+              detail="Reglas de la agenda y recordatorios"
+              href="/panel/configuracion"
+            />
+            <ListRow title="Roles" detail="Barberos y administradores" href="/panel/roles" />
           </List>
         </section>
       ) : null}

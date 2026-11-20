@@ -132,3 +132,24 @@ export async function listNotes(
   const { data, error } = await request.order("created_at", { ascending: false });
   return error ? fail(error) : { ok: true, data };
 }
+
+/** Agrega una nota privada del barbero sobre un cliente suyo. RLS lo exige. */
+export async function addNote(
+  db: DbClient,
+  input: { customerId: string; barberId: string; body: string },
+): R<CustomerNote> {
+  const body = input.body.trim();
+  if (!body) return { ok: false, error: "INVALID_CUSTOMER" };
+  const { data, error } = await db
+    .from("customer_notes")
+    .insert({ customer_id: input.customerId, barber_id: input.barberId, body: body.slice(0, 500) })
+    .select("*")
+    .single();
+  return error ? fail(error) : { ok: true, data };
+}
+
+/** Borra una nota. RLS: el barbero, las suyas; el administrador, todas. */
+export async function deleteNote(db: DbClient, id: string): R<null> {
+  const { error } = await db.from("customer_notes").delete().eq("id", id);
+  return error ? fail(error) : { ok: true, data: null };
+}

@@ -2,7 +2,7 @@ import "server-only";
 import { notFound, redirect } from "next/navigation";
 import type { DbClient, Result } from "@possos/supabase";
 import { getAuthSettings } from "@possos/supabase/server";
-import { AUTH_ROUTES, withNext, type Viewer } from "./index";
+import { AUTH_ROUTES, withNext, type StaffRole, type Viewer } from "./index";
 import { authErrorCode, type AuthErrorCode } from "./internal/errors";
 
 /**
@@ -192,4 +192,42 @@ export async function deleteMyAccount(db: DbClient): R<null> {
   if (error) return fail(error);
   await signOut(db);
   return { ok: true, data: null };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Roles (F6). Solo el administrador; la base lo exige (list_staff, grant_role, revoke_role).
+// ---------------------------------------------------------------------------------------------
+
+export interface StaffMember {
+  userId: string;
+  email: string;
+  roles: StaffRole[];
+}
+
+/** Cuentas con algún rol del personal, por correo. */
+export async function listStaff(db: DbClient): R<StaffMember[]> {
+  const { data, error } = await db.rpc("list_staff");
+  if (error) return fail(error);
+  return {
+    ok: true,
+    data: data.map((r) => ({ userId: r.user_id, email: r.email, roles: r.roles })),
+  };
+}
+
+/** Da un rol a la cuenta con ese correo. Devuelve su `user_id`. */
+export async function grantRole(
+  db: DbClient,
+  input: { email: string; role: StaffRole },
+): R<string> {
+  const { data, error } = await db.rpc("grant_role", { p_email: input.email, p_role: input.role });
+  return error ? fail(error) : { ok: true, data };
+}
+
+/** Quita un rol. Nadie se quita a sí mismo el de administrador (así siempre queda uno). */
+export async function revokeRole(
+  db: DbClient,
+  input: { userId: string; role: StaffRole },
+): R<null> {
+  const { error } = await db.rpc("revoke_role", { p_user_id: input.userId, p_role: input.role });
+  return error ? fail(error) : { ok: true, data: null };
 }

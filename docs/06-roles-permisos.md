@@ -9,7 +9,7 @@
 | **Administrador** | El dueño | Fila en `staff_roles` con `role = 'admin'` |
 
 - Una persona puede tener varios roles. Hoy el dueño es **administrador y barbero**, y también puede reservar como cliente desde otra cuenta si quiere probar el flujo.
-- Los roles se asignan solo desde el panel del administrador o con una migración (el primer administrador). Nadie se asigna un rol a sí mismo.
+- Los roles se asignan solo desde el panel del administrador ("Más > Roles", desde F6, por el correo de una cuenta que ya existe) o con el script del primer administrador. Nadie se asigna un rol a sí mismo, y el administrador no se puede quitar su propio rol: así siempre queda uno. El rol de barbero se da junto con su perfil de `barbers` (que el administrador crea antes en "Barberos").
 - El rol se lee en la base de datos con funciones `security definer` (`is_admin()`, `current_barber_id()`) que usan las políticas RLS. No se confía en lo que diga el navegador.
 
 ## Matriz de permisos
@@ -39,6 +39,7 @@
 - Un cliente **nunca** ve el nombre ni el celular de otro. Las horas libres salen de `get_available_slots`, que solo devuelve horas de inicio.
 - Las operaciones sensibles (reservar, cancelar, reprogramar, aprobar, marcar asistencia) se hacen con funciones de Postgres que validan el rol y la política adentro. El cliente no puede hacer `UPDATE` directo sobre `appointments`.
 - **En la app (F3)**, las guardas de servidor de `@possos/auth/server` (`requireViewer`, `requireStaff`, `requireAdmin`) leen el rol con `is_admin()` y `current_barber_id()`. Un cliente que abre `/panel` recibe 404. El proxy de Next solo revisa que haya sesión; cada página y cada acción vuelve a verificar.
+- **En el panel (F6)**, el administrador elige de qué barbero ve la agenda ("Agenda de"); puede no ser barbero. Un barbero sin rol de administrador ve solo su agenda, sus clientes, su liquidación y su porcentaje, y recibe 404 en Servicios, Barberos, Porcentajes, Configuración y Roles.
 - Después de ingresar, el personal va al panel y el cliente a completar su perfil (si le falta) o a donde iba (`next`, solo rutas internas).
 - **Borrar la cuenta** (Ley 1581): el cliente la borra desde su perfil con `delete_my_account()`, salvo que tenga una cita próxima. El personal no puede borrar su cuenta desde la app.
 - **El primer administrador** se crea con `supabase/scripts/primer-administrador.sql` (`pnpm db:primer-admin`), sobre una cuenta que ya existe. Ver [F3-entrega](../fases/F3-entrega.md).

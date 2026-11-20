@@ -32,7 +32,7 @@ inbound_messages, event_cursors                               [notifications]
 |---|---|
 | `staff_roles` | `user_id` → auth.users, `role` (`admin` \| `barber`), PK (`user_id`, `role`) |
 
-Funciones `security definer` con `set search_path = ''`: `is_admin()` y `has_role(role)`, y `delete_my_account()` (F3): el cliente borra su usuario de Auth; el personal recibe `FORBIDDEN`.
+Funciones `security definer` con `set search_path = ''`: `is_admin()` y `has_role(role)`, y `delete_my_account()` (F3): el cliente borra su usuario de Auth; el personal recibe `FORBIDDEN`. Desde F6, `list_staff()`, `grant_role(email, role)` y `revoke_role(user_id, role)` para que el administrador asigne y quite roles por correo (no puede leer `auth.users`).
 
 ### catalog
 
@@ -192,6 +192,9 @@ Las funciones internas van en el esquema `private`, que PostgREST no expone; cad
 | `update_charge(id, amount_cop)` | barbero (sus cobros del mismo día) y admin | Corrige el monto; el porcentaje copiado no cambia |
 | `void_charge(id, reason)` | admin | Anula un cobro con motivo; no se borra |
 | `delete_my_account()` | cliente | Módulo `auth`. Borra su usuario de Auth; `customers` anonimiza el perfil. El personal recibe `FORBIDDEN`. La app no la llama si el cliente tiene una cita próxima |
+| `list_staff()` | admin | F6. Módulo `auth`. Correo y roles de cada cuenta del personal |
+| `grant_role(email, role)` | admin | F6. Da un rol por correo (sin importar mayúsculas). `USER_NOT_FOUND` si no hay cuenta. Dar dos veces el mismo rol no es error |
+| `revoke_role(user_id, role)` | admin | F6. Quita un rol. Nadie se quita a sí mismo el de administrador (`CANNOT_REVOKE_SELF`), así que siempre queda uno |
 | `get_settlement(from, to, barber_id?)` | barbero (solo el suyo) y admin | Totales del periodo (fechas de Bogotá, ambas incluidas), una fila por barbero: servicios, cobrado, parte del barbero y parte de la barbería, sin los anulados |
 
 Los errores salen como excepción con el código en el mensaje (SQLSTATE `P0001`). Cada paquete los traduce con `errorCode()` de `@possos/supabase` y su función de textos (`bookingErrorMessage`, ...); los textos están en [11](11-interfaz.md#textos-de-la-interfaz).
@@ -200,7 +203,7 @@ Los errores salen como excepción con el código en el mensaje (SQLSTATE `P0001`
 |---|---|
 | booking | `SLOT_TAKEN`, `TOO_LATE_TO_CANCEL`, `OUTSIDE_WORKING_HOURS`, `IN_TIME_OFF`, `TOO_SOON`, `TOO_FAR`, `SERVICE_NOT_AVAILABLE`, `NO_CUSTOMER_PROFILE`, `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `INVALID_STATUS`, `INVALID_INPUT`, `INVALID_PERIOD`, `REASON_REQUIRED`, `NOT_STARTED` |
 | barbers | `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `INVALID_PERIOD`, `TIME_OFF_OVERLAP`, `HOURS_OVERLAP`, `INVALID_INPUT` |
-| auth | `NOT_AUTHENTICATED`, `FORBIDDEN` (`delete_my_account`). Los errores de Supabase Auth (ingreso, registro, contraseña) los traduce `authErrorCode` de `@possos/auth` |
+| auth | `NOT_AUTHENTICATED`, `FORBIDDEN` (`delete_my_account`); `USER_NOT_FOUND`, `CANNOT_REVOKE_SELF` e `INVALID_INPUT` (roles, F6). Los errores de Supabase Auth (ingreso, registro, contraseña) los traduce `authErrorCode` de `@possos/auth` |
 | customers | `NOT_AUTHENTICATED`, `FORBIDDEN`, `INVALID_CUSTOMER`. En la app, además, `CONSENT_REQUIRED` |
 | commissions | `NOT_AUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `NOT_COMPLETED`, `ALREADY_CHARGED`, `INVALID_AMOUNT`, `NO_COMMISSION_RATE`, `TOO_LATE_TO_EDIT`, `INVALID_STATUS`, `INVALID_PERIOD`, `REASON_REQUIRED` |
 
@@ -260,7 +263,7 @@ Envolver `auth.uid()` y las funciones en `(select ...)` hace que Postgres las ev
 
 ## Pruebas obligatorias (pgTAP)
 
-Están en `supabase/tests/database/` (`02_booking`, `03_rls`, `04_commissions` y, desde F3, `05_accounts`: perfil, autorización y borrar la cuenta; F4 agregó `06_reserva` y F6 `07_panel`: Realtime, horario semanal, cliente creado por el personal y la matriz de docs/06 del barbero frente al administrador), con el fixture compartido `supabase/tests/fixtures/setup.psql`. Cada prueba obligatoria lleva su número al inicio de la descripción.
+Están en `supabase/tests/database/` (`02_booking`, `03_rls`, `04_commissions` y, desde F3, `05_accounts`: perfil, autorización y borrar la cuenta; F4 agregó `06_reserva` y F6 `07_panel`: Realtime, horario semanal, cliente creado por el personal, roles y la matriz de docs/06 del barbero frente al administrador), con el fixture compartido `supabase/tests/fixtures/setup.psql`. Cada prueba obligatoria lleva su número al inicio de la descripción.
 
 1. Dos `book_appointment` a la misma hora para el mismo barbero: uno pasa y el otro falla con `SLOT_TAKEN`.
 2. Una cita cancelada libera la hora.

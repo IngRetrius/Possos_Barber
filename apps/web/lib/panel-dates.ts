@@ -26,3 +26,8 @@ export function todayKey(): string {
 export function bogotaHourMinute(iso: string): string {
   return new Date(new Date(iso).getTime() - 5 * 3_600_000).toISOString().slice(11, 16);
 }
+
+/** El instante de hace `days` días (ISO). */
+export function isoDaysAgo(days: number): string {
+  return new Date(new Date().getTime() - days * 86_400_000).toISOString();
+}

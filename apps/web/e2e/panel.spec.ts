@@ -9,7 +9,10 @@ import {
   cleanPanelTestData,
   dayWithSlots,
   E2E_PREFIX,
+  pastWalkInAppointment,
+  pesos,
   SEED,
+  todaySettlement,
 } from "./support/supabase";
 
 /*
@@ -302,4 +305,134 @@ test("un barbero sin rol de administrador ve solo lo suyo", async ({ page }) => 
   // No ve a los clientes del otro barbero.
   await page.goto("/panel/clientes");
   await expect(page.getByText("Todavía no tienes clientes.")).toBeVisible();
+});
+
+test("vino con su cobro, corrección del valor, anulación y liquidación de hoy", async ({
+  page,
+}) => {
+  const name = `${E2E_PREFIX} Cobro ${Date.now()}`;
+  await pastWalkInAppointment(name);
+  await signIn(page, SEED.admin);
+
+  const card = page.locator("li", { hasText: name });
+  await expect(page.getByRole("heading", { name: /^Por cerrar/ })).toBeVisible();
+  await card.getByRole("button", { name: "Vino", exact: true }).click();
+  await expect(sheet(page).getByRole("heading", { name: "Cobro" })).toBeVisible();
+  const started = Date.now();
+  // El servicio de la semilla no tiene precio ([PENDIENTE]): el valor se escribe.
+  await sheet(page).getByLabel("Valor cobrado").fill("30000");
+  await expect(sheet(page).getByText("Para ti (50 %)")).toBeVisible();
+  await expect(sheet(page).getByText(pesos(15000)).first()).toBeVisible();
+  await expectAccessible(page);
+  await sheet(page).getByRole("button", { name: "Guardar cobro" }).click();
+  await expect(page.getByText("Guardaste el cobro")).toBeVisible();
+  expect(Date.now() - started).toBeLessThan(10_000);
+  await expect(card).toHaveCount(0);
+
+  // Liquidación de hoy: la fila del cobro y los totales cuadran con la base.
+  await page.goto(`/panel/liquidacion?periodo=hoy&barbero=${SEED.barberId}`);
+  const row = page.getByRole("button", { name: new RegExp(name) });
+  await expect(row).toContainText(pesos(30000));
+  const expectTotals = async () => {
+    const db = await todaySettlement();
+    await expect(page.getByTestId("total")).toHaveText(pesos(db.amount));
+    await expect(page.getByTestId("barbero")).toHaveText(pesos(db.barber));
+    await expect(page.getByTestId("barberia")).toHaveText(pesos(db.business));
+    expect(db.barber + db.business).toBe(db.amount);
+  };
+  await expectTotals();
+  await expectAccessible(page);
+
+  // Corregir el valor el mismo día.
+  await row.click();
+  await sheet(page).getByRole("button", { name: "Corregir valor" }).click();
+  await sheet(page).getByLabel("Valor cobrado").fill("32000");
+  await sheet(page).getByRole("button", { name: "Guardar el valor" }).click();
+  await expect(page.getByText("Corregiste el cobro")).toBeVisible();
+  await expect(row).toContainText(pesos(32000));
+  await expectTotals();
+
+  // Anular con motivo (administrador): sigue en la lista, tachado, y no cuenta.
+  await row.click();
+  await sheet(page).getByRole("button", { name: "Anular cobro" }).click();
+  await sheet(page).getByLabel("Motivo").fill("Prueba del panel");
+  await sheet(page).getByRole("button", { name: "Sí, anular el cobro" }).click();
+  await expect(page.getByText("Anulaste el cobro")).toBeVisible();
+  await expect(row).toContainText("Anulado: Prueba del panel");
+  await expectTotals();
+});
+
+test("ficha del cliente: inasistencias, historial y notas privadas", async ({ page }) => {
+  await signIn(page, SEED.admin, "/panel/clientes?q=aprobaci");
+  await page.getByRole("link", { name: /Cliente con aprobación/ }).click();
+  await expect(page.getByRole("heading", { name: "Cliente con aprobación" })).toBeVisible();
+  await expect(page.getByText("Necesita aprobación")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reiniciar inasistencias" })).toBeVisible();
+
+  const note = `${E2E_PREFIX} nota ${Date.now()}`;
+  await page.getByLabel("Nota nueva").fill(note);
+  await page.getByRole("button", { name: "Guardar nota" }).click();
+  await expect(page.getByText(note)).toBeVisible();
+  await expect(page.getByLabel("Nota nueva")).toHaveValue("");
+  await expectAccessible(page);
+  await page
+    .locator("li", { hasText: note })
+    .getByRole("button", { name: /Borrar/ })
+    .click();
+  await expect(page.getByText(note)).toHaveCount(0);
+});
+
+test("configuración, porcentajes y roles del administrador", async ({ page }) => {
+  await signIn(page, SEED.admin, "/panel/configuracion");
+  const lead = page.getByLabel("Anticipación mínima, en minutos");
+  await lead.fill("abc");
+  await page.getByRole("button", { name: "Guardar la agenda" }).click();
+  await expect(page.getByText("Escribe los minutos (0 a 10.080)")).toBeVisible();
+  await expect(lead).toHaveValue("abc");
+  await lead.fill("60");
+  await page.getByRole("button", { name: "Guardar la agenda" }).click();
+  await expect(page.getByText("Guardaste las reglas de la agenda")).toBeVisible();
+  await page.getByRole("button", { name: "Guardar los recordatorios" }).click();
+  await expect(page.getByText("Guardaste los recordatorios")).toBeVisible();
+  await expectAccessible(page);
+
+  await page.goto("/panel/porcentajes");
+  await page.getByLabel("Porcentaje de Barbero dos de prueba").fill("50");
+  await page
+    .locator("section", { hasText: "Barbero dos de prueba" })
+    .getByRole("button", { name: "Guardar" })
+    .click();
+  await expect(page.getByText("Guardaste el porcentaje")).toBeVisible();
+
+  await page.goto("/panel/roles");
+  await expect(page.getByText(`${SEED.admin} (tú)`)).toBeVisible();
+  await page.getByLabel("Correo de la cuenta").fill(SEED.customer2);
+  await page.getByText("Administrador", { exact: true }).click();
+  await page.getByRole("button", { name: "Dar el rol" }).click();
+  await expect(page.getByText("Diste el rol")).toBeVisible();
+  const member = page.locator("li", { hasText: SEED.customer2 });
+  await member.getByRole("button", { name: /quitar el rol de administrador/ }).click();
+  await expect(page.getByText("Quitaste el rol de administrador")).toBeVisible();
+  await expect(member).toHaveCount(0);
+
+  // Nadie se quita a sí mismo el rol de administrador.
+  await page
+    .locator("li", { hasText: `${SEED.admin} (tú)` })
+    .getByRole("button", { name: /quitar el rol de administrador/ })
+    .click();
+  await expect(
+    page.getByText("No puedes quitarte a ti mismo el rol de administrador"),
+  ).toBeVisible();
+  await expectAccessible(page);
+});
+
+test("el barbero ve su liquidación y no las pantallas de administración", async ({ page }) => {
+  await signIn(page, SEED.barber2, "/panel/liquidacion");
+  await expect(page.getByRole("heading", { name: "Liquidación" })).toBeVisible();
+  await expect(page.getByLabel("Liquidación de")).toHaveCount(0);
+  await expect(page.getByText("Para ti (50 % hoy)")).toBeVisible();
+  for (const path of ["/panel/porcentajes", "/panel/configuracion", "/panel/roles"]) {
+    const response = await page.goto(path);
+    expect(response?.status()).toBe(404);
+  }
 });

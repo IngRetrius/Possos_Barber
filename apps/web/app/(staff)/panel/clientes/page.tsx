@@ -53,6 +53,7 @@ export default async function CustomersPage({ searchParams }: PageProps<"/panel/
               <ListRow
                 key={c.id}
                 title={c.full_name}
+                href={`/panel/clientes/${c.id}`}
                 detail={
                   <>
                     {c.phone ? formatPhone(c.phone) : "Sin celular"}

@@ -1,6 +1,6 @@
 # Entrega de F6
 
-Estado del panel del barbero y del administrador en [F6](F6-panel-barbero.md). Parte A cerrada el 19/11/2026: agenda en vivo, citas, horario, bloqueos, festivos, servicios y barberos. Con esto el dueño puede cargar sus datos reales sin SQL. Lo anterior sigue en [F0](F0-entrega.md) a [F4](F4-entrega.md); las reglas, en [CLAUDE.md](../CLAUDE.md).
+Estado del panel del barbero y del administrador al cerrar [F6](F6-panel-barbero.md), el 19/11/2026. Parte A: agenda en vivo, citas, horario, bloqueos, festivos, servicios y barberos (con esto el dueño carga sus datos reales sin SQL). Parte B: "Vino" con su cobro, corrección y anulación, liquidación, ficha del cliente con notas, porcentajes, configuración de la agenda y de los recordatorios, inasistencias y roles. Lo anterior sigue en [F0](F0-entrega.md) a [F4](F4-entrega.md); las reglas, en [CLAUDE.md](../CLAUDE.md).
 
 ## Qué existe
 
@@ -9,17 +9,22 @@ Estado del panel del barbero y del administrador en [F6](F6-panel-barbero.md). P
 | Pestañas | `apps/web/app/(staff)/panel/`: `page.tsx` (Hoy), `semana/`, `clientes/`, `mas/` | `PanelTabBar` solo en esas cuatro; las demás pantallas tienen atrás (`PanelHeader`) y su barra con la acción |
 | Citas | `cita/nueva/`, `cita/[id]/mover/` y la hoja de la cita dentro de Hoy (`_components/agenda-view.tsx`) | `?cita=<id>` abre la hoja desde otra pantalla (la usan los bloqueos) |
 | Agenda | `horario/`, `bloqueos/` | Horario semanal de una vez; bloqueos con las citas que quedan debajo; festivos sugeridos |
-| Administración | `servicios/`, `servicios/nuevo`, `servicios/[id]`, `barberos/`, `barberos/nuevo`, `barberos/[id]` | Solo el administrador (`loadAdminPanel`); un barbero recibe 404 |
-| Acciones | `_actions/agenda.ts`, `_actions/schedule.ts`, `_actions/admin.ts` | Cada una repite la guarda |
+| Administración | `servicios/`, `servicios/nuevo`, `servicios/[id]`, `barberos/`, `barberos/nuevo`, `barberos/[id]`, `porcentajes/`, `configuracion/`, `roles/` | Solo el administrador (`loadAdminPanel`); un barbero recibe 404 |
+| Cobros | La hoja de la cita en Hoy (`agenda-view.tsx`) y `liquidacion/` (`charges-list.tsx`) | "Vino" abre la hoja de cobro; corrección y anulación desde la cita o desde la liquidación |
+| Clientes | `clientes/` y `clientes/[id]` | Lista con búsqueda; ficha con historial, notas e inasistencias |
+| Acciones | `_actions/agenda.ts` (citas y cobros), `_actions/schedule.ts`, `_actions/admin.ts`, `_actions/customers.ts`, `_actions/settings.ts` | Cada una repite la guarda |
 | Composición | `apps/web/lib/panel.ts` (`loadPanel`, `loadAdminPanel`, `canActOnBarber`), `lib/panel-dates.ts`, `panel/_lib/free-starts.ts` (`loadAgendaDays`) | Qué barbero se ve y la agenda de uno o varios días con tres consultas |
-| `@possos/booking` | `.`: `buildDayAgenda`, `dayOccupancy`, `isToClose`, `bogotaInstant`, `dayBounds`, `addDays`, `isoWeekday`, `weekStart`. `/server`: `listAgenda`, `listToClose`, `listPendingApproval`, `getAgendaAppointment`, `listBookingStatus`. `/ui`: `AgendaList`, `AppointmentDetail`, `useLiveAgenda` | La agenda del día es una función pura con pruebas |
+| `@possos/booking` | `.`: `buildDayAgenda`, `dayOccupancy`, `isToClose`, `bogotaInstant`, `dayBounds`, `addDays`, `isoWeekday`, `weekStart`. `validateBookingSettings`. `/server`: `listAgenda`, `listToClose`, `listPendingApproval`, `listCompleted`, `listAgendaByIds`, `listCustomerAppointments`, `getAgendaAppointment`, `listBookingStatus`, `getBookingSettings`, `updateBookingSettings`. `/ui`: `AgendaList`, `AppointmentDetail`, `useLiveAgenda` | La agenda del día es una función pura con pruebas |
 | `@possos/barbers` | `.`: `colombianHolidays`, `holidaysBetween`, `validateWeeklyRanges`, `validateBarberProfile`, `normalizeWhatsappUrl`, `isOwnImagePath`. `/server`: `listBarbers`, `getBarber`, `createBarber`, `updateBarber`, `setWorkingHours`, `listBarberServiceIds`, `setBarberServices`, `addServiceToBarbers`, `addPortfolioItem`, `deletePortfolioItem`, `setBarberPhoto`. `/ui`: `WeeklyHoursEditor`, `TimeOffForm`, `BarberForm`, `ImageUpload` | |
-| `@possos/customers` | `.`: `validateStaffCustomer`, `searchTerm`, `whatsappChatUrl`. `/server`: `searchCustomers`, `getCustomer`, `staffCreateCustomer`, `listNotes`. `/ui`: `CustomerPicker` | |
+| `@possos/customers` | `.`: `validateStaffCustomer`, `searchTerm`, `whatsappChatUrl`. `/server`: `searchCustomers`, `getCustomer`, `staffCreateCustomer`, `listNotes`, `addNote`, `deleteNote`. `/ui`: `CustomerPicker` | |
+| `@possos/commissions` | `.`: `splitAmount`, `formatPercent`, `periodRange`, `SETTLEMENT_PERIODS`. `/server`: `listCharges`, `listChargesForAppointments`, `listCommissionRates`. `/ui` (nueva): `ChargeForm` | |
+| `@possos/notifications` | `.`: `validateReminderSettings`, `offsetToHours`. `/server` (nueva): `getNotificationSettings`, `updateNotificationSettings` | El despacho sigue siendo de F7 |
+| `@possos/auth` | `/server`: `listStaff`, `grantRole`, `revokeRole` | Roles desde el panel |
 | `@possos/catalog` | `.`: `validateService`, `parsePesos`. `/server`: `listServices`, `getService`, `createService`, `updateService`, `moveService`. `/ui`: `ServiceForm` | |
 | `@possos/ui` | `submitKeepingValues` (nuevo) | Único cambio en `ui`; ver abajo |
-| Migraciones | `20261119160000_booking_realtime.sql`, `20261119160100_customers_staff_consent.sql`, `20261119160200_barbers_working_hours.sql` | `appointments` en `supabase_realtime`; `staff_create_customer` con la versión de la política; `set_working_hours`. Cada función con su `revoke` y su `grant` |
+| Migraciones | `20261119160000_booking_realtime.sql`, `20261119160100_customers_staff_consent.sql`, `20261119160200_barbers_working_hours.sql`, `20261119160300_auth_role_admin.sql` | `appointments` en `supabase_realtime`; `staff_create_customer` con la versión de la política; `set_working_hours`; `list_staff`, `grant_role` y `revoke_role`. Cada función con su `revoke` y su `grant` |
 | Semilla | `supabase/seed.sql` | `barbero2@ejemplo.test`: barbero sin administrador, **inactivo**, con 50 % |
-| Pruebas | `supabase/tests/database/07_panel.test.sql` (42), Vitest en booking (`agenda`), barbers (`holidays`, `panel`), customers (`staff`) y catalog (`service-form`), `apps/web/e2e/panel.spec.ts` (9) | |
+| Pruebas | `supabase/tests/database/07_panel.test.sql` (52), Vitest en booking (`agenda`, `settings`), barbers (`holidays`, `panel`), customers (`staff`), catalog (`service-form`), commissions (`split`) y notifications (`settings`), `apps/web/e2e/panel.spec.ts` (13) | |
 
 ## Lo que no es evidente
 
@@ -71,6 +76,26 @@ Estado del panel del barbero y del administrador en [F6](F6-panel-barbero.md). P
 - Enlazar un barbero con su cuenta es "asignar roles", de la parte B.
 - El precio y la duración propios por barbero (`barber_services.*_override`) no tienen pantalla todavía.
 
+### Cobros y liquidación
+
+- **"Vino" llama a dos funciones**: `mark_attendance` y después `record_charge`. Si la segunda falla (por ejemplo, el barbero no tiene porcentaje), la cita queda `completed` sin cobro y aparece en "Por cerrar" como "Falta registrar el cobro", con "Registrar cobro". Se buscan en los últimos 30 días: `listCompleted` de booking y `listChargesForAppointments` de commissions, juntos en la página (booking no conoce los cobros).
+- **El valor se prellena con el precio de la cita.** Mientras el servicio no tenga precio ([PENDIENTE]), el campo sale vacío y el barbero escribe lo que cobró.
+- **El reparto en vivo de la hoja usa `splitAmount`**, la misma cuenta que las columnas generadas de `charges` (redondeo al peso, y la barbería se queda con el resto). Lo que se guarda lo calcula la base.
+- **"Para ti" o "Para el barbero"**: "Para ti" solo cuando quien mira es el barbero de la cita.
+- **Corregir el valor**: el barbero, los cobros de hoy (`update_charge` lo exige con `TOO_LATE_TO_EDIT`); el administrador, siempre. **Anular** solo el administrador, con motivo; el cobro sigue en la lista, tachado, y no cuenta.
+- **La liquidación suma lo que devuelve `get_settlement`** (una fila por barbero; "Toda la barbería" suma las filas). La lista de cobros sale de `listCharges` con los anulados, y los nombres del cliente y del servicio de `listAgendaByIds` de booking: commissions no lee clientes ni servicios (docs/08).
+- **El porcentaje que se muestra es el de hoy** ("50 % hoy"); cada cobro guarda el suyo y por eso cambiarlo no altera periodos anteriores (pgTAP de F2).
+- **Periodos de la liquidación** (`periodRange`): semana de lunes a domingo; quincena del 1 al 15 o del 16 al fin de mes; días de Bogotá.
+
+### Clientes, configuración y roles
+
+- **La ficha del cliente da 404** si RLS no deja leerlo (un barbero con un cliente que no es suyo). Las notas se escriben a nombre del barbero de la sesión; si el administrador no es barbero, a nombre del barbero que tiene elegido en "Agenda de".
+- **"Reiniciar inasistencias" no tiene prueba de Playwright** a propósito: cambiaría la cuenta `aprobacion@ejemplo.test`, que `reserva.spec` necesita con 2 inasistencias. La cubre pgTAP.
+- **Configuración**: `booking_settings` y `notification_settings` se cambian por RLS (solo el administrador); para otro, el `update` no toca filas y la pantalla lo trata como `FORBIDDEN`. Los recordatorios quedan guardados pero no salen hasta F7.
+- **Roles por correo**: `grant_role` busca la cuenta en `auth.users`, que el administrador no puede leer. La persona primero se registra en la app. El rol de barbero además enlaza la cuenta con un perfil de `barbers` sin cuenta (`user_id`); si no se elige perfil, la acción quita el rol que acababa de dar. Quitar el rol de barbero no borra el enlace: la cuenta deja de ver la agenda porque `current_barber_id()` exige el rol.
+- **Nadie se quita a sí mismo el rol de administrador** (`CANNOT_REVOKE_SELF`). Como solo un administrador quita roles, siempre queda uno; no hace falta otra protección.
+- La prueba de roles le da y le quita a `cliente2@ejemplo.test` el rol de administrador; `cleanPanelTestData` se lo quita si quedó a mitad.
+
 ### `@possos/ui`: `submitKeepingValues`
 
 - **React 19 vacía los campos no controlados de un `<form action>` al terminar la acción.** Con un error de validación, lo escrito se perdía (lo encontró Playwright en "Nuevo servicio"). `submitKeepingValues(formAction)` como `onSubmit` manda el formulario por `startTransition` y no lo resetea. F3 lo resolvía en cada formulario; ahora es una función de `ui`. Un formulario que la use no puede tener botones con su propio `formAction`.
@@ -90,10 +115,11 @@ Estado del panel del barbero y del administrador en [F6](F6-panel-barbero.md). P
 
 ## Despliegue
 
-- Las tres migraciones de F6 se aplican a producción con `pnpm db:push` después del CI en verde (primero `--dry-run`). Sin ellas, la agenda no se actualiza sola, guardar el horario falla y "Nueva cita" con cliente nuevo falla (la función pide un parámetro que no existe).
+- Las cuatro migraciones de F6 se aplican a producción con `pnpm db:push` después del CI en verde (primero `--dry-run`). Sin ellas, la agenda no se actualiza sola, guardar el horario falla, "Nueva cita" con cliente nuevo falla (la función pide un parámetro que no existe) y "Roles" no carga. Las tres de la parte A y la de roles salieron en pushes distintos.
 
 ## Pendiente
 
-- **Parte B:** "Vino" con la hoja de cobro, corrección del mismo día y anulación con motivo; liquidación; ficha del cliente con historial y notas; porcentajes; `booking_settings` y `notification_settings`; reiniciar inasistencias; asignar y quitar roles.
-- **Del dueño:** horario real, servicios con precio y duración, foto, portafolio, presentación y enlace de WhatsApp (todo se carga desde el panel), probar "Hoy" durante una jornada en paralelo con Beunik y comparar una liquidación con Beunik (parte B).
+- **Sin pantalla todavía:** el precio y la duración propios de un barbero (`barber_services.*_override`), editar el nombre o el celular de un cliente sin cuenta, y el costo de WhatsApp del mes en "Más" (F7).
+- **Del dueño:** horario real, servicios con precio y duración, foto, portafolio, presentación y enlace de WhatsApp (todo se carga desde el panel), probar "Hoy" durante una jornada en paralelo con Beunik y comparar una liquidación de prueba con la de Beunik para el mismo periodo.
+- **De Juan:** dar los roles al dueño en producción. Ya no hace falta el script de F3: con la cuenta de Juan (administradora sin agenda), crear el perfil del dueño en "Barberos" (con su 50 %), y en "Roles" darle a su correo el rol de barbero con ese perfil y el de administrador.
 - **En un celular real:** la hoja de la cita con el gesto atrás de Android, los selectores nativos de fecha y hora de iOS y Android, subir una foto HEIC desde el iPhone, y la agenda en vivo con la pantalla bloqueada y al volver.

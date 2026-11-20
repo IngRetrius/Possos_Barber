@@ -228,6 +228,9 @@ test("el personal entra al panel", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /^Hoy · / })).toBeVisible();
   await page.getByRole("link", { name: "Más" }).click();
   await expect(page.getByText(/^Administrador y barbero/)).toBeVisible();
+  // La barra de pestañas es sticky: al cargar, "Cerrar sesión" puede quedar a medias debajo de
+  // ella y axe lo marca (target-size). Al final de la página nada queda debajo.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await expectAccessible(page);
 
   // Con sesión, ingresar lleva directo al panel.

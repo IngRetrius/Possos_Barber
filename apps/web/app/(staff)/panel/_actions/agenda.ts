@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@possos/auth/server";
@@ -11,6 +12,8 @@ import {
   reschedule,
   staffCreateAppointment,
 } from "@possos/booking/server";
+import { commissionsErrorMessage } from "@possos/commissions";
+import { recordCharge, updateCharge, voidCharge } from "@possos/commissions/server";
 import { customersErrorMessage, validateStaffCustomer } from "@possos/customers";
 import { listNotes, searchCustomers, staffCreateCustomer } from "@possos/customers/server";
 import type { PickerCustomer } from "@possos/customers/ui";
@@ -168,4 +171,59 @@ export async function notesAction(
   const { db } = await loadPanel();
   const result = await listNotes(db, { customerId, barberId });
   return result.ok ? result.data.map(({ id, body, created_at }) => ({ id, body, created_at })) : [];
+}
+
+// ---------------------------------------------------------------------------------------------
+// Cobros (parte B). "Vino" marca la asistencia y después registra el cobro; si el cobro falla,
+// la cita queda completada y aparece en "Por cerrar" como "Falta registrar el cobro".
+// ---------------------------------------------------------------------------------------------
+
+const CHARGE_MISSING =
+  "La cita quedó como atendida, pero falta registrar el cobro. Intenta de nuevo desde Por cerrar";
+
+/** "Vino" con su cobro. */
+export async function attendAction(
+  appointmentId: string,
+  amountCop: number,
+): Promise<ActionResult> {
+  const { db } = await loadPanel();
+  const attended = await markAttendance(db, { appointmentId, attended: true });
+  if (!attended.ok) return { ok: false, error: bookingErrorMessage(attended.error) };
+  const charged = await recordCharge(db, { appointmentId, amountCop });
+  if (!charged.ok) {
+    return { ok: false, error: `${CHARGE_MISSING}: ${commissionsErrorMessage(charged.error)}` };
+  }
+  return { ok: true, message: "Guardaste el cobro" };
+}
+
+/** Registrar el cobro de una cita que ya está atendida. */
+export async function recordChargeAction(
+  appointmentId: string,
+  amountCop: number,
+): Promise<ActionResult> {
+  const { db } = await loadPanel();
+  const result = await recordCharge(db, { appointmentId, amountCop });
+  if (!result.ok) return { ok: false, error: commissionsErrorMessage(result.error) };
+  return { ok: true, message: "Guardaste el cobro" };
+}
+
+/** Corregir el valor: el barbero, el mismo día; el administrador, siempre. */
+export async function updateChargeAction(
+  chargeId: string,
+  amountCop: number,
+): Promise<ActionResult> {
+  const { db } = await loadPanel();
+  const result = await updateCharge(db, { chargeId, amountCop });
+  if (!result.ok) return { ok: false, error: commissionsErrorMessage(result.error) };
+  revalidatePath("/panel", "layout");
+  return { ok: true, message: "Corregiste el cobro" };
+}
+
+/** Anular un cobro con motivo. Solo el administrador; el cobro no se borra. */
+export async function voidChargeAction(chargeId: string, reason: string): Promise<ActionResult> {
+  const { db } = await loadPanel();
+  const result = await voidCharge(db, { chargeId, reason });
+  if (!result.ok) return { ok: false, error: commissionsErrorMessage(result.error) };
+  revalidatePath("/panel", "layout");
+  return { ok: true, message: "Anulaste el cobro" };
 }

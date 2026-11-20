@@ -9,12 +9,14 @@ import type {
   AppointmentStatus,
   AppointmentForNotification,
   AvailableSlot,
+  BookingSettings,
   ConfirmVia,
   ConflictingAppointment,
   CustomerBookingStatus,
   DayAvailability,
 } from "./index";
 import { BOOKING_ERROR_CODES, type BookingErrorCode } from "./internal/errors";
+import type { ValidBookingSettings } from "./internal/settings";
 
 /**
  * API de servidor de booking. Cada función recibe el cliente de Supabase de quien actúa:
@@ -368,4 +370,65 @@ export async function listBookingStatus(
     .select("*")
     .in("customer_id", customerIds);
   return error ? fail(error) : { ok: true, data };
+}
+
+/** Citas completadas de un barbero desde `since` (ISO), para ver cuáles quedaron sin cobro. */
+export async function listCompleted(
+  db: DbClient,
+  input: { barberId: string; since: string },
+): R<AgendaAppointment[]> {
+  const { data, error } = await db
+    .from("appointments")
+    .select(AGENDA_SELECT)
+    .eq("barber_id", input.barberId)
+    .eq("status", "completed")
+    .not("period", "sl", `[${input.since},${input.since}]`)
+    .order("period");
+  return error ? fail(error) : { ok: true, data: toAgenda(data) };
+}
+
+/** Citas del panel por id (las que la sesión ve), en cualquier estado. */
+export async function listAgendaByIds(db: DbClient, ids: string[]): R<AgendaAppointment[]> {
+  if (ids.length === 0) return { ok: true, data: [] };
+  const { data, error } = await db.from("appointments").select(AGENDA_SELECT).in("id", ids);
+  return error ? fail(error) : { ok: true, data: toAgenda(data) };
+}
+
+/**
+ * Historial de citas de un cliente, de la más nueva a la más vieja. RLS: el barbero ve solo las
+ * de su agenda; el administrador, todas.
+ */
+export async function listCustomerAppointments(
+  db: DbClient,
+  input: { customerId: string; limit?: number },
+): R<AgendaAppointment[]> {
+  const { data, error } = await db
+    .from("appointments")
+    .select(AGENDA_SELECT)
+    .eq("customer_id", input.customerId)
+    .order("period", { ascending: false })
+    .limit(input.limit ?? 50);
+  return error ? fail(error) : { ok: true, data: toAgenda(data) };
+}
+
+/** Reglas de la agenda (una sola fila). Las lee el personal. */
+export async function getBookingSettings(db: DbClient): R<BookingSettings> {
+  const { data, error } = await db.from("booking_settings").select("*").maybeSingle();
+  if (error) return fail(error);
+  return data ? { ok: true, data } : { ok: false, error: "NOT_FOUND" };
+}
+
+/** Cambia las reglas de la agenda. Solo el administrador (RLS). */
+export async function updateBookingSettings(
+  db: DbClient,
+  patch: ValidBookingSettings,
+): R<BookingSettings> {
+  const { data, error } = await db
+    .from("booking_settings")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", true)
+    .select("*")
+    .maybeSingle();
+  if (error) return fail(error);
+  return data ? { ok: true, data } : { ok: false, error: "FORBIDDEN" };
 }

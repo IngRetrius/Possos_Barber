@@ -92,3 +92,39 @@ export async function setCommissionRate(
     .single();
   return error ? fail(error) : { ok: true, data };
 }
+
+/** Cobros de unas citas (los que la sesión ve), para saber cuáles ya tienen cobro. */
+export async function listChargesForAppointments(
+  db: DbClient,
+  appointmentIds: string[],
+): R<Charge[]> {
+  if (appointmentIds.length === 0) return { ok: true, data: [] };
+  const { data, error } = await db.from("charges").select("*").in("appointment_id", appointmentIds);
+  return error ? fail(error) : { ok: true, data };
+}
+
+/**
+ * Cobros de `from` a `to` (días de Bogotá, ambos incluidos), anulados incluidos, del más nuevo al
+ * más viejo. Sin `barberId`, todos los que la sesión ve.
+ */
+export async function listCharges(
+  db: DbClient,
+  input: { from: string; to: string; barberId?: string },
+): R<Charge[]> {
+  const next = new Date(`${input.to}T12:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + 1);
+  let request = db
+    .from("charges")
+    .select("*")
+    .gte("charged_at", `${input.from}T00:00:00-05:00`)
+    .lt("charged_at", `${next.toISOString().slice(0, 10)}T00:00:00-05:00`);
+  if (input.barberId) request = request.eq("barber_id", input.barberId);
+  const { data, error } = await request.order("charged_at", { ascending: false });
+  return error ? fail(error) : { ok: true, data };
+}
+
+/** Porcentajes que la sesión ve: el suyo para el barbero, todos para el administrador. */
+export async function listCommissionRates(db: DbClient): R<CommissionRate[]> {
+  const { data, error } = await db.from("commission_rates").select("*");
+  return error ? fail(error) : { ok: true, data };
+}

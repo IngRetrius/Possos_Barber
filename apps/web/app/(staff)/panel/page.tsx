@@ -2,10 +2,16 @@ import type { Metadata } from "next";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { addDays, type AgendaAppointment } from "@possos/booking";
-import { getAgendaAppointment, listPendingApproval, listToClose } from "@possos/booking/server";
+import {
+  getAgendaAppointment,
+  listCompleted,
+  listPendingApproval,
+  listToClose,
+} from "@possos/booking/server";
+import { listChargesForAppointments, listCommissionRates } from "@possos/commissions/server";
 import { Button, EmptyState, formatDate } from "@possos/ui";
 import { loadPanel } from "../../../lib/panel";
-import { parseDay, todayKey } from "../../../lib/panel-dates";
+import { isoDaysAgo, parseDay, todayKey } from "../../../lib/panel-dates";
 import { param } from "../../../lib/session";
 import { AgendaView } from "./_components/agenda-view";
 import { BarberSwitcher } from "./_components/barber-switcher";
@@ -49,6 +55,24 @@ export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
   ]);
   const { items, appointments } = dayAgenda;
 
+  // Cobros: los de las citas atendidas del día y las de los últimos 30 días que quedaron sin
+  // cobro ("Falta registrar el cobro" en "Por cerrar").
+  const since = isoDaysAgo(30);
+  const [completed, rates] = await Promise.all([
+    isToday ? listCompleted(ctx.db, { barberId: barber.id, since }) : null,
+    listCommissionRates(ctx.db),
+  ]);
+  const recentCompleted = completed?.ok ? completed.data : [];
+  const completedIds = [
+    ...new Set([
+      ...appointments.filter((a) => a.status === "completed").map((a) => a.id),
+      ...recentCompleted.map((a) => a.id),
+    ]),
+  ];
+  const charges = await listChargesForAppointments(ctx.db, completedIds);
+  const charged = new Set((charges.ok ? charges.data : []).map((c) => c.appointment_id));
+  const uncharged = charges.ok ? recentCompleted.filter((a) => !charged.has(a.id)) : [];
+
   const selectedId = param(params.cita) ?? null;
   let extra: AgendaAppointment | null = null;
   if (selectedId && !appointments.some((a) => a.id === selectedId)) {
@@ -58,7 +82,7 @@ export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
 
   const count = appointments.length;
   const unconfirmed = appointments.filter((a) => a.status === "booked").length;
-  const closing = toClose?.ok ? toClose.data.length : 0;
+  const closing = (toClose?.ok ? toClose.data.length : 0) + uncharged.length;
   const approving = pending?.ok ? pending.data.length : 0;
   const summary = [
     count === 1 ? "1 cita" : `${count} citas`,
@@ -132,6 +156,14 @@ export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
         extra={extra}
         initialSelectedId={selectedId}
         notice={param(params.aviso) ?? null}
+        charges={charges.ok ? charges.data : []}
+        uncharged={uncharged}
+        rates={Object.fromEntries(
+          (rates.ok ? rates.data : []).map((r) => [r.barber_id, Number(r.barber_pct)]),
+        )}
+        viewerBarberId={ctx.viewer.barberId}
+        isAdmin={ctx.viewer.isAdmin}
+        today={today}
       />
     </main>
   );

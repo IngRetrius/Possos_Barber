@@ -70,3 +70,10 @@ export {
 export { appointmentIcs, escapeIcsText, type IcsEvent } from "./internal/ics";
 export { APPOINTMENT_STATUS_DISPLAY, TO_CLOSE_DISPLAY } from "./internal/status";
 export { BOOKING_ERROR_CODES, bookingErrorMessage, type BookingErrorCode } from "./internal/errors";
+export {
+  validateBookingSettings,
+  type BookingSettingsErrors,
+  type BookingSettingsField,
+  type BookingSettingsInput,
+  type ValidBookingSettings,
+} from "./internal/settings";
