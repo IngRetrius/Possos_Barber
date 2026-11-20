@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { listActiveBarbers } from "@possos/barbers/server";
 import { BOOKING_ROUTES, MY_APPOINTMENTS_ROUTES, parsePeriod } from "@possos/booking";
-import { getAppointment } from "@possos/booking/server";
+import { getAppointment, getMyAppointment } from "@possos/booking/server";
 import { AppointmentSummary } from "@possos/booking/ui";
 import { servicePriceLabel } from "@possos/catalog";
 import { listActiveServices } from "@possos/catalog/server";
@@ -29,8 +29,10 @@ export default async function DonePage({ searchParams }: PageProps<"/reservar/li
 
   const db = await createClient();
   const { profile } = await requireCustomer(db, `${BOOKING_ROUTES.done}?cita=${id}`);
-  const [appointment, services, barbers] = await Promise.all([
+  const [appointment, mine, services, barbers] = await Promise.all([
     getAppointment(db, id),
+    // El nombre con los adicionales ("Corte + Barba") sale de Mis citas.
+    getMyAppointment(db, id),
     listActiveServices(db),
     listActiveBarbers(db),
   ]);
@@ -65,7 +67,9 @@ export default async function DonePage({ searchParams }: PageProps<"/reservar/li
           ) : null}
         </div>
         <AppointmentSummary
-          serviceName={service?.name ?? t("done.fallbackService")}
+          serviceName={
+            (mine.ok ? mine.data?.serviceName : null) ?? service?.name ?? t("done.fallbackService")
+          }
           start={period.start}
           end={period.end}
           barberName={barber?.display_name ?? null}

@@ -60,8 +60,9 @@ export default async function MyAppointmentsPage({ searchParams }: PageProps<"/m
   const { upcoming, past } = splitMyAppointments(result.data, now);
   const [next, ...later] = upcoming;
   const shownPast = showAll ? past : past.slice(0, HISTORY_SIZE);
-  const bookHref =
-    flow.services.length > 1 ? BOOKING_ROUTES.service : timeStepHref(flow, parseSelection({}));
+  const bookHref = flow.steps.includes("service")
+    ? BOOKING_ROUTES.service
+    : timeStepHref(flow, parseSelection({}));
 
   return (
     <>

@@ -51,6 +51,7 @@ export default async function ConfirmStepPage({ searchParams }: PageProps<"/rese
 
   const selection = resolvedSelection(flow, raw);
   const service = flow.service!;
+  const total = flow.total!;
   const barberId = flow.barberId!;
   if (!selection.startAt) redirect(selectionHref(BOOKING_ROUTES.time, selection));
 
@@ -61,6 +62,7 @@ export default async function ConfirmStepPage({ searchParams }: PageProps<"/rese
   // La hora pudo ocuparse mientras el cliente se registraba.
   const starts = await getAvailableStarts(db, {
     serviceId: service.id,
+    addonIds: selection.addonIds,
     day: date,
     barberId: barberId === ANY_BARBER ? undefined : barberId,
   });
@@ -74,7 +76,7 @@ export default async function ConfirmStepPage({ searchParams }: PageProps<"/rese
     );
   }
 
-  const end = new Date(Date.parse(startAt) + service.duration_min * 60_000).toISOString();
+  const end = new Date(Date.parse(startAt) + total.durationMin * 60_000).toISOString();
   const viewer = await getViewer(db);
   const t = await getTranslations("web.customer");
   const f = await currentFormatters();
@@ -133,6 +135,7 @@ export default async function ConfirmStepPage({ searchParams }: PageProps<"/rese
         <BookForm
           action={bookAction}
           serviceId={service.id}
+          addonIds={selection.addonIds}
           barberId={barberId}
           date={date}
           startAt={startAt}
@@ -153,11 +156,11 @@ export default async function ConfirmStepPage({ searchParams }: PageProps<"/rese
       <main className="grid flex-1 content-start gap-6 px-gutter pt-2 pb-8">
         <h1 className="text-title">{t("confirm.title")}</h1>
         <AppointmentSummary
-          serviceName={service.name}
+          serviceName={flow.label!}
           start={startAt}
           end={end}
           barberName={barberName(flow, barberId)}
-          priceLabel={servicePriceLabel(service.price_cop, f.locale)}
+          priceLabel={servicePriceLabel(total.priceCop, f.locale)}
           location={addressLabel(f.locale)}
         />
         <p className="text-body text-fg-muted">{t("policy")}</p>

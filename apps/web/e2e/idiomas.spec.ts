@@ -44,7 +44,7 @@ test("el inicio está en español y el botón lo pasa a inglés y de vuelta", as
   // El idioma sigue al navegar: el horario y la política también salen en inglés.
   await page.goto("/reservar/horario");
   await expect(page.getByRole("heading", { name: "Choose your time" })).toBeVisible();
-  await expect(page.getByText(/Step 1 of \d/)).toBeVisible();
+  await expect(page.getByText("Step 2 of 3")).toBeVisible();
   await page.goto("/politica-de-datos");
   await expect(
     page.getByRole("heading", { level: 1, name: "Personal data processing policy" }),

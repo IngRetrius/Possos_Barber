@@ -10,9 +10,16 @@ import {
   type BookingSelection,
   type BookingStep,
 } from "@possos/booking";
-import type { Service } from "@possos/catalog";
+import {
+  pickAddons,
+  serviceLabel,
+  withAddons,
+  type Service,
+  type ServiceAddon,
+  type ServiceTotal,
+} from "@possos/catalog";
 import { getAvailableDays, getAvailableStarts } from "@possos/booking/server";
-import { listActiveServices } from "@possos/catalog/server";
+import { listActiveAddons, listActiveServices } from "@possos/catalog/server";
 import type { DbClient } from "@possos/supabase";
 
 /*
@@ -25,6 +32,14 @@ export interface BookingFlow {
   services: Service[];
   /** El servicio elegido (o el único activo), o null. */
   service: Service | null;
+  /** Adicionales activos del servicio (barba, cejas, diseño). */
+  addons: ServiceAddon[];
+  /** Los adicionales elegidos que existen, en su orden. */
+  selectedAddons: ServiceAddon[];
+  /** Precio y duración del servicio con los adicionales elegidos. */
+  total: ServiceTotal | null;
+  /** "Corte + Barba", o null sin servicio. */
+  label: string | null;
   /** Barberos activos que hacen el servicio. */
   barbers: Barber[];
   /** Id del barbero (el único, si hay uno), `ANY_BARBER`, o null si falta elegir. */
@@ -44,11 +59,18 @@ export async function loadBookingFlow(
     (services.length === 1 ? services[0]! : null);
 
   let barbers: Barber[] = [];
+  let addons: ServiceAddon[] = [];
   if (service) {
-    const result = await listBarbersForService(db, service.id);
+    const [result, addonList] = await Promise.all([
+      listBarbersForService(db, service.id),
+      listActiveAddons(db, [service.id]),
+    ]);
     if (!result.ok) throw new Error(`No se pudieron leer los barberos: ${result.error}`);
+    if (!addonList.ok) throw new Error(`No se pudieron leer los adicionales: ${addonList.error}`);
     barbers = result.data;
+    addons = addonList.data;
   }
+  const selectedAddons = pickAddons(addons, selection.addonIds);
 
   let barberId: string | null = null;
   if (barbers.length === 1) barberId = barbers[0]!.id;
@@ -58,9 +80,22 @@ export async function loadBookingFlow(
   return {
     services,
     service,
+    addons,
+    selectedAddons,
+    total: service ? withAddons(service, selectedAddons) : null,
+    label: service
+      ? serviceLabel(
+          service.name,
+          selectedAddons.map((a) => a.name),
+        )
+      : null,
     barbers,
     barberId,
-    steps: bookingSteps({ services: services.length, barbers: barbers.length }),
+    steps: bookingSteps({
+      services: services.length,
+      barbers: barbers.length,
+      addons: addons.length,
+    }),
   };
 }
 
@@ -69,7 +104,12 @@ export function resolvedSelection(
   flow: BookingFlow,
   selection: BookingSelection,
 ): BookingSelection {
-  return { ...selection, serviceId: flow.service?.id ?? null, barberId: flow.barberId };
+  return {
+    ...selection,
+    serviceId: flow.service?.id ?? null,
+    addonIds: flow.selectedAddons.map((a) => a.id),
+    barberId: flow.barberId,
+  };
 }
 
 /**
@@ -79,7 +119,10 @@ export function resolvedSelection(
 export function missingStepHref(flow: BookingFlow): string | null {
   if (!flow.service) return BOOKING_ROUTES.service;
   if (!flow.barberId) {
-    return selectionHref(BOOKING_ROUTES.barber, { serviceId: flow.service.id });
+    return selectionHref(BOOKING_ROUTES.barber, {
+      serviceId: flow.service.id,
+      addonIds: flow.selectedAddons.map((a) => a.id),
+    });
   }
   return null;
 }
@@ -90,6 +133,7 @@ export function timeStepHref(flow: BookingFlow, selection: BookingSelection): st
     missingStepHref(flow) ??
     selectionHref(BOOKING_ROUTES.time, {
       serviceId: flow.service!.id,
+      addonIds: flow.selectedAddons.map((a) => a.id),
       barberId: flow.barberId,
       date: selection.date,
     })
@@ -107,9 +151,16 @@ export function previousStepHref(
   const sel = resolvedSelection(flow, selection);
   switch (previous) {
     case "service":
-      return BOOKING_ROUTES.service;
+      // Vuelve con el servicio abierto y sus adicionales marcados.
+      return selectionHref(BOOKING_ROUTES.service, {
+        serviceId: sel.serviceId,
+        addonIds: sel.addonIds,
+      });
     case "barber":
-      return selectionHref(BOOKING_ROUTES.barber, { serviceId: sel.serviceId });
+      return selectionHref(BOOKING_ROUTES.barber, {
+        serviceId: sel.serviceId,
+        addonIds: sel.addonIds,
+      });
     case "time":
       return selectionHref(BOOKING_ROUTES.time, sel);
     default:
@@ -123,29 +174,53 @@ export function barberName(flow: BookingFlow, barberId: string | null): string |
 }
 
 /**
- * A dónde lleva reservar un servicio desde el inicio, sin pasar por pasos que se saltan solos:
- * con un solo barbero, al horario; con varios, a elegir barbero. `barberId` es el único barbero o
- * null.
+ * A dónde lleva reservar un servicio desde el inicio o el paso "Servicio", sin pasar por pasos
+ * que se saltan solos: con un solo barbero, al horario; con varios, a elegir barbero. `barberId`
+ * es el único barbero o null. `addons` son sus adicionales activos.
  */
 export interface ServiceEntry {
   barberId: string | null;
+  addons: ServiceAddon[];
+  /** El paso siguiente sin adicionales. */
   href: string;
+  /** El mismo paso con unos adicionales. */
+  hrefWith: (addonIds: string[]) => string;
+  /** Ruta y parámetros del paso siguiente, para el formulario de adicionales. */
+  next: { path: string; params: Record<string, string> };
 }
 
 export async function loadServiceEntries(
   db: DbClient,
   services: Service[],
 ): Promise<Map<string, ServiceEntry>> {
-  const lists = await Promise.all(services.map((s) => listBarbersForService(db, s.id)));
+  const [lists, addonList] = await Promise.all([
+    Promise.all(services.map((s) => listBarbersForService(db, s.id))),
+    listActiveAddons(
+      db,
+      services.map((s) => s.id),
+    ),
+  ]);
+  const allAddons = addonList.ok ? addonList.data : [];
   return new Map(
     services.map((service, i) => {
       const result = lists[i]!;
       const barbers = result.ok ? result.data : [];
       const barberId = barbers.length === 1 ? barbers[0]!.id : null;
-      const href = barberId
-        ? selectionHref(BOOKING_ROUTES.time, { serviceId: service.id, barberId })
-        : selectionHref(BOOKING_ROUTES.barber, { serviceId: service.id });
-      return [service.id, { barberId, href }];
+      const path = barberId ? BOOKING_ROUTES.time : BOOKING_ROUTES.barber;
+      const hrefWith = (addonIds: string[]) =>
+        selectionHref(path, { serviceId: service.id, addonIds, barberId });
+      const params: Record<string, string> = { servicio: service.id };
+      if (barberId) params.barbero = barberId;
+      return [
+        service.id,
+        {
+          barberId,
+          addons: allAddons.filter((a) => a.service_id === service.id),
+          href: hrefWith([]),
+          hrefWith,
+          next: { path, params },
+        },
+      ];
     }),
   );
 }
@@ -157,7 +232,7 @@ export async function loadServiceEntries(
  */
 export async function loadQuickSlots(
   db: DbClient,
-  input: { serviceId: string; barberId: string },
+  input: { serviceId: string; barberId: string; addonIds: string[] },
 ): Promise<string[] | null> {
   const days = await getAvailableDays(db, input);
   if (!days.ok) return null;

@@ -212,9 +212,10 @@ test("la barra Reservar se esconde mientras se ven los servicios", async ({ page
   await expect(bar).not.toHaveAttribute("inert", "");
   await expectAccessible(page);
 
-  // Con un solo servicio, lleva directo al horario.
+  // El único servicio tiene adicionales: sube a la lista para elegirlos ahí.
   await bar.getByRole("link", { name: "Reservar" }).tap();
-  await expect(page.getByRole("heading", { name: "Elige tu hora" })).toBeVisible();
+  await expect(page).toHaveURL("/");
+  await expect(page.getByRole("heading", { name: "Servicios" })).toBeFocused();
 });
 
 test("con varios servicios, Reservar de la barra sube a la lista", async ({ page }) => {
@@ -251,12 +252,13 @@ test("cliente con sesión reserva en 3 toques desde el inicio", async ({ page })
   await quickSlots(page).getByRole("group").getByRole("link").first().tap();
   await expect(page).toHaveURL(/\/reservar\/confirmar\?/);
   expect(new URL(page.url()).searchParams.get("hora")).toBe(startAt);
-  await expect(page.getByText("Paso 2 de 2")).toBeVisible();
+  // Servicio (con adicionales), Horario y Confirmar.
+  await expect(page.getByText("Paso 3 de 3")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Revisa tu cita" })).toBeVisible();
   await expect(
     page.getByText("Puedes cancelar o cambiar tu cita hasta 2 horas antes."),
   ).toBeVisible();
-  await expect(page.getByText("Total en la barbería")).toBeVisible();
+  await expect(page.getByText("Total", { exact: true })).toBeVisible();
   await expectAccessible(page);
 
   // 3. Reservar.

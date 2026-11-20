@@ -3,6 +3,37 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      appointment_addons: {
+        Row: {
+          addon_id: string;
+          appointment_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          addon_id: string;
+          appointment_id: string;
+        };
+        Update: {
+          addon_id?: string;
+          appointment_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "appointment_addons_addon_id_fkey";
+            columns: ["addon_id"];
+            isOneToOne: false;
+            referencedRelation: "service_addons";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "appointment_addons_appointment_id_fkey";
+            columns: ["appointment_id"];
+            isOneToOne: false;
+            referencedRelation: "appointments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       appointments: {
         Row: {
           auto_assigned: boolean;
@@ -686,9 +717,55 @@ export type Database = {
         };
         Relationships: [];
       };
+      service_addons: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          duration_min: number;
+          id: string;
+          name: string;
+          price_cop: number | null;
+          service_id: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          duration_min?: number;
+          id?: string;
+          name: string;
+          price_cop?: number | null;
+          service_id: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          duration_min?: number;
+          id?: string;
+          name?: string;
+          price_cop?: number | null;
+          service_id?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_addons_service_id_fkey";
+            columns: ["service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       services: {
         Row: {
           active: boolean;
+          category: string | null;
           created_at: string;
           description: string | null;
           duration_min: number;
@@ -701,6 +778,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           active?: boolean;
+          category?: string | null;
           created_at?: string;
           description?: string | null;
           duration_min: number;
@@ -712,6 +790,7 @@ export type Database = {
         };
         Update: {
           active?: boolean;
+          category?: string | null;
           created_at?: string;
           description?: string | null;
           duration_min?: number;
@@ -821,7 +900,12 @@ export type Database = {
         Returns: boolean;
       };
       book_appointment: {
-        Args: { p_barber_id?: string; p_service_id: string; p_start_at: string };
+        Args: {
+          p_addon_ids?: string[];
+          p_barber_id?: string;
+          p_service_id: string;
+          p_start_at: string;
+        };
         Returns: {
           auto_assigned: boolean;
           barber_id: string;
@@ -985,14 +1069,14 @@ export type Database = {
         }[];
       };
       get_available_days: {
-        Args: { p_barber_id?: string; p_service_id: string };
+        Args: { p_addon_ids?: string[]; p_barber_id?: string; p_service_id: string };
         Returns: {
           day: string;
           slots: number;
         }[];
       };
       get_available_slots: {
-        Args: { p_barber_id?: string; p_day: string; p_service_id: string };
+        Args: { p_addon_ids?: string[]; p_barber_id?: string; p_day: string; p_service_id: string };
         Returns: {
           barber_ids: string[];
           start_at: string;
@@ -1040,6 +1124,8 @@ export type Database = {
       list_my_appointments: {
         Args: { p_id?: string; p_limit?: number };
         Returns: {
+          addon_ids: string[];
+          addon_names: string[];
           barber_active: boolean;
           barber_id: string;
           barber_name: string;
@@ -1180,6 +1266,7 @@ export type Database = {
       };
       staff_create_appointment: {
         Args: {
+          p_addon_ids?: string[];
           p_barber_id: string;
           p_customer_id: string;
           p_service_id: string;

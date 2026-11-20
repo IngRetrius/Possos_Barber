@@ -45,6 +45,7 @@ function forSite(m: Messages) {
     auth: m.auth,
     booking: m.booking,
     customers: { profile: m.customers.profile },
+    catalog: { addonPicker: m.catalog.addonPicker },
     web: { common: m.web.common },
   };
 }

@@ -30,16 +30,26 @@ export default async function BarberStepPage({ searchParams }: PageProps<"/reser
   if (!flow.service) redirect(BOOKING_ROUTES.service);
 
   const service = flow.service;
+  const addonIds = flow.selectedAddons.map((a) => a.id);
   if (flow.barbers.length <= 1) {
     redirect(
-      selectionHref(BOOKING_ROUTES.time, { serviceId: service.id, barberId: flow.barberId }),
+      selectionHref(BOOKING_ROUTES.time, {
+        serviceId: service.id,
+        addonIds,
+        barberId: flow.barberId,
+      }),
     );
   }
 
   const position = stepPosition("barber", flow.steps, await currentLocale());
   const t = await getTranslations("web.customer.barber");
   const timeHref = (barberId: string) =>
-    selectionHref(BOOKING_ROUTES.time, { serviceId: service.id, barberId, date: selection.date });
+    selectionHref(BOOKING_ROUTES.time, {
+      serviceId: service.id,
+      addonIds,
+      barberId,
+      date: selection.date,
+    });
   return (
     <>
       <StepHeader
@@ -50,7 +60,7 @@ export default async function BarberStepPage({ searchParams }: PageProps<"/reser
       <main className="grid flex-1 content-start gap-6 px-gutter pt-2 pb-8">
         <div className="grid gap-2">
           <p className="text-body text-fg-muted">
-            {service.name} · {formatDuration(service.duration_min)}
+            {flow.label} · {formatDuration(flow.total!.durationMin)}
           </p>
           <h1 className="text-title">{t("title")}</h1>
         </div>

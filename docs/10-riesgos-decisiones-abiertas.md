@@ -9,7 +9,7 @@ Ordenadas por lo que bloquean. Cada una trae un valor por omisión para no deten
 | # | Decisión | Quién decide | Valor por omisión | Bloquea |
 |---|---|---|---|---|
 | 1 | **Resuelta el 19/11/2026: A.** El número actual del dueño está en su cuenta personal y sigue siendo su contacto; va a sacar un número nuevo solo para la API. Falta la SIM nueva. Ver [03](03-recordatorios-whatsapp.md#qué-número-envía-los-mensajes) | Dueño | | Alta en Meta y plantillas, hasta que exista la SIM |
-| 2 | **Servicios, precios y duraciones** además del corte normal (barba, cejas, combos…) | Dueño | Resuelta el 19/11/2026: los 9 servicios de Beunik, con precio y duración, cargados en producción (la semilla local sigue con "Corte normal") | Catálogo y semillas |
+| 2 | **Servicios, precios y duraciones** además del corte normal (barba, cejas, combos…) | Dueño | Resuelta el 19/11/2026: los 9 servicios de Beunik, con precio y duración, cargados en producción (la semilla local sigue con "Corte normal"). El 20/11/2026 los combos pasan a adicionales del corte (barba, cejas, diseño) que se suman en cualquier combinación, y el color va en su grupo: `supabase/scripts/adicionales-produccion.sql` | Catálogo y semillas |
 | 3 | **Horario de atención** por día, descansos y si trabaja festivos | Dueño | [PENDIENTE] | Disponibilidad |
 | 4 | **Dirección** de la barbería para la página y el recordatorio de 2 h | Dueño | Resuelta el 19/11/2026: Manzana 26 Casa 13, barrio Kennedy, Girardot (casa esquinera naranja) | Plantilla `recordatorio_2h` |
 | 5 | **Texto de las plantillas** de WhatsApp, con su habla | Dueño | Borrador neutro y corto, en tuteo | Aprobación de plantillas |

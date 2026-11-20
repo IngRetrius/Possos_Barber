@@ -181,7 +181,7 @@ reset role;
 -- get_available_slots: anon responde, solo horas, y respeta anticipación y máximo de días.
 select tests.login_anon();
 select is(
-  pg_get_function_result('public.get_available_slots(uuid, date, uuid)'::regprocedure),
+  pg_get_function_result('public.get_available_slots(uuid, date, uuid, uuid[])'::regprocedure),
   'TABLE(start_at timestamp with time zone, barber_ids uuid[])',
   'get_available_slots solo devuelve horas de inicio y barberos libres'
 );

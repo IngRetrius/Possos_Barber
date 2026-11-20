@@ -1,6 +1,7 @@
 import "server-only";
 import type { DbClient, Result } from "@possos/supabase";
-import type { Service } from "./index";
+import type { Service, ServiceAddon } from "./index";
+import type { ValidAddon } from "./internal/addon-form";
 import type { ValidService } from "./internal/service-form";
 
 /** Servicios activos en el orden en que se muestran. */
@@ -25,6 +26,22 @@ export async function getActiveService(
     .eq("id", id)
     .eq("active", true)
     .maybeSingle();
+  return error ? { ok: false, error: "UNKNOWN" } : { ok: true, data };
+}
+
+/** Adicionales activos de unos servicios, en el orden en que se muestran. */
+export async function listActiveAddons(
+  db: DbClient,
+  serviceIds: string[],
+): Promise<Result<ServiceAddon[], "UNKNOWN">> {
+  if (serviceIds.length === 0) return { ok: true, data: [] };
+  const { data, error } = await db
+    .from("service_addons")
+    .select("*")
+    .in("service_id", serviceIds)
+    .eq("active", true)
+    .order("sort_order")
+    .order("name");
   return error ? { ok: false, error: "UNKNOWN" } : { ok: true, data };
 }
 
@@ -108,4 +125,58 @@ export async function moveService(db: DbClient, id: string, direction: "up" | "d
     if (error) return failure(error);
   }
   return { ok: true, data: null };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Adicionales (20/11/2026). RLS: solo el administrador escribe.
+// ---------------------------------------------------------------------------------------------
+
+/** Adicionales de un servicio que la sesión ve (el administrador, también los inactivos). */
+export async function listAddons(db: DbClient, serviceId: string): R<ServiceAddon[]> {
+  const { data, error } = await db
+    .from("service_addons")
+    .select("*")
+    .eq("service_id", serviceId)
+    .order("active", { ascending: false })
+    .order("sort_order")
+    .order("name");
+  return error ? failure(error) : { ok: true, data };
+}
+
+/** Agrega un adicional al final de los del servicio. */
+export async function createAddon(
+  db: DbClient,
+  serviceId: string,
+  input: ValidAddon,
+): R<ServiceAddon> {
+  const last = await db
+    .from("service_addons")
+    .select("sort_order")
+    .eq("service_id", serviceId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (last.error) return failure(last.error);
+  const { data, error } = await db
+    .from("service_addons")
+    .insert({ ...input, service_id: serviceId, sort_order: (last.data?.sort_order ?? 0) + 1 })
+    .select("*")
+    .single();
+  return error ? failure(error) : { ok: true, data };
+}
+
+/** Cambia un adicional. El precio nuevo vale para las citas nuevas, no para las ya reservadas. */
+export async function updateAddon(
+  db: DbClient,
+  id: string,
+  patch: Partial<ValidAddon> & { active?: boolean },
+): R<ServiceAddon> {
+  const { data, error } = await db
+    .from("service_addons")
+    .update(patch)
+    .eq("id", id)
+    .select("*")
+    .maybeSingle();
+  if (error) return failure(error);
+  return data ? { ok: true, data } : { ok: false, error: "NOT_FOUND" };
 }

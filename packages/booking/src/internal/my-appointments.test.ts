@@ -22,6 +22,7 @@ function appt(overrides: Partial<MyAppointment> & { start: string }): MyAppointm
     end,
     serviceId: "s",
     serviceName: "Corte normal",
+    addonIds: [],
     serviceActive: true,
     barberId: "b",
     barberName: "Barbero",

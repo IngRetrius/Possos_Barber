@@ -84,6 +84,9 @@ export interface ListDisclosureRowProps {
   group?: string;
   /** Lo que aparece al abrir la fila: el detalle completo y su acción. */
   children: ReactNode;
+  /** Abierta al cargar (por ejemplo, el servicio cuyos adicionales se acaban de elegir). */
+  defaultOpen?: boolean;
+  id?: string;
   className?: string;
 }
 
@@ -98,11 +101,13 @@ export function ListDisclosureRow({
   value,
   group,
   children,
+  defaultOpen,
+  id,
   className,
 }: ListDisclosureRowProps) {
   return (
-    <li data-slot="list-disclosure-row">
-      <details name={group} className={cn("group", className)}>
+    <li data-slot="list-disclosure-row" id={id} className="scroll-mt-4">
+      <details name={group} open={defaultOpen} className={cn("group", className)}>
         <summary
           className={cn(
             "flex min-h-16 w-full cursor-pointer list-none items-center gap-3 px-4 py-3",

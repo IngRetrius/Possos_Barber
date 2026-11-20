@@ -7,6 +7,7 @@ Construido en F2 (19/11/2026): las migraciones están en `supabase/migrations/`,
 ```
 auth.users ─┬─< staff_roles                                  [auth]
             ├── barbers ─┬─< barber_services >── services    [barbers] / [catalog]
+            │            │                            └─< service_addons  [catalog]
             │            ├─< working_hours                   [barbers]
             │            ├─< time_off                        [barbers]
             │            └─< portfolio_items                 [barbers]
@@ -15,6 +16,7 @@ auth.users ─┬─< staff_roles                                  [auth]
             └─< push_subscriptions                           [notifications]
 
 appointments  (barber_id, customer_id, service_id)           [booking]
+  ├─< appointment_addons >── service_addons                   [booking]
   ├── customer_booking_status (por customer_id)              [booking]
   ├── booking_events                                          [booking]
   ├─< message_jobs                                            [notifications]
@@ -38,7 +40,8 @@ Funciones `security definer` con `set search_path = ''`: `is_admin()` y `has_rol
 
 | Tabla | Columnas principales |
 |---|---|
-| `services` | `id`, `name`, `description`, `duration_min` (> 0, múltiplo de 5), `price_cop` (entero ≥ 0; null mientras el dueño no confirme el precio, **[PENDIENTE]**), `active`, `sort_order` |
+| `services` | `id`, `name`, `description`, `duration_min` (> 0, múltiplo de 5), `price_cop` (entero ≥ 0; null mientras el dueño no confirme el precio, **[PENDIENTE]**), `active`, `sort_order`, `category` (20/11/2026: grupo con que se muestra en el inicio, por ejemplo "Color de cabello"; null, sin grupo) |
+| `service_addons` | 20/11/2026. Adicionales de un servicio (barba, cejas, diseño): `id`, `service_id` → services, `name`, `price_cop` (null, **[PENDIENTE]**), `duration_min` (≥ 0, múltiplo de 5: los minutos que suma), `active`, `sort_order`. Se pueden combinar todos y cada uno suma su precio y sus minutos (decisión del 20/11/2026). Reemplazan los combos de Beunik, cuyo precio era la suma exacta |
 
 ### barbers
 
@@ -81,6 +84,7 @@ Un trigger impide que un barbero sin rol de administrador cambie su `user_id`, `
 |---|---|
 | `booking_settings` | Una sola fila: `min_lead_min` (60), `max_days_ahead` (30), `cancel_window_min` (120), `no_show_threshold` (2), `timezone` ('America/Bogota') |
 | `appointments` | Ver abajo |
+| `appointment_addons` | 20/11/2026. Los adicionales de una cita: `appointment_id` → appointments, `addon_id` → service_addons, PK de las dos. La duración (`period`) y el precio (`price_cop`) de la cita ya los incluyen: los calcula `private.booking_offer` al reservar, así que la restricción `no_double_booking` cubre el tiempo completo |
 | `customer_booking_status` | `customer_id` (PK), `no_show_count`, `requires_approval`, `updated_at` |
 | `booking_events` | `id` (bigserial), `type`, `version`, `appointment_id`, `payload` (jsonb), `created_at` |
 
@@ -177,14 +181,14 @@ Las funciones internas van en el esquema `private`, que PostgREST no expone; cad
 
 | Función | Quién | Qué hace |
 |---|---|---|
-| `get_available_slots(service_id, day, barber_id?)` | anon y authenticated | Devuelve solo `start_at` y `barber_ids` (los barberos libres). Sin datos de clientes. Horas alineadas al `slot_interval_min` del barbero desde el inicio de cada rango del horario |
-| `get_available_days(service_id, barber_id?)` | anon y authenticated | F4. Cuántas horas libres tiene cada día, de hoy a `max_days_ahead`, para la tira de días. Cuenta lo mismo que `get_available_slots` |
+| `get_available_slots(service_id, day, barber_id?, addon_ids?)` | anon y authenticated | Devuelve solo `start_at` y `barber_ids` (los barberos libres). Sin datos de clientes. Horas alineadas al `slot_interval_min` del barbero desde el inicio de cada rango del horario. Con `addon_ids`, la duración incluye los adicionales |
+| `get_available_days(service_id, barber_id?, addon_ids?)` | anon y authenticated | F4. Cuántas horas libres tiene cada día, de hoy a `max_days_ahead`, para la tira de días. Cuenta lo mismo que `get_available_slots` |
 | `my_booking_requires_approval()` | authenticated | F4. Si la próxima reserva del cliente de la sesión quedará `pending_approval`. El cliente no ve su contador de inasistencias (docs/06), solo este aviso |
-| `list_my_appointments(id?, limit?)` | authenticated | F5. Las citas del cliente de la sesión (nunca las de otro), con el nombre del servicio y del barbero aunque estén inactivos, el WhatsApp del barbero, `change_deadline` (inicio menos `cancel_window_min`: hasta cuándo puede cancelar o cambiar) y `replaced_by` (la cita que la reemplazó al reprogramarla). Sin `id`, deja fuera las reprogramadas. El personal sin perfil de cliente recibe una lista vacía |
-| `book_appointment(service_id, start_at, barber_id?)` | cliente | Aplica anticipación y horario, resuelve "cualquiera disponible", pone `pending_approval` si el cliente lo requiere y enlaza el cliente con el barbero |
-| `staff_create_appointment(customer_id, service_id, barber_id, start_at)` | barbero (su agenda) y admin | Igual, sin las reglas de anticipación ni la alineación al intervalo; la cita sí debe caber en el horario. El barbero solo agenda a clientes que ya ve |
+| `list_my_appointments(id?, limit?)` | authenticated | F5. Las citas del cliente de la sesión (nunca las de otro), con el nombre del servicio y del barbero aunque estén inactivos, los adicionales (`addon_ids`, `addon_names`), el WhatsApp del barbero, `change_deadline` (inicio menos `cancel_window_min`: hasta cuándo puede cancelar o cambiar) y `replaced_by` (la cita que la reemplazó al reprogramarla). Sin `id`, deja fuera las reprogramadas. El personal sin perfil de cliente recibe una lista vacía |
+| `book_appointment(service_id, start_at, barber_id?, addon_ids?)` | cliente | Aplica anticipación y horario, resuelve "cualquiera disponible", pone `pending_approval` si el cliente lo requiere y enlaza el cliente con el barbero. Un adicional inactivo o de otro servicio da `SERVICE_NOT_AVAILABLE` |
+| `staff_create_appointment(customer_id, service_id, barber_id, start_at, addon_ids?)` | barbero (su agenda) y admin | Igual, sin las reglas de anticipación ni la alineación al intervalo; la cita sí debe caber en el horario. El barbero solo agenda a clientes que ya ve |
 | `cancel_appointment(id, reason)` | cliente (dentro de la ventana), barbero y admin | El personal debe dar un motivo |
-| `reschedule_appointment(id, new_start_at, new_barber_id?)` | cliente (dentro de la ventana), barbero y admin | Crea la nueva y cancela la anterior en una sola transacción |
+| `reschedule_appointment(id, new_start_at, new_barber_id?)` | cliente (dentro de la ventana), barbero y admin | Crea la nueva y cancela la anterior en una sola transacción. La nueva lleva los mismos adicionales |
 | `confirm_appointment(id, via)` | cliente, barbero, admin y el servicio de notificaciones | `via`: `customer`, `staff` o `whatsapp`. Confirmar dos veces no es error |
 | `decide_pending(id, approve)` | barbero y admin | |
 | `mark_attendance(id, attended)` | barbero y admin | Solo después de la hora de inicio. Actualiza `customer_booking_status` |
@@ -192,7 +196,7 @@ Las funciones internas van en el esquema `private`, que PostgREST no expone; cad
 | `list_conflicting_appointments(barber_id, starts_at, ends_at)` | barbero (su agenda) y admin | Citas que ocupan ese periodo, con el nombre del cliente |
 | `set_working_hours(barber_id, ranges)` | barbero (el suyo) y admin | F6. Módulo `barbers`. Reemplaza el horario semanal completo en una transacción |
 | `staff_create_customer(full_name, phone, email, whatsapp_opt_in, data_policy_version)` | barbero y admin | Módulo `customers`. Cliente sin cuenta; con la versión de la política guarda la hora de la autorización de palabra (F6) |
-| `get_appointment_for_notification(id)` | solo service role | Contrato público para `notifications`: fecha, servicio, barbero, nombre, celular y opt-in |
+| `get_appointment_for_notification(id)` | solo service role | Contrato público para `notifications`: fecha, servicio (con sus adicionales: "Corte + Barba"), barbero, nombre, celular y opt-in |
 | `claim_booking_events(consumer, limit?)` | solo service role | F8. Módulo `notifications`. Toma el turno del consumidor y devuelve sus eventos pendientes en orden, sin pasar un hueco reciente. `BUSY` si otro despacho tiene el turno (vence al minuto) |
 | `ack_booking_events(consumer, last_event_id?)` | solo service role | F8. Avanza el cursor (null: no avanza), suelta el turno y dice si quedan eventos |
 | `save_push_subscription(endpoint, p256dh, auth)` | barbero | F8. Guarda la suscripción push del navegador para la cuenta de la sesión. Si el endpoint ya estaba con otra cuenta (otra persona en el mismo celular), pasa a la de ahora |
@@ -226,6 +230,8 @@ RLS está activado en todas las tablas. Resumen:
 | Tabla | select | insert, update, delete |
 |---|---|---|
 | `services`, `portfolio_items` | todos (si están activos), admin todo | admin (portafolio: también su barbero) |
+| `service_addons` | todos (si están activos); el personal también los inactivos, para no perder nombres en la agenda | admin |
+| `appointment_addons` | quien ve la cita | **ninguno** (solo funciones) |
 | `barbers` | todos los activos; admin todo; el barbero se ve a sí mismo | admin; el barbero actualiza su perfil |
 | `working_hours`, `time_off` | su barbero y admin | su barbero y admin (los bloqueos, por función) |
 | `staff_roles` | lo propio; admin todo | admin |
@@ -273,7 +279,7 @@ Envolver `auth.uid()` y las funciones en `(select ...)` hace que Postgres las ev
 
 ## Pruebas obligatorias (pgTAP)
 
-Están en `supabase/tests/database/` (`02_booking`, `03_rls`, `04_commissions` y, desde F3, `05_accounts`: perfil, autorización y borrar la cuenta; F4 agregó `06_reserva`, F5 `08_mis_citas` y F6 `07_panel`: Realtime, horario semanal, cliente creado por el personal, roles y la matriz de docs/06 del barbero frente al administrador), con el fixture compartido `supabase/tests/fixtures/setup.psql`. Cada prueba obligatoria lleva su número al inicio de la descripción.
+Están en `supabase/tests/database/` (`02_booking`, `03_rls`, `04_commissions` y, desde F3, `05_accounts`: perfil, autorización y borrar la cuenta; F4 agregó `06_reserva`, F5 `08_mis_citas` y F6 `07_panel`: Realtime, horario semanal, cliente creado por el personal, roles y la matriz de docs/06 del barbero frente al administrador; el 20/11/2026, `10_adicionales`: suma de precio y minutos, horas libres con la barba, la restricción de exclusión sobre el tiempo extra, reprogramar con los mismos adicionales y RLS), con el fixture compartido `supabase/tests/fixtures/setup.psql`. Cada prueba obligatoria lleva su número al inicio de la descripción.
 
 1. Dos `book_appointment` a la misma hora para el mismo barbero: uno pasa y el otro falla con `SLOT_TAKEN`.
 2. Una cita cancelada libera la hora.

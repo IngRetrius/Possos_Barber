@@ -54,6 +54,7 @@ export {
   type DayAgendaInput,
 } from "./internal/agenda";
 export {
+  ADDON_PARAM,
   ANY_BARBER,
   BOOKING_ROUTES,
   BOOKING_STEP_NAMES,

@@ -14,14 +14,16 @@ import {
   updateBarber,
 } from "@possos/barbers/server";
 import type { BarberFormState } from "@possos/barbers/ui";
-import { validateService } from "@possos/catalog";
+import { validateAddon, validateService } from "@possos/catalog";
 import {
+  createAddon,
   createService,
   listActiveServices,
   moveService,
+  updateAddon,
   updateService,
 } from "@possos/catalog/server";
-import type { ServiceFormState } from "@possos/catalog/ui";
+import type { AddonFormState, ServiceFormState } from "@possos/catalog/ui";
 import { commissionsErrorMessage } from "@possos/commissions";
 import { setCommissionRate } from "@possos/commissions/server";
 import { loadAdminPanel } from "../../../../lib/panel";
@@ -47,7 +49,54 @@ function readService(form: FormData) {
     description: text(form, "descripcion"),
     durationMin: text(form, "duracion"),
     priceCop: text(form, "precio"),
+    category: text(form, "grupo"),
   });
+}
+
+function readAddon(form: FormData) {
+  return validateAddon({
+    name: text(form, "nombre"),
+    durationMin: text(form, "duracion"),
+    priceCop: text(form, "precio"),
+  });
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const addonsPath = (serviceId: string) => `/panel/servicios/${serviceId}/adicionales`;
+
+/** Adicional nuevo (barba, cejas) para un servicio. */
+export async function createAddonAction(
+  _prev: AddonFormState,
+  form: FormData,
+): Promise<AddonFormState> {
+  const serviceId = text(form, "servicio");
+  if (!UUID.test(serviceId)) return { error: (await actionText())("unknown") };
+  const { db } = await loadAdminPanel(`${addonsPath(serviceId)}/nuevo`);
+  const valid = readAddon(form);
+  if (!valid.ok) return { fieldErrors: valid.errors };
+  const created = await createAddon(db, serviceId, valid.data);
+  if (!created.ok) return { error: (await actionText())("unknown") };
+  revalidatePath("/", "layout");
+  redirect(addonsPath(serviceId));
+}
+
+/** Cambia o desactiva un adicional. Las citas que ya lo tienen no cambian. */
+export async function updateAddonAction(
+  _prev: AddonFormState,
+  form: FormData,
+): Promise<AddonFormState> {
+  const serviceId = text(form, "servicio");
+  if (!UUID.test(serviceId)) return { error: (await actionText())("unknown") };
+  const { db } = await loadAdminPanel(addonsPath(serviceId));
+  const valid = readAddon(form);
+  if (!valid.ok) return { fieldErrors: valid.errors };
+  const updated = await updateAddon(db, text(form, "id"), {
+    ...valid.data,
+    active: form.get("activo") === "si",
+  });
+  if (!updated.ok) return { error: (await actionText())("unknown") };
+  revalidatePath("/", "layout");
+  redirect(addonsPath(serviceId));
 }
 
 export async function createServiceAction(

@@ -115,7 +115,7 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 
 ```
 ┌──────────────────────────────────┐
-│ [P] Possos Barber   Ingresar  EN │  el nombre es el título (h1)
+│ [P] Possos Barber   Ingresar     │  el nombre es el título (h1)
 │                                  │
 │ [PENDIENTE: frase del dueño]     │
 │                                  │
@@ -124,6 +124,10 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 │ │ Corte              $25.000 ˄ │ │  abierta
 │ │ 60 min                       │ │
 │ │ Servicio de corte que…       │ │
+│ │ Agrega                       │ │
+│ │ (+ Barba +$15.000 · +60 min) │ │  chips; marcado: invertido (✓)
+│ │ (✓ Cejas +$5.000)(+ Diseño…) │ │
+│ │ Total        $30.000 · 60 min│ │  se anuncia al cambiar
 │ │ Próximas horas               │ │
 │ │ Hoy · jue 20 nov             │ │
 │ │ [3:00 p.m.][4:00 p.m.][5:00…]│ │  enlaces a "Confirmar"
@@ -131,12 +135,20 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 │ │ [9:00 a.m.][10:00 a.m.]      │ │
 │ │ [   Ver todas las horas    ] │ │
 │ ├──────────────────────────────┤ │
-│ │ Corte con barba    $40.000 ˅ │ │
+│ │ Corte a domicilio  $50.000 ˅ │ │
 │ │ 2 h                          │ │
+│ └──────────────────────────────┘ │
+│ Color de cabello                 │  título del grupo
+│ ┌──────────────────────────────┐ │
+│ │ Rayos platinados  $120.000 ˅ │ │
+│ ├──────────────────────────────┤ │
+│ │ Global platinado  $170.000 ˅ │ │
 │ └──────────────────────────────┘ │
 │ El barbero · foto y portafolio   │
 │ Ubicación · mapa · horario       │
 │ Instagram · WhatsApp             │
+│ ──────────────────────────────── │
+│ [文A English]                    │  pie: botón de idioma
 ├──────────────────────────────────┤
 │ [          Reservar          ]   │  barra fija; escondida mientras se ven los servicios
 └──────────────────────────────────┘
@@ -148,11 +160,17 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 - **Próximas horas** (pedido de Juan el 19/11/2026, para reservar más rápido): al abrir un servicio con un solo barbero aparecen hasta 6 horas libres de sus dos primeros días con horas, agrupadas por día ("Hoy · jue 20 nov", "Mañana · vie 21 nov" o "sáb 22 nov"; la fecha evita confundir "Mañana" con la franja de la mañana). Cada hora va completa ("3:00 p. m.") en una cuadrícula de 3 columnas de 48 px y es un enlace a "Confirmar": desde el inicio se reserva en 3 toques (abrir el servicio, la hora y "Reservar"). El lector de pantalla oye la hora y el día ("3:00 p. m., hoy, jue 20 nov"). Debajo, "Ver todas las horas" (botón secundario) abre el paso de horario de ese servicio sin pasar por el del barbero. Sin horas en la ventana: "No hay horas libres en los próximos días."
 - Las horas llegan en streaming: el inicio no las espera. Hasta que llegan, y sin JavaScript (que no recibe el reemplazo), queda solo "Ver todas las horas". Si alguien toma la hora antes, "Confirmar" ya lo maneja: vuelve al horario con "Esa hora se acaba de ocupar, elige otra".
 - Un servicio con varios barberos no muestra horas: "Reservar este servicio" lleva a elegir barbero.
-- **La barra "Reservar" se esconde mientras la lista de servicios está en pantalla**, para que no se vean dos acciones de reservar a la vez, y aparece al bajar al barbero, al mapa o al contacto. Con un servicio lleva al horario; con varios, sube a la lista y pone el foco en "Servicios". Entra en 200 ms con *ease-out* (con `prefers-reduced-motion`, solo opacidad) y escondida es `inert` e invisible. Sin JavaScript queda fija y lleva al flujo, como antes.
+- **Grupos y adicionales** (pedido de Juan el 20/11/2026: los combos de Beunik repetían "Corte con…" en cada fila). Los servicios se separan en Corte, Corte a domicilio y Color de cabello:
+  - Los servicios sin grupo van juntos en una tarjeta. Los que tienen el mismo `category` van en su propia tarjeta bajo un título pequeño ("Color de cabello"), así el nombre del grupo no se repite en cada servicio.
+  - Lo que antes eran combos ahora son **adicionales** dentro del servicio: "Agrega" con un chip por adicional (Barba +$15.000 · +60 min, Cejas +$5.000, Diseño +$5.000). Cada chip es una casilla nativa dentro de un `fieldset` (el lector anuncia "marcada"), de 48 px de alto, con ícono más o chulo: el color no es la única señal. Marcado se invierte (fondo blanco, texto negro) y no usa el amarillo, que en esta zona ya tiene la barra "Reservar" (principio 2 del color).
+  - Se pueden combinar todos; cada uno suma su precio y sus minutos (decisión del 20/11/2026). "Total $45.000 · 2 h" cambia al instante y se anuncia completo (`role="status"`).
+  - Marcar un chip vuelve a pedir el inicio con `?servicio=…&adicional=…` sin mover el scroll, porque las próximas horas dependen de la duración (la barba suma 1 h). La tarjeta vuelve abierta. Sin JavaScript, el botón "Ver horas con lo que agregaste" hace lo mismo.
+  - Las horas rápidas, "Ver todas las horas", el resumen de "Confirmar", "Listo", Mis citas, la agenda y los avisos nombran la cita con sus adicionales: "Corte + Barba + Cejas". El total del resumen dice solo "Total".
+- **La barra "Reservar" se esconde mientras la lista de servicios está en pantalla**, para que no se vean dos acciones de reservar a la vez, y aparece al bajar al barbero, al mapa o al contacto. Con un servicio sin adicionales lleva al horario; con varios, o con uno que tiene adicionales, sube a la lista y pone el foco en "Servicios". Entra en 200 ms con *ease-out* (con `prefers-reduced-motion`, solo opacidad) y escondida es `inert` e invisible. Sin JavaScript queda fija y lleva al flujo, como antes.
 
 ### Paso: Servicio
 
-Solo aparece si hay más de un servicio activo. Lista de filas de 64 px: nombre, duración y precio. La duración va en minutos hasta 60 ("45 min", "60 min") y en horas desde ahí ("2 h", "1 h 30 min"), en todas las pantallas. Tocar una fila avanza; no hay botón "Continuar" en este paso.
+Aparece si hay más de un servicio activo o si el único tiene adicionales. Lista de filas de 64 px: nombre, duración y precio, con los mismos grupos del inicio. La duración va en minutos hasta 60 ("45 min", "60 min") y en horas desde ahí ("2 h", "1 h 30 min"), en todas las pantallas. Tocar una fila sin adicionales avanza. Una con adicionales (Corte) se abre con "Agrega", el total y "Continuar", que lleva lo elegido al paso siguiente; al volver con atrás o con "Cambiar", queda abierta con lo que se había marcado.
 
 ### Paso: Horario
 
@@ -200,7 +218,7 @@ Solo aparece si hay más de un servicio activo. Lista de filas de 64 px: nombre,
 │ │ jueves 20 de noviembre       │ │
 │ │ 3:00 p. m. a 4:00 p. m.      │ │
 │ │ Con [barbero]                │ │
-│ │ Total en la barbería  [PEND] │ │
+│ │ Total                 [PEND] │ │
 │ │ [Dirección PENDIENTE]        │ │
 │ └──────────────────────────────┘ │
 │ Puedes cancelar o cambiar tu     │
@@ -312,6 +330,8 @@ Solo aparece si hay más de un servicio activo. Lista de filas de 64 px: nombre,
 
 - Página completa (no hoja), porque tiene búsqueda y formulario: buscar cliente por nombre o celular, o "Cliente nuevo" con nombre, celular y la autorización de datos que el cliente dio de palabra.
 - Servicio y hora prellenados si se llegó desde una hora libre.
+- Debajo del servicio, "Adicionales" con una casilla por cada uno del servicio elegido (20/11/2026). La base calcula la duración y el precio con ellos.
+- En Más, Servicios: cada servicio tiene "Grupo" (opcional) y una fila "Adicionales" que abre su lista, con "Nuevo" y la edición de cada uno (nombre, precio en pesos, minutos que suma y "Activo").
 
 ### Más
 
@@ -428,7 +448,7 @@ Los textos de la tabla de arriba (paso de horario, hora tomada, política, aprob
 | "Confirmar" sin sesión | "Para reservar, ingresa", "Con tu cuenta te avisamos de tu cita y puedes cambiarla o cancelarla. Vuelves aquí con la misma hora.", "Continuar con Google" (si está activo) y "Usar mi correo" |
 | "Confirmar" con cuenta del personal | "Estás con una cuenta del personal. Las citas de los clientes se crean desde el panel; para reservar como cliente, usa otra cuenta." y "Ir al panel" |
 | "Confirmar" con perfil incompleto | "Completa tu perfil para reservar." y "Completar mi perfil" |
-| Resumen | Servicio, fecha larga, rango de horas, "Con [barbero]" ("Con el barbero que esté libre a esa hora" con "Cualquiera disponible"), "Total en la barbería" y "Dónde" (**[PENDIENTE]** mientras falten precio y dirección) |
+| Resumen | Servicio, fecha larga, rango de horas, "Con [barbero]" ("Con el barbero que esté libre a esa hora" con "Cualquiera disponible"), "Total" y "Dónde" (**[PENDIENTE]** mientras falten precio y dirección) |
 | Botón mientras reserva | "Reservando..." |
 | "Listo" con aprobación | Título "Tu reserva quedó pendiente" y "Tu reserva queda pendiente de que el barbero la apruebe" |
 | "Listo" | "Agregar al calendario", "Instalar la app" (si no está instalada) y "Volver al inicio". El aviso del WhatsApp se activa en F7 |

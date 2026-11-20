@@ -38,8 +38,10 @@ export default async function RescheduleTimePage({
   const f = await currentFormatters();
   const selection = parseSelection(query);
   const serviceId = appointment.serviceId;
+  // La cita se mueve con sus adicionales: las horas se buscan con su duración completa.
+  const addonIds = appointment.addonIds;
   const barberId = appointment.barberId;
-  const days = await getAvailableDays(db, { serviceId, barberId });
+  const days = await getAvailableDays(db, { serviceId, addonIds, barberId });
   const dayList = days.ok ? days.data : [];
   const today = toDateKey(new Date());
 
@@ -52,7 +54,7 @@ export default async function RescheduleTimePage({
     if (initial.skippedToday) notice = t("skippedToday", { date: f.dateLong(date) });
   }
 
-  const starts = await getAvailableStarts(db, { serviceId, day: date, barberId });
+  const starts = await getAvailableStarts(db, { serviceId, addonIds, day: date, barberId });
   const durationMin = Math.round(
     (new Date(appointment.end).getTime() - new Date(appointment.start).getTime()) / 60_000,
   );

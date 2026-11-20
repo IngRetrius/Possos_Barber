@@ -1,11 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
-import {
-  LOCALE_COOKIE,
-  negotiateLocale,
-  parseLocale,
-  TIMEZONE,
-} from "@possos/config/constants";
+import { LOCALE_COOKIE, negotiateLocale, parseLocale, TIMEZONE } from "@possos/config/constants";
 import { MESSAGES } from "./messages";
 
 /**

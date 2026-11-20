@@ -41,6 +41,7 @@ export default async function RescheduleConfirmPage({
   const [starts, approval] = await Promise.all([
     getAvailableStarts(db, {
       serviceId: appointment.serviceId,
+      addonIds: appointment.addonIds,
       day: date,
       barberId: appointment.barberId,
     }),

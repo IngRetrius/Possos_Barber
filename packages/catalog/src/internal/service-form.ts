@@ -5,6 +5,7 @@
 
 export const MAX_SERVICE_NAME = 60;
 export const MAX_SERVICE_DESCRIPTION = 300;
+export const MAX_SERVICE_CATEGORY = 40;
 
 export interface ServiceFormInput {
   name: string;
@@ -12,6 +13,8 @@ export interface ServiceFormInput {
   durationMin: string;
   /** Vacío: precio [PENDIENTE]. Acepta "30.000", "30000" o "$ 30.000". */
   priceCop: string;
+  /** Grupo en el inicio ("Color de cabello"). Vacío: el servicio va solo. */
+  category: string;
 }
 
 export interface ValidService {
@@ -19,12 +22,18 @@ export interface ValidService {
   description: string | null;
   duration_min: number;
   price_cop: number | null;
+  category: string | null;
 }
 
-export type ServiceField = "name" | "description" | "durationMin" | "priceCop";
+export type ServiceField = "name" | "description" | "durationMin" | "priceCop" | "category";
 /** Clave del error; el formulario la traduce (`catalog.serviceForm.errors`). */
 export type ServiceError =
-  "nameRequired" | "nameTooLong" | "descriptionTooLong" | "durationInvalid" | "priceInvalid";
+  | "nameRequired"
+  | "nameTooLong"
+  | "descriptionTooLong"
+  | "durationInvalid"
+  | "priceInvalid"
+  | "categoryTooLong";
 export type ServiceErrors = Partial<Record<ServiceField, ServiceError>>;
 
 /** "$ 30.000" → 30000. Vacío → null. Lo que no es un número entero → NaN. */
@@ -52,9 +61,17 @@ export function validateService(
   if (price !== null && (!Number.isSafeInteger(price) || price < 0)) {
     errors.priceCop = "priceInvalid";
   }
+  const category = input.category.trim().replace(/\s+/g, " ");
+  if (category.length > MAX_SERVICE_CATEGORY) errors.category = "categoryTooLong";
   if (Object.keys(errors).length) return { ok: false, errors };
   return {
     ok: true,
-    data: { name, description: description || null, duration_min: duration, price_cop: price },
+    data: {
+      name,
+      description: description || null,
+      duration_min: duration,
+      price_cop: price,
+      category: category || null,
+    },
   };
 }

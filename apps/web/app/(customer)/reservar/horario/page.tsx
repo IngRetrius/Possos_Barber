@@ -43,10 +43,15 @@ export default async function TimeStepPage({ searchParams }: PageProps<"/reserva
   if (missing) redirect(missing);
 
   const service = flow.service!;
+  const addonIds = flow.selectedAddons.map((a) => a.id);
   const barberId = flow.barberId!;
   const rpcBarberId = barberId === ANY_BARBER ? undefined : barberId;
 
-  const days = await getAvailableDays(db, { serviceId: service.id, barberId: rpcBarberId });
+  const days = await getAvailableDays(db, {
+    serviceId: service.id,
+    addonIds,
+    barberId: rpcBarberId,
+  });
   const dayList = days.ok ? days.data : [];
   const today = toDateKey(new Date());
 
@@ -61,6 +66,7 @@ export default async function TimeStepPage({ searchParams }: PageProps<"/reserva
 
   const starts = await getAvailableStarts(db, {
     serviceId: service.id,
+    addonIds,
     day: date,
     barberId: rpcBarberId,
   });
@@ -78,19 +84,19 @@ export default async function TimeStepPage({ searchParams }: PageProps<"/reserva
         <div className="grid gap-2 px-gutter">
           <div className="flex items-center justify-between gap-4">
             <p className="text-body text-fg-muted">
-              {service.name} · {formatDuration(service.duration_min)}
+              {flow.label} · {formatDuration(flow.total!.durationMin)}
               {flow.barbers.length > 1 ? ` · ${name ?? t("anyBarber")}` : null}
             </p>
-            {flow.services.length > 1 ? (
+            {flow.steps.includes("service") ? (
               <Link
-                href={BOOKING_ROUTES.service}
+                href={selectionHref(BOOKING_ROUTES.service, { serviceId: service.id, addonIds })}
                 className="inline-flex min-h-12 items-center text-label text-fg underline underline-offset-4"
               >
                 {t("change")}
               </Link>
             ) : flow.barbers.length > 1 ? (
               <Link
-                href={selectionHref(BOOKING_ROUTES.barber, { serviceId: service.id })}
+                href={selectionHref(BOOKING_ROUTES.barber, { serviceId: service.id, addonIds })}
                 className="inline-flex min-h-12 items-center text-label text-fg underline underline-offset-4"
               >
                 {t("change")}
@@ -101,6 +107,7 @@ export default async function TimeStepPage({ searchParams }: PageProps<"/reserva
         </div>
         <TimePicker
           serviceId={service.id}
+          addonIds={addonIds}
           barberId={barberId}
           days={dayList}
           date={date}

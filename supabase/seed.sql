@@ -60,6 +60,13 @@ insert into public.services (id, name, duration_min, price_cop, sort_order) valu
 insert into public.barber_services (barber_id, service_id) values
   ('5eedba00-0000-0000-0000-000000000001', '5eed5e00-0000-0000-0000-000000000001');
 
+-- Adicionales del corte con los valores de producción (combos de Beunik, 20/11/2026): barba suma
+-- $15.000 y 1 h; cejas y diseño, $5.000 cada uno y nada de tiempo.
+insert into public.service_addons (id, service_id, name, price_cop, duration_min, sort_order) values
+  ('5eedad00-0000-0000-0000-000000000001', '5eed5e00-0000-0000-0000-000000000001', 'Barba', 15000, 60, 1),
+  ('5eedad00-0000-0000-0000-000000000002', '5eed5e00-0000-0000-0000-000000000001', 'Cejas', 5000, 0, 2),
+  ('5eedad00-0000-0000-0000-000000000003', '5eed5e00-0000-0000-0000-000000000001', 'Diseño', 5000, 0, 3);
+
 -- Porcentaje del barbero: 50 % (dueño, 19/11/2026).
 insert into public.commission_rates (barber_id, barber_pct) values
   ('5eedba00-0000-0000-0000-000000000001', 50),

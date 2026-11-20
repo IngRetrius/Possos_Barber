@@ -31,15 +31,28 @@ type R<T> = Promise<Result<T, BookingErrorCode>>;
 const fail = (error: { message?: string } | null) =>
   ({ ok: false, error: errorCode(error, BOOKING_ERROR_CODES) }) as const;
 
+/** Lo que define la duración de una cita: el servicio y sus adicionales (barba suma 1 h). */
+interface ServiceInput {
+  serviceId: string;
+  addonIds?: string[];
+}
+
+/**
+ * Nombre de un servicio con sus adicionales: "Corte + Barba + Cejas". Es la misma regla de
+ * `serviceLabel` de @possos/catalog y del aviso de get_appointment_for_notification.
+ */
+const withAddonNames = (name: string, addons: readonly string[]) => [name, ...addons].join(" + ");
+
 /** Horas libres de un día para un servicio; sin `barberId`, de todos los barberos. */
 export async function getAvailableSlots(
   db: DbClient,
-  input: { serviceId: string; day: string; barberId?: string },
+  input: ServiceInput & { day: string; barberId?: string },
 ): R<AvailableSlot[]> {
   const { data, error } = await db.rpc("get_available_slots", {
     p_service_id: input.serviceId,
     p_day: input.day,
     p_barber_id: input.barberId,
+    p_addon_ids: input.addonIds ?? [],
   });
   return error ? fail(error) : { ok: true, data };
 }
@@ -50,7 +63,7 @@ export async function getAvailableSlots(
  */
 export async function getAvailableStarts(
   db: DbClient,
-  input: { serviceId: string; day: string; barberId?: string },
+  input: ServiceInput & { day: string; barberId?: string },
 ): R<string[]> {
   const result = await getAvailableSlots(db, input);
   if (!result.ok) return result;
@@ -63,11 +76,12 @@ export async function getAvailableStarts(
 /** Horas libres de cada día de la ventana de reserva (hoy y los `max_days_ahead` siguientes). */
 export async function getAvailableDays(
   db: DbClient,
-  input: { serviceId: string; barberId?: string },
+  input: ServiceInput & { barberId?: string },
 ): R<DayAvailability[]> {
   const { data, error } = await db.rpc("get_available_days", {
     p_service_id: input.serviceId,
     p_barber_id: input.barberId,
+    p_addon_ids: input.addonIds ?? [],
   });
   return error
     ? fail(error)
@@ -92,12 +106,13 @@ export async function getAppointment(db: DbClient, id: string): R<Appointment | 
 /** Reserva del cliente. Sin `barberId` es "cualquiera disponible". */
 export async function book(
   db: DbClient,
-  input: { serviceId: string; startAt: string; barberId?: string },
+  input: ServiceInput & { startAt: string; barberId?: string },
 ): R<Appointment> {
   const { data, error } = await db.rpc("book_appointment", {
     p_service_id: input.serviceId,
     p_start_at: input.startAt,
     p_barber_id: input.barberId,
+    p_addon_ids: input.addonIds ?? [],
   });
   return error ? fail(error) : { ok: true, data };
 }
@@ -105,13 +120,14 @@ export async function book(
 /** Cita creada por el personal, también para clientes sin cuenta. */
 export async function staffCreateAppointment(
   db: DbClient,
-  input: { customerId: string; serviceId: string; barberId: string; startAt: string },
+  input: ServiceInput & { customerId: string; barberId: string; startAt: string },
 ): R<Appointment> {
   const { data, error } = await db.rpc("staff_create_appointment", {
     p_customer_id: input.customerId,
     p_service_id: input.serviceId,
     p_barber_id: input.barberId,
     p_start_at: input.startAt,
+    p_addon_ids: input.addonIds ?? [],
   });
   return error ? fail(error) : { ok: true, data };
 }
@@ -266,7 +282,8 @@ function toMyAppointment(row: MyAppointmentRow): MyAppointment | null {
     start,
     end,
     serviceId: row.service_id,
-    serviceName: row.service_name,
+    serviceName: withAddonNames(row.service_name, row.addon_names ?? []),
+    addonIds: row.addon_ids ?? [],
     serviceActive: row.service_active,
     barberId: row.barber_id,
     barberName: row.barber_name,
@@ -310,7 +327,8 @@ export async function getMyAppointment(db: DbClient, id: string): R<MyAppointmen
 
 const AGENDA_SELECT =
   "id, barber_id, status, period, price_cop, source, service_id, customer_id, " +
-  "customers(full_name, phone), services(name)";
+  "customers(full_name, phone), services(name), " +
+  "appointment_addons(addon_id, service_addons(name, sort_order))";
 
 interface AgendaRow {
   id: string;
@@ -323,11 +341,16 @@ interface AgendaRow {
   customer_id: string;
   customers: { full_name: string; phone: string | null } | null;
   services: { name: string } | null;
+  appointment_addons:
+    { addon_id: string; service_addons: { name: string; sort_order: number } | null }[] | null;
 }
 
 function toAgendaAppointment(row: AgendaRow): AgendaAppointment | null {
   const period = parsePeriod(row.period);
   if (!period) return null;
+  const addons = (row.appointment_addons ?? [])
+    .map((a) => ({ id: a.addon_id, ...(a.service_addons ?? { name: "", sort_order: 0 }) }))
+    .sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name));
   return {
     id: row.id,
     barberId: row.barber_id,
@@ -336,7 +359,11 @@ function toAgendaAppointment(row: AgendaRow): AgendaAppointment | null {
     end: period.end,
     priceCop: row.price_cop,
     serviceId: row.service_id,
-    serviceName: row.services?.name ?? "",
+    serviceName: withAddonNames(
+      row.services?.name ?? "",
+      addons.map((a) => a.name).filter(Boolean),
+    ),
+    addonIds: addons.map((a) => a.id),
     customerId: row.customer_id,
     customerName: row.customers?.full_name ?? "",
     customerPhone: row.customers?.phone ?? null,

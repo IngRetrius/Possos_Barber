@@ -155,6 +155,8 @@ export async function createAppointmentAction(
   const result = await staffCreateAppointment(ctx.db, {
     customerId,
     serviceId,
+    // Los adicionales marcados; la base descarta la cita si alguno no es del servicio.
+    addonIds: form.getAll("adicional").filter((v): v is string => typeof v === "string"),
     barberId,
     startAt: startAt!,
   });

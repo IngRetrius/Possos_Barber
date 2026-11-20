@@ -46,8 +46,8 @@ select ok(
 );
 
 select ok(
-  has_function_privilege('anon', 'public.get_available_slots(uuid, date, uuid)', 'execute')
-  and not has_function_privilege('anon', 'public.book_appointment(uuid, timestamptz, uuid)', 'execute'),
+  has_function_privilege('anon', 'public.get_available_slots(uuid, date, uuid, uuid[])', 'execute')
+  and not has_function_privilege('anon', 'public.book_appointment(uuid, timestamptz, uuid, uuid[])', 'execute'),
   'anon consulta horas libres pero no reserva'
 );
 

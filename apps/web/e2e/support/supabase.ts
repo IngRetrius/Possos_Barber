@@ -36,6 +36,12 @@ function config() {
 export const SEED = {
   password: "possos-local",
   serviceId: "5eed5e00-0000-0000-0000-000000000001",
+  /** Adicionales del corte (20/11/2026): barba suma 1 h y $15.000; cejas y diseño, $5.000. */
+  addons: {
+    barba: "5eedad00-0000-0000-0000-000000000001",
+    cejas: "5eedad00-0000-0000-0000-000000000002",
+    diseno: "5eedad00-0000-0000-0000-000000000003",
+  },
   barberId: "5eedba00-0000-0000-0000-000000000001",
   admin: "barbero@ejemplo.test",
   customer: "cliente@ejemplo.test",
@@ -94,12 +100,13 @@ export async function availableDays(): Promise<{ day: string; slots: number }[]>
   return rpc("get_available_days", { p_service_id: SEED.serviceId, p_barber_id: SEED.barberId });
 }
 
-/** Inicios libres de un día, en el formato de la URL (`toISOString`). */
-export async function availableStarts(day: string): Promise<string[]> {
+/** Inicios libres de un día, en el formato de la URL (`toISOString`), con unos adicionales. */
+export async function availableStarts(day: string, addonIds: string[] = []): Promise<string[]> {
   const rows = await rpc<{ start_at: string }[]>("get_available_slots", {
     p_service_id: SEED.serviceId,
     p_day: day,
     p_barber_id: SEED.barberId,
+    p_addon_ids: addonIds,
   });
   return rows.map((r) => new Date(r.start_at).toISOString());
 }
@@ -173,6 +180,12 @@ export async function cleanPanelTestData(): Promise<void> {
   await rpc("revoke_role", { p_user_id: SEED.customer2UserId, p_role: "admin" }, token);
   await rest(`time_off?reason=like.${E2E_PREFIX}*`, { method: "DELETE", token });
   await rest(`services?name=like.${E2E_PREFIX}*`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify({ active: false }),
+  });
+  // Los adicionales que crea la prueba del panel: desactivados no aparecen en la reserva.
+  await rest(`service_addons?name=like.${E2E_PREFIX}*`, {
     method: "PATCH",
     token,
     body: JSON.stringify({ active: false }),

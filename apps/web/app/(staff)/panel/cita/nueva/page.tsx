@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { listBarberServiceIds } from "@possos/barbers/server";
-import { listActiveServices } from "@possos/catalog/server";
+import { listActiveAddons, listActiveServices } from "@possos/catalog/server";
 import { searchCustomers } from "@possos/customers/server";
 import { toDateKey } from "@possos/ui";
 import { loadPanel } from "../../../../../lib/panel";
@@ -45,6 +45,10 @@ export default async function NewAppointmentPage({ searchParams }: PageProps<"/p
   ]);
   const offered =
     services.ok && serviceIds.ok ? services.data.filter((s) => serviceIds.data.includes(s.id)) : [];
+  const addons = await listActiveAddons(
+    ctx.db,
+    offered.map((s) => s.id),
+  );
 
   return (
     <>
@@ -57,6 +61,12 @@ export default async function NewAppointmentPage({ searchParams }: PageProps<"/p
       <NewAppointmentForm
         barberId={barber.id}
         services={offered.map(({ id, name, duration_min }) => ({ id, name, duration_min }))}
+        addons={(addons.ok ? addons.data : []).map(({ id, service_id, name, duration_min }) => ({
+          id,
+          service_id,
+          name,
+          duration_min,
+        }))}
         recent={recent.ok ? recent.data : []}
         date={date}
         time={fromHour && toDateKey(fromHour) === date ? bogotaHourMinute(fromHour) : ""}

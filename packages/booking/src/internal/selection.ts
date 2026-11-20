@@ -1,7 +1,8 @@
 import { DEFAULT_LOCALE, type Locale } from "@possos/config/constants";
 
 /*
- * Estado del flujo de reserva en la URL (`?servicio=…&barbero=…&fecha=…&hora=…`): el botón atrás
+ * Estado del flujo de reserva en la URL (`?servicio=…&adicional=…&barbero=…&fecha=…&hora=…`,
+ * con un `adicional` por cada adicional elegido): el botón atrás
  * funciona y el regreso del registro no pierde nada. Sin efectos: lo usan el servidor y el
  * navegador. No importa ./index (lo reexporta), para que dependency-cruiser no vea un ciclo.
  */
@@ -18,8 +19,13 @@ export const BOOKING_ROUTES = {
 /** Valor de `barbero` para "Cualquiera disponible". */
 export const ANY_BARBER = "cualquiera";
 
+/** Parámetro de la URL con cada adicional elegido (`?adicional=…&adicional=…`). */
+export const ADDON_PARAM = "adicional";
+
 export interface BookingSelection {
   serviceId: string | null;
+  /** Adicionales elegidos (barba, cejas), sin repetir y ordenados. Vacío si no hay. */
+  addonIds: string[];
   /** Id del barbero, `ANY_BARBER` o null si todavía no se elige. */
   barberId: string | null;
   /** Día del calendario en Bogotá, `YYYY-MM-DD`. */
@@ -47,6 +53,18 @@ function read(params: ParamsInput, key: string): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function readAll(params: ParamsInput, key: string): string[] {
+  if (params instanceof URLSearchParams) return params.getAll(key);
+  const value = params[key];
+  return Array.isArray(value) ? value : value === undefined ? [] : [value];
+}
+
+/** Ids válidos, en minúsculas, sin repetir y ordenados (la misma selección da la misma URL). */
+function validIds(values: readonly string[]): string[] {
+  const ids = values.filter((v) => UUID.test(v)).map((v) => v.toLowerCase());
+  return [...new Set(ids)].sort();
+}
+
 /** Un instante en el formato con que se comparan las horas, o null si no es una fecha. */
 export function normalizeInstant(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -66,6 +84,7 @@ export function parseSelection(params: ParamsInput): BookingSelection {
   const barber = read(params, "barbero");
   return {
     serviceId: service && UUID.test(service) ? service.toLowerCase() : null,
+    addonIds: validIds(readAll(params, ADDON_PARAM)),
     barberId:
       barber === ANY_BARBER
         ? ANY_BARBER
@@ -85,6 +104,9 @@ export function selectionHref(
 ): string {
   const query = new URLSearchParams();
   if (selection.serviceId) query.set("servicio", selection.serviceId);
+  if (selection.serviceId) {
+    for (const id of validIds(selection.addonIds ?? [])) query.append(ADDON_PARAM, id);
+  }
   if (selection.barberId) query.set("barbero", selection.barberId);
   if (selection.date) query.set("fecha", selection.date);
   if (selection.startAt) query.set("hora", selection.startAt);
@@ -94,12 +116,17 @@ export function selectionHref(
 }
 
 /**
- * Pasos que el cliente va a recorrer: el de servicio solo con más de un servicio activo y el de
- * barbero solo con más de un barbero que haga el servicio (docs/11, decisión 3).
+ * Pasos que el cliente va a recorrer: el de servicio con más de un servicio activo o si el único
+ * tiene adicionales (ahí se eligen), y el de barbero solo con más de un barbero que haga el
+ * servicio (docs/11, decisión 3).
  */
-export function bookingSteps(counts: { services: number; barbers: number }): BookingStep[] {
+export function bookingSteps(counts: {
+  services: number;
+  barbers: number;
+  addons?: number;
+}): BookingStep[] {
   const steps: BookingStep[] = [];
-  if (counts.services > 1) steps.push("service");
+  if (counts.services > 1 || (counts.addons ?? 0) > 0) steps.push("service");
   if (counts.barbers > 1) steps.push("barber");
   steps.push("time", "confirm");
   return steps;

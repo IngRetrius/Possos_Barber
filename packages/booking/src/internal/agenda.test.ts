@@ -22,6 +22,7 @@ function appointment(start: string, end: string, extra: Partial<AgendaAppointmen
     priceCop: null,
     serviceId: "s",
     serviceName: "Corte normal",
+    addonIds: [],
     customerId: "c",
     customerName: "Carlos",
     customerPhone: null,

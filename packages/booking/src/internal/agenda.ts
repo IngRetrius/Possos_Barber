@@ -18,7 +18,10 @@ export interface AgendaAppointment {
   end: string;
   priceCop: number | null;
   serviceId: string;
+  /** El servicio con sus adicionales: "Corte + Barba + Cejas". */
   serviceName: string;
+  /** Adicionales de la cita (para moverla con la misma duración). */
+  addonIds: string[];
   customerId: string;
   customerName: string;
   /** E.164, o null si el cliente no lo dio. Solo lo ve el personal. */

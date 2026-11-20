@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { BOOKING_ROUTES, parseSelection, selectionHref, stepPosition } from "@possos/booking";
-import { ServiceList } from "@possos/catalog/ui";
+import { ADDON_PARAM, parseSelection, stepPosition } from "@possos/booking";
+import { pickAddons } from "@possos/catalog";
+import { AddonPicker, ServiceList } from "@possos/catalog/ui";
 import { createClient } from "@possos/supabase/server";
 import { Button, EmptyState, StepHeader } from "@possos/ui";
-import { loadBookingFlow, timeStepHref } from "../../../lib/booking-flow";
+import { loadBookingFlow, loadServiceEntries, timeStepHref } from "../../../lib/booking-flow";
 import { LocaleSwitch } from "../../_components/locale-switch";
 import { currentLocale } from "../../../lib/i18n";
 
@@ -15,15 +16,21 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * Paso "Servicio". Solo se ve con más de un servicio activo: con uno, se elige solo y el flujo
- * sigue al barbero o al horario (docs/11, decisión 3). Tocar una fila avanza.
+ * Paso "Servicio". Se ve con más de un servicio activo o si el único tiene adicionales: con uno
+ * sin adicionales, se elige solo y el flujo sigue al barbero o al horario (docs/11, decisión 3).
+ *
+ * - Un servicio sin adicionales es una fila que avanza al tocarla.
+ * - Uno con adicionales (Corte: barba, cejas, diseño) se abre con "Agrega", el total y
+ *   "Continuar", que lleva lo elegido al paso siguiente. Al volver atrás, queda abierto con lo que
+ *   se había marcado (`?servicio=…&adicional=…`).
  */
 export default async function ServiceStepPage({ searchParams }: PageProps<"/reservar">) {
   const selection = parseSelection(await searchParams);
   const db = await createClient();
-  const flow = await loadBookingFlow(db, { ...selection, serviceId: null });
+  const flow = await loadBookingFlow(db, { ...selection, serviceId: null, addonIds: [] });
 
-  if (flow.services.length === 1) redirect(timeStepHref(flow, selection));
+  if (!flow.steps.includes("service")) redirect(timeStepHref(flow, selection));
+  const entries = await loadServiceEntries(db, flow.services);
 
   const position = stepPosition("service", flow.steps, await currentLocale());
   const t = await getTranslations("web.customer");
@@ -45,7 +52,30 @@ export default async function ServiceStepPage({ searchParams }: PageProps<"/rese
         ) : (
           <ServiceList
             services={flow.services}
-            hrefFor={(service) => selectionHref(BOOKING_ROUTES.barber, { serviceId: service.id })}
+            openId={
+              selection.serviceId ?? (flow.services.length === 1 ? flow.services[0]!.id : null)
+            }
+            hrefFor={(service) => entries.get(service.id)?.href ?? "/reservar"}
+            bookingFor={(service) => {
+              const entry = entries.get(service.id);
+              if (!entry || entry.addons.length === 0) return null;
+              const selected =
+                selection.serviceId === service.id
+                  ? pickAddons(entry.addons, selection.addonIds).map((a) => a.id)
+                  : [];
+              return (
+                <AddonPicker
+                  action={entry.next.path}
+                  hidden={entry.next.params}
+                  name={ADDON_PARAM}
+                  service={service}
+                  addons={entry.addons}
+                  selected={selected}
+                  mode="continue"
+                  submitLabel={t("service.continue")}
+                />
+              );
+            }}
           />
         )}
       </main>

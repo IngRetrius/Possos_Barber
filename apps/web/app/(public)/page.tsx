@@ -70,6 +70,8 @@ const linkClass = "text-fg underline underline-offset-4 hover:text-fg-muted";
  */
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
+  // Servicio abierto y sus adicionales, si el cliente los acaba de elegir (formulario "Agrega").
+  const chosen = parseSelection(params);
   const t = await getTranslations("web.home");
   const f = formatters(parseLocale(await getLocale()));
   const db = await createClient();
@@ -115,8 +117,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     }
   }
 
-  const bookHref =
-    flow.services.length > 1 ? BOOKING_ROUTES.service : timeStepHref(flow, parseSelection({}));
+  // Con varios servicios, o uno con adicionales, "Reservar" lleva a elegirlos (paso Servicio).
+  const chooseService = flow.steps.includes("service");
+  const bookHref = chooseService ? BOOKING_ROUTES.service : timeStepHref(flow, parseSelection({}));
   const whatsapp = barberList.find((b) => b.whatsapp_url)?.whatsapp_url ?? null;
   const map = mapsEmbedUrl(f.locale);
   const mapLink = mapsUrl();
@@ -175,9 +178,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             </Button>
           ) : null}
           <Button asChild variant="ghost" className="px-2">
-            <Link
-              href={viewer ? (viewer.isStaff ? STAFF_HOME : PROFILE_PATH) : AUTH_ROUTES.signIn}
-            >
+            <Link href={viewer ? (viewer.isStaff ? STAFF_HOME : PROFILE_PATH) : AUTH_ROUTES.signIn}>
               {viewer ? (viewer.isStaff ? t("nav.panel") : t("nav.profile")) : t("nav.signIn")}
             </Link>
           </Button>
@@ -224,10 +225,16 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           {flow.services.length ? (
             <ServiceList
               services={flow.services}
+              openId={chosen.serviceId}
               bookingFor={(service) => {
                 const entry = entries.get(service.id);
                 return entry ? (
-                  <ServiceBooking db={db} serviceId={service.id} entry={entry} />
+                  <ServiceBooking
+                    db={db}
+                    service={service}
+                    entry={entry}
+                    selectedAddonIds={chosen.serviceId === service.id ? chosen.addonIds : []}
+                  />
                 ) : null;
               }}
             />
@@ -336,11 +343,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         </div>
       </footer>
 
-      <HomeBookBar
-        href={bookHref}
-        targetId="lista-servicios"
-        scrollToTarget={flow.services.length > 1}
-      />
+      <HomeBookBar href={bookHref} targetId="lista-servicios" scrollToTarget={chooseService} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { redirect, RedirectType } from "next/navigation";
 import { AUTH_ROUTES, withNext } from "@possos/auth";
 import { getViewer } from "@possos/auth/server";
 import {
+  ADDON_PARAM,
   ANY_BARBER,
   BOOKING_ROUTES,
   bookingErrorMessage,
@@ -32,6 +33,9 @@ export async function bookAction(_prev: BookFormState, form: FormData): Promise<
     const value = form.get(key);
     if (typeof value === "string") fields.set(key, value);
   }
+  for (const value of form.getAll(ADDON_PARAM)) {
+    if (typeof value === "string") fields.append(ADDON_PARAM, value);
+  }
   const selection = parseSelection(fields);
   if (!selection.serviceId || !selection.barberId || !selection.startAt) {
     return { error: bookingErrorMessage("INVALID_INPUT", locale) };
@@ -44,6 +48,7 @@ export async function bookAction(_prev: BookFormState, form: FormData): Promise<
 
   const result = await book(db, {
     serviceId: selection.serviceId,
+    addonIds: selection.addonIds,
     startAt: selection.startAt,
     barberId: selection.barberId === ANY_BARBER ? undefined : selection.barberId,
   });

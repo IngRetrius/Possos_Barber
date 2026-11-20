@@ -1,9 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { CustomerPicker, type PickerCustomer } from "@possos/customers/ui";
-import { BottomBar, Button, cn, formatDuration, submitKeepingValues } from "@possos/ui";
+import { BottomBar, Button, Checkbox, cn, formatDuration, submitKeepingValues } from "@possos/ui";
 import {
   createAppointmentAction,
   searchCustomersAction,
@@ -14,6 +14,8 @@ import { TimeFields } from "./time-fields";
 export interface NewAppointmentFormProps {
   barberId: string;
   services: { id: string; name: string; duration_min: number }[];
+  /** Adicionales activos de esos servicios (barba, cejas): se muestran los del elegido. */
+  addons: { id: string; service_id: string; name: string; duration_min: number }[];
   recent: PickerCustomer[];
   date: string;
   time: string;
@@ -25,6 +27,7 @@ export interface NewAppointmentFormProps {
 export function NewAppointmentForm({
   barberId,
   services,
+  addons,
   recent,
   date,
   time,
@@ -37,6 +40,8 @@ export function NewAppointmentForm({
   );
   const t = useTranslations("web.agenda.newAppointment");
   const errors = state.fieldErrors ?? {};
+  const [serviceId, setServiceId] = useState(services[0]?.id ?? null);
+  const serviceAddons = addons.filter((a) => a.service_id === serviceId);
   return (
     <form
       action={action}
@@ -70,6 +75,7 @@ export function NewAppointmentForm({
                     name="servicio"
                     value={s.id}
                     defaultChecked={i === 0}
+                    onChange={() => setServiceId(s.id)}
                     className="size-5 shrink-0 accent-fg"
                   />
                   <span className="flex-1 text-label">{s.name}</span>
@@ -82,6 +88,17 @@ export function NewAppointmentForm({
           )}
           {errors.service ? <p className="text-caption text-danger">{errors.service}</p> : null}
         </fieldset>
+        {serviceAddons.length ? (
+          // key: al cambiar de servicio, las casillas empiezan sin marcar.
+          <fieldset key={serviceId} className="grid">
+            <legend className="mb-1 text-heading">{t("addons")}</legend>
+            {serviceAddons.map((a) => (
+              <Checkbox key={a.id} name="adicional" value={a.id}>
+                {a.duration_min > 0 ? `${a.name} · +${formatDuration(a.duration_min)}` : a.name}
+              </Checkbox>
+            ))}
+          </fieldset>
+        ) : null}
         <TimeFields date={date} time={time} freeStarts={freeStarts} error={errors.time} />
       </div>
       <BottomBar

@@ -33,11 +33,15 @@ export interface MyAppointmentCardProps {
   className?: string;
 }
 
-/** "Volver a reservar": el horario con el servicio y el barbero de la cita (si siguen activos). */
+/**
+ * "Volver a reservar": el horario con el servicio, los adicionales y el barbero de la cita (si
+ * siguen activos; un adicional que ya no existe se descarta en el flujo).
+ */
 export function rebookHref(appointment: MyAppointment): string | null {
   if (!appointment.serviceActive) return null;
   return selectionHref(BOOKING_ROUTES.time, {
     serviceId: appointment.serviceId,
+    addonIds: appointment.addonIds,
     barberId: appointment.barberActive ? appointment.barberId : null,
   });
 }

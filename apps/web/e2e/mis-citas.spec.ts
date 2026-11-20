@@ -91,9 +91,10 @@ test("cuenta nueva: Todavía no tienes citas y Reservar", async ({ page }) => {
   await expect(page).toHaveTitle("Mis citas · Possos Barber");
   await expectAccessible(page);
 
+  // El corte tiene adicionales: Reservar empieza en el paso Servicio.
   await page.getByRole("link", { name: "Reservar" }).click();
-  await expect(page).toHaveURL(/\/reservar\/horario\?/);
-  await expect(page.getByRole("heading", { name: "Elige tu hora" })).toBeVisible();
+  await expect(page).toHaveURL("/reservar");
+  await expect(page.getByRole("heading", { name: "¿Qué servicio quieres?" })).toBeVisible();
 });
 
 test("enlace directo: sin sesión pide ingresar y vuelve; otra cuenta recibe 404", async ({

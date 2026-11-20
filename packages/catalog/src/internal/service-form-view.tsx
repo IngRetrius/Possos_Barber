@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useActionState } from "react";
+import { useActionState, type ReactNode } from "react";
 import {
   BottomBar,
   Button,
@@ -12,6 +12,7 @@ import {
   submitKeepingValues,
 } from "@possos/ui";
 import {
+  MAX_SERVICE_CATEGORY,
   MAX_SERVICE_DESCRIPTION,
   MAX_SERVICE_NAME,
   type ServiceError,
@@ -34,22 +35,29 @@ export interface ServiceFormProps {
     description: string | null;
     duration_min: number;
     price_cop: number | null;
+    category: string | null;
     active: boolean;
   };
   submitLabel: string;
+  /** Lo que va al final del formulario, antes de la barra (el enlace a los adicionales). */
+  extra?: ReactNode;
 }
 
 /**
  * Crear o editar un servicio (administrador). Sin precio, la página pública y el resumen dicen
  * [PENDIENTE] (regla 8 de CLAUDE.md). Desactivar lo quita de la reserva sin borrar el historial.
  */
-export function ServiceForm({ action, initial, submitLabel }: ServiceFormProps) {
+export function ServiceForm({ action, initial, submitLabel, extra }: ServiceFormProps) {
   const t = useTranslations("catalog.serviceForm");
   const [state, formAction, pending] = useActionState(action, {});
   const fieldErrors = state.fieldErrors ?? {};
   const error = (key: ServiceError | undefined) =>
     key
-      ? t(`errors.${key}`, { maxName: MAX_SERVICE_NAME, maxDescription: MAX_SERVICE_DESCRIPTION })
+      ? t(`errors.${key}`, {
+          maxName: MAX_SERVICE_NAME,
+          maxDescription: MAX_SERVICE_DESCRIPTION,
+          maxCategory: MAX_SERVICE_CATEGORY,
+        })
       : undefined;
   return (
     <form
@@ -102,11 +110,20 @@ export function ServiceForm({ action, initial, submitLabel }: ServiceFormProps) 
             maxLength={MAX_SERVICE_DESCRIPTION}
           />
         </Field>
+        <Field label={t("category")} hint={t("categoryHint")} error={error(fieldErrors.category)}>
+          <Input
+            name="grupo"
+            defaultValue={initial?.category ?? ""}
+            maxLength={MAX_SERVICE_CATEGORY}
+            autoComplete="off"
+          />
+        </Field>
         {initial ? (
           <Checkbox name="activo" value="si" defaultChecked={initial.active} hint={t("activeHint")}>
             {t("active")}
           </Checkbox>
         ) : null}
+        {extra}
       </div>
       <BottomBar summary={state.error ? <span className="text-danger">{state.error}</span> : null}>
         <Button type="submit" disabled={pending} aria-busy={pending}>

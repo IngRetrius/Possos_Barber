@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useActionState, type ReactNode } from "react";
 import { BottomBar, Button } from "@possos/ui";
+import { ADDON_PARAM } from "./selection";
 
 export interface BookFormState {
   /** Error ya en el idioma de la persona (`bookingErrorMessage`). */
@@ -15,6 +16,8 @@ export interface BookFormProps {
   /** Server Action que llama a `book()`. Al reservar, redirige a "Listo". */
   action: BookAction;
   serviceId: string;
+  /** Adicionales elegidos (barba, cejas): la duración y el precio los incluyen. */
+  addonIds?: string[];
   /** Id del barbero o `ANY_BARBER`. */
   barberId: string;
   /** `YYYY-MM-DD`, para volver al mismo día si la hora se ocupó. */
@@ -25,13 +28,24 @@ export interface BookFormProps {
 }
 
 /** Barra inferior de "Confirmar" con el botón "Reservar". */
-export function BookForm({ action, serviceId, barberId, date, startAt, summary }: BookFormProps) {
+export function BookForm({
+  action,
+  serviceId,
+  addonIds = [],
+  barberId,
+  date,
+  startAt,
+  summary,
+}: BookFormProps) {
   const t = useTranslations("booking.book");
   const [state, formAction, pending] = useActionState(action, {});
   return (
     <BottomBar summary={state.error ? <span className="text-danger">{state.error}</span> : summary}>
       <form action={formAction} className="grid">
         <input type="hidden" name="servicio" value={serviceId} />
+        {addonIds.map((id) => (
+          <input key={id} type="hidden" name={ADDON_PARAM} value={id} />
+        ))}
         <input type="hidden" name="barbero" value={barberId} />
         <input type="hidden" name="fecha" value={date} />
         <input type="hidden" name="hora" value={startAt} />

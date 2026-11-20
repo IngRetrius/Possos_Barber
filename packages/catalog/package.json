@@ -18,6 +18,7 @@
     "@possos/config": "workspace:*",
     "@possos/supabase": "workspace:*",
     "@possos/ui": "workspace:*",
+    "lucide-react": "1.75.0",
     "next-intl": "4.14.9",
     "server-only": "0.0.1"
   },

@@ -19,7 +19,10 @@ export interface MyAppointment {
   start: string;
   end: string;
   serviceId: string;
+  /** El servicio con sus adicionales: "Corte + Barba + Cejas". */
   serviceName: string;
+  /** Adicionales de la cita, para volver a reservar lo mismo. */
+  addonIds: string[];
   /** Si el servicio se puede reservar todavía. */
   serviceActive: boolean;
   barberId: string;

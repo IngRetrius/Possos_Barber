@@ -25,6 +25,8 @@ import {
 
 export interface TimePickerProps {
   serviceId: string;
+  /** Adicionales elegidos: siguen en la URL al cambiar de día y al pasar a "Confirmar". */
+  addonIds?: string[];
   /** Id del barbero o `ANY_BARBER`. */
   barberId: string;
   days: DayAvailability[];
@@ -77,6 +79,7 @@ function useDelayed(active: boolean, delay: number): boolean {
  */
 export function TimePicker({
   serviceId,
+  addonIds = [],
   barberId,
   days,
   date,
@@ -107,7 +110,7 @@ export function TimePicker({
   // El servidor manda el día nuevo: la tira lo sigue.
   useEffect(() => setDay(date), [date]);
 
-  const base = paths ? {} : { serviceId, barberId };
+  const base = paths ? {} : { serviceId, addonIds, barberId };
   const timePath = paths?.time ?? BOOKING_ROUTES.time;
   const confirmPath = paths?.confirm ?? BOOKING_ROUTES.confirm;
   const hrefFor = (d: string, startAt: string | null = null, extra?: Record<string, string>) =>

@@ -24,6 +24,7 @@ describe("parseSelection", () => {
       }),
     ).toEqual({
       serviceId: SERVICE,
+      addonIds: [],
       barberId: BARBER,
       date: "2026-11-20",
       startAt: "2026-11-20T20:00:00.000Z",
@@ -43,11 +44,51 @@ describe("parseSelection", () => {
         fecha: "2026-02-30",
         hora: "mañana",
       }),
-    ).toEqual({ serviceId: null, barberId: null, date: null, startAt: null });
+    ).toEqual({ serviceId: null, addonIds: [], barberId: null, date: null, startAt: null });
   });
 
   it("toma el primer valor si el parámetro viene repetido", () => {
     expect(parseSelection({ servicio: [SERVICE, "otro"] }).serviceId).toBe(SERVICE);
+  });
+});
+
+describe("adicionales en la URL", () => {
+  const BARBA = "5eedad00-0000-0000-0000-000000000001";
+  const CEJAS = "5eedad00-0000-0000-0000-000000000002";
+
+  it("lee cada adicional, sin repetir, ordenado y sin los inválidos", () => {
+    expect(parseSelection({ adicional: [CEJAS, "otro", BARBA, CEJAS] }).addonIds).toEqual([
+      BARBA,
+      CEJAS,
+    ]);
+    expect(parseSelection({ adicional: BARBA.toUpperCase() }).addonIds).toEqual([BARBA]);
+    const params = new URLSearchParams([
+      ["adicional", CEJAS],
+      ["adicional", BARBA],
+    ]);
+    expect(parseSelection(params).addonIds).toEqual([BARBA, CEJAS]);
+  });
+
+  it("los pone después del servicio, uno por parámetro, y solo si hay servicio", () => {
+    const href = selectionHref("/reservar/horario", {
+      serviceId: SERVICE,
+      addonIds: [CEJAS, BARBA],
+      barberId: BARBER,
+    });
+    expect(href).toBe(
+      `/reservar/horario?servicio=${SERVICE}&adicional=${BARBA}&adicional=${CEJAS}&barbero=${BARBER}`,
+    );
+    expect(parseSelection(new URL(href, "http://x").searchParams).addonIds).toEqual([BARBA, CEJAS]);
+    expect(selectionHref("/reservar", { addonIds: [BARBA] })).toBe("/reservar");
+  });
+
+  it("muestra el paso Servicio si el único servicio tiene adicionales", () => {
+    expect(bookingSteps({ services: 1, barbers: 1, addons: 3 })).toEqual([
+      "service",
+      "time",
+      "confirm",
+    ]);
+    expect(bookingSteps({ services: 1, barbers: 1, addons: 0 })).toEqual(["time", "confirm"]);
   });
 });
 

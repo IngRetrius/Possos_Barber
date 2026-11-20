@@ -43,6 +43,7 @@ const es = {
   },
   newAppointment: {
     service: "Servicio",
+    addons: "Adicionales",
     noServices: "Este barbero no tiene servicios. Asígnalos en Más, Barberos.",
     pending: "Creando...",
     submit: "Crear cita",
@@ -102,6 +103,7 @@ const en: typeof es = {
   },
   newAppointment: {
     service: "Service",
+    addons: "Add-ons",
     noServices: "This barber has no services. Assign them in More, Barbers.",
     pending: "Creating...",
     submit: "Create appointment",
