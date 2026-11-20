@@ -199,28 +199,27 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             {t("profileSaved")}
           </p>
         ) : null}
-        <div className="grid gap-4">
-          {upcoming ? (
-            <Link
-              href={MY_APPOINTMENTS_ROUTES.detail(upcoming.id)}
-              className="grid gap-2 rounded-card border border-border bg-surface p-4 transition-colors hover:bg-surface-2 active:bg-surface-2"
-            >
-              <span className="text-caption text-fg-muted">{t("upcoming.label")}</span>
-              <span className="text-heading tabular-nums">
-                {f.date(upcoming.start)}, {f.time(upcoming.start)}
-              </span>
-              <span className="flex items-center justify-between gap-3">
-                <span className="text-body text-fg-muted">{upcoming.serviceName}</span>
-                <StatusBadge tone={APPOINTMENT_STATUS_DISPLAY[f.locale][upcoming.status].tone}>
-                  {APPOINTMENT_STATUS_DISPLAY[f.locale][upcoming.status].label}
-                </StatusBadge>
-              </span>
-              <span className="text-label underline underline-offset-4">{t("upcoming.open")}</span>
-            </Link>
-          ) : BUSINESS.tagline || SHOW_PENDING ? (
-            <p className="text-body text-fg-muted">{BUSINESS.tagline ?? t("taglinePending")}</p>
-          ) : null}
-        </div>
+        {/* Sin frase ni cita no se pinta nada: un contenedor vacío dejaría un hueco de separación. */}
+        {upcoming ? (
+          <Link
+            href={MY_APPOINTMENTS_ROUTES.detail(upcoming.id)}
+            className="grid gap-2 rounded-card border border-border bg-surface p-4 transition-colors hover:bg-surface-2 active:bg-surface-2"
+          >
+            <span className="text-caption text-fg-muted">{t("upcoming.label")}</span>
+            <span className="text-heading tabular-nums">
+              {f.date(upcoming.start)}, {f.time(upcoming.start)}
+            </span>
+            <span className="flex items-center justify-between gap-3">
+              <span className="text-body text-fg-muted">{upcoming.serviceName}</span>
+              <StatusBadge tone={APPOINTMENT_STATUS_DISPLAY[f.locale][upcoming.status].tone}>
+                {APPOINTMENT_STATUS_DISPLAY[f.locale][upcoming.status].label}
+              </StatusBadge>
+            </span>
+            <span className="text-label underline underline-offset-4">{t("upcoming.open")}</span>
+          </Link>
+        ) : BUSINESS.tagline || SHOW_PENDING ? (
+          <p className="text-body text-fg-muted">{BUSINESS.tagline ?? t("taglinePending")}</p>
+        ) : null}
 
         {works.length > 0 || SHOW_PENDING ? (
           <section aria-labelledby="trabajos" className="grid gap-3">
