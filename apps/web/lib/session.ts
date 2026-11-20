@@ -13,11 +13,14 @@ import type { DbClient } from "@possos/supabase";
  */
 
 /**
- * Inicio del cliente con sesión: la página principal, que muestra su próxima cita y "Reservar".
- * Antes era el perfil, que es otro formulario y hacía creer que faltaba un paso. F5 puede
- * cambiarlo a "Mis citas".
+ * Inicio del cliente con sesión: la página principal, que muestra su próxima cita (con enlace a
+ * ella), "Reservar" y, arriba, "Mis citas". Antes era el perfil, que es otro formulario y hacía
+ * creer que faltaba un paso. F5 lo dejó en el inicio y no en "Mis citas": quien ingresa por
+ * primera vez no tiene citas (vería una lista vacía), quien ingresa desde "Confirmar" vuelve a
+ * `next` igual, y el inicio ya muestra la próxima cita y lleva a "Mis citas" con un toque.
  */
 export const CUSTOMER_HOME = "/";
+export const MY_APPOINTMENTS_PATH = "/mis-citas";
 export const PROFILE_PATH = "/perfil";
 export const STAFF_HOME = "/panel";
 export const COMPLETE_PROFILE = "/completar-perfil";
@@ -45,13 +48,16 @@ export async function destinationAfterSignIn(
 
 /**
  * Exige un cliente con perfil completo. `path` es la ruta actual, para volver a ella después
- * de ingresar o de completar el perfil.
+ * de ingresar o de completar el perfil. Con `staffTo`, el personal (que no necesita perfil de
+ * cliente) va ahí en vez de a completar el perfil.
  */
 export async function requireCustomer(
   db: DbClient,
   path: string,
+  options: { staffTo?: string } = {},
 ): Promise<{ viewer: Viewer; profile: Customer }> {
   const viewer = await requireViewer(db, path);
+  if (viewer.isStaff && options.staffTo) redirect(options.staffTo);
   const profile = await getMyProfile(db, viewer.userId);
   if (!profile.ok) throw new Error(`No se pudo leer el perfil: ${profile.error}`);
   if (!profile.data || needsConsent(profile.data)) redirect(withNext(COMPLETE_PROFILE, path));

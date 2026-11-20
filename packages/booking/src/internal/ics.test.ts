@@ -25,6 +25,31 @@ describe("appointmentIcs", () => {
     expect(lines).toContain("DTSTAMP:20261119T120000Z");
   });
 
+  it("convierte la hora de Bogotá a UTC y termina cuando termina la cita", () => {
+    const bogota = appointmentIcs({
+      id: "x",
+      // 7:00 p. m. a 8:30 p. m. en Bogotá: en UTC ya es el día siguiente.
+      start: "2026-11-20T19:00:00-05:00",
+      end: "2026-11-20T20:30:00-05:00",
+      title: "Corte",
+      now: new Date("2026-11-19T12:00:00Z"),
+    }).split("\r\n");
+    expect(bogota).toContain("DTSTART:20261121T000000Z");
+    expect(bogota).toContain("DTEND:20261121T013000Z");
+  });
+
+  it("escapa la dirección", () => {
+    const withAddress = appointmentIcs({
+      id: "x",
+      start: "2026-11-20T20:00:00.000Z",
+      end: "2026-11-20T21:00:00.000Z",
+      title: "Corte",
+      location: "Manzana 26 Casa 13, barrio Kennedy, Girardot",
+      now: new Date("2026-11-19T12:00:00Z"),
+    }).split("\r\n");
+    expect(withAddress).toContain("LOCATION:Manzana 26 Casa 13\\, barrio Kennedy\\, Girardot");
+  });
+
   it("identifica la cita y avisa una hora antes", () => {
     expect(lines).toContain("UID:ad000000-0000-0000-0000-000000000001@possosbarber");
     expect(lines).toContain("TRIGGER:-PT60M");

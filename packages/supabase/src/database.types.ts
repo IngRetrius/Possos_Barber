@@ -1010,6 +1010,25 @@ export type Database = {
           status: Database["public"]["Enums"]["appointment_status"];
         }[];
       };
+      list_my_appointments: {
+        Args: { p_id?: string; p_limit?: number };
+        Returns: {
+          barber_active: boolean;
+          barber_id: string;
+          barber_name: string;
+          barber_whatsapp_url: string;
+          change_deadline: string;
+          end_at: string;
+          id: string;
+          price_cop: number;
+          replaced_by: string;
+          service_active: boolean;
+          service_id: string;
+          service_name: string;
+          start_at: string;
+          status: Database["public"]["Enums"]["appointment_status"];
+        }[];
+      };
       list_staff: {
         Args: Record<PropertyKey, never>;
         Returns: {

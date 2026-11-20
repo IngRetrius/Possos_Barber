@@ -42,7 +42,7 @@ const viewer = await requireStaff(await createClient());
 ```
 
 - Después de ingresar, `next` vuelve con su consulta intacta (`/reservar?servicio=1&hora=...`). Se probó con el registro por correo, que es el camino más largo (correo de activación y perfil).
-- `CUSTOMER_HOME` es `/` desde el 19/11/2026 (antes `/perfil`, que es otro formulario y hacía creer que faltaba un paso): después de ingresar, y al guardar el perfil, el cliente llega al inicio con la sesión abierta (con "Guardamos tus cambios." si viene del perfil). El enlace "Tu perfil" del inicio usa `PROFILE_PATH`. F5 puede cambiar `CUSTOMER_HOME` a `/mis-citas` (la ruta ya está en `NEEDS_SESSION` del proxy).
+- `CUSTOMER_HOME` es `/` desde el 19/11/2026 (antes `/perfil`, que es otro formulario y hacía creer que faltaba un paso): después de ingresar, y al guardar el perfil, el cliente llega al inicio con la sesión abierta (con "Guardamos tus cambios." si viene del perfil). El enlace "Tu perfil" del inicio usa `PROFILE_PATH`. F5 decidió dejarlo en el inicio y agregar ahí el acceso "Mis citas" (los motivos, en [F5-entrega](F5-entrega.md#por-qué-el-inicio-sigue-siendo-el-inicio-del-cliente)).
 
 ## Lo que no es evidente
 

@@ -1,16 +1,16 @@
 import { getViewer } from "@possos/auth/server";
-import { listActiveBarbers } from "@possos/barbers/server";
-import { appointmentIcs, parsePeriod } from "@possos/booking";
-import { getAppointment } from "@possos/booking/server";
-import { listActiveServices } from "@possos/catalog/server";
+import { appointmentIcs, MY_APPOINTMENTS_ROUTES } from "@possos/booking";
+import { getMyAppointment } from "@possos/booking/server";
 import { createClient } from "@possos/supabase/server";
 import { BUSINESS, siteUrl } from "../../../../../lib/business";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * "Agregar al calendario": la cita como archivo .ics. Solo la ve su dueño (RLS de appointments);
- * sin sesión, el proxy manda a ingresar.
+ * "Agregar al calendario": la cita como archivo .ics, con las horas en UTC (el calendario las
+ * muestra en la hora del teléfono) y la dirección. Solo para el cliente dueño de la cita
+ * (`list_my_appointments`); sin sesión, el proxy manda a ingresar. Si la cita se reprogramó,
+ * entrega la nueva.
  */
 export async function GET(_request: Request, ctx: RouteContext<"/mis-citas/[id]/calendario.ics">) {
   const { id } = await ctx.params;
@@ -20,33 +20,28 @@ export async function GET(_request: Request, ctx: RouteContext<"/mis-citas/[id]/
   const viewer = await getViewer(db);
   if (!viewer) return new Response("Ingresa para continuar", { status: 401 });
 
-  const [appointment, services, barbers] = await Promise.all([
-    getAppointment(db, id),
-    listActiveServices(db),
-    listActiveBarbers(db),
-  ]);
-  const period = appointment.ok && appointment.data ? parsePeriod(appointment.data.period) : null;
-  if (!appointment.ok || !appointment.data || !period) {
-    return new Response("No encontrado", { status: 404 });
+  const result = await getMyAppointment(db, id);
+  if (!result.ok || !result.data) return new Response("No encontrado", { status: 404 });
+  const appt = result.data;
+  if (appt.replacedBy) {
+    return Response.redirect(new URL(MY_APPOINTMENTS_ROUTES.calendar(appt.replacedBy), siteUrl()));
   }
-
-  const appt = appointment.data;
-  const service = services.ok ? services.data.find((s) => s.id === appt.service_id) : undefined;
-  const barber = barbers.ok ? barbers.data.find((b) => b.id === appt.barber_id) : undefined;
 
   const ics = appointmentIcs({
     id,
-    start: period.start,
-    end: period.end,
-    title: `${service?.name ?? "Cita"} en ${BUSINESS.name}`,
+    start: appt.start,
+    end: appt.end,
+    title: `${appt.serviceName} en ${BUSINESS.name}`,
     description: [
-      barber ? `Con ${barber.display_name}.` : null,
+      `Con ${appt.barberName}.`,
+      BUSINESS.addressReference ? `${BUSINESS.addressReference}.` : null,
       "Puedes cancelar o cambiar tu cita hasta 2 horas antes.",
+      `Tu cita: ${new URL(MY_APPOINTMENTS_ROUTES.detail(id), siteUrl())}`,
     ]
       .filter(Boolean)
       .join(" "),
     location: BUSINESS.address ? `${BUSINESS.address}, ${BUSINESS.city}` : BUSINESS.city,
-    url: siteUrl(),
+    url: new URL(MY_APPOINTMENTS_ROUTES.detail(id), siteUrl()).toString(),
     alarmMinutes: 60,
   });
 

@@ -69,6 +69,15 @@ export {
 } from "./internal/selection";
 export { appointmentIcs, escapeIcsText, type IcsEvent } from "./internal/ics";
 export { APPOINTMENT_STATUS_DISPLAY, TO_CLOSE_DISPLAY } from "./internal/status";
+export {
+  canChange,
+  canReschedule,
+  isUpcoming,
+  MY_APPOINTMENTS_ROUTES,
+  myStatusDisplay,
+  splitMyAppointments,
+  type MyAppointment,
+} from "./internal/my-appointments";
 export { BOOKING_ERROR_CODES, bookingErrorMessage, type BookingErrorCode } from "./internal/errors";
 export {
   validateBookingSettings,

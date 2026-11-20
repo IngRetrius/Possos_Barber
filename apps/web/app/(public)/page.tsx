@@ -13,6 +13,7 @@ import { BarberProfile, OpeningHoursList } from "@possos/barbers/ui";
 import {
   APPOINTMENT_STATUS_DISPLAY,
   BOOKING_ROUTES,
+  MY_APPOINTMENTS_ROUTES,
   parsePeriod,
   parseSelection,
 } from "@possos/booking";
@@ -24,7 +25,7 @@ import { createClient } from "@possos/supabase/server";
 import { BottomBar, Button, formatDate, formatTime, Logo, StatusBadge } from "@possos/ui";
 import { BUSINESS, mapsEmbedUrl, mapsUrl, PENDING, siteUrl } from "../../lib/business";
 import { loadBookingFlow, timeStepHref } from "../../lib/booking-flow";
-import { PROFILE_PATH, STAFF_HOME } from "../../lib/session";
+import { MY_APPOINTMENTS_PATH, PROFILE_PATH, STAFF_HOME } from "../../lib/session";
 
 export const metadata: Metadata = {
   title: `${BUSINESS.name} · ${BUSINESS.kind}`,
@@ -76,6 +77,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
 
   // Cita próxima del cliente con sesión y perfil completo.
   let upcoming: {
+    id: string;
     start: string;
     serviceName: string;
     status: keyof typeof APPOINTMENT_STATUS_DISPLAY;
@@ -87,6 +89,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       const period = next.ok && next.data ? parsePeriod(next.data.period) : null;
       if (next.ok && next.data && period) {
         upcoming = {
+          id: next.data.id,
           start: period.start,
           serviceName: flow.services.find((s) => s.id === next.data!.service_id)?.name ?? "Tu cita",
           status: next.data.status,
@@ -142,11 +145,18 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       />
       <header className="flex min-h-14 items-center justify-between gap-2 px-gutter pt-safe">
         <Logo label="" />
-        <Button asChild variant="ghost">
-          <Link href={viewer ? (viewer.isStaff ? STAFF_HOME : PROFILE_PATH) : AUTH_ROUTES.signIn}>
-            {viewer ? (viewer.isStaff ? "Panel" : "Tu perfil") : "Ingresar"}
-          </Link>
-        </Button>
+        <nav aria-label="Tu cuenta" className="flex items-center">
+          {viewer && !viewer.isStaff ? (
+            <Button asChild variant="ghost" className="px-3">
+              <Link href={MY_APPOINTMENTS_PATH}>Mis citas</Link>
+            </Button>
+          ) : null}
+          <Button asChild variant="ghost" className="px-3">
+            <Link href={viewer ? (viewer.isStaff ? STAFF_HOME : PROFILE_PATH) : AUTH_ROUTES.signIn}>
+              {viewer ? (viewer.isStaff ? "Panel" : "Tu perfil") : "Ingresar"}
+            </Link>
+          </Button>
+        </nav>
       </header>
 
       <main className="grid flex-1 content-start gap-10 px-gutter pt-4 pb-10 md:mx-auto md:w-full md:max-w-2xl">
@@ -159,18 +169,24 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           <h1 className="text-title text-brand">{BUSINESS.name}</h1>
           <p className="text-body text-fg">{BUSINESS.kind}</p>
           {upcoming ? (
-            <div className="mt-4 grid gap-2 rounded-card border border-border bg-surface p-4">
-              <p className="text-caption text-fg-muted">Tu próxima cita</p>
-              <p className="text-heading tabular-nums">
+            <Link
+              href={MY_APPOINTMENTS_ROUTES.detail(upcoming.id)}
+              className="mt-4 grid gap-2 rounded-card border border-border bg-surface p-4 transition-colors hover:bg-surface-2 active:bg-surface-2"
+            >
+              <span className="text-caption text-fg-muted">Tu próxima cita</span>
+              <span className="text-heading tabular-nums">
                 {formatDate(upcoming.start)}, {formatTime(upcoming.start)}
-              </p>
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-body text-fg-muted">{upcoming.serviceName}</p>
+              </span>
+              <span className="flex items-center justify-between gap-3">
+                <span className="text-body text-fg-muted">{upcoming.serviceName}</span>
                 <StatusBadge tone={APPOINTMENT_STATUS_DISPLAY[upcoming.status].tone}>
                   {APPOINTMENT_STATUS_DISPLAY[upcoming.status].label}
                 </StatusBadge>
-              </div>
-            </div>
+              </span>
+              <span className="text-label underline underline-offset-4">
+                Ver, cambiar o cancelar
+              </span>
+            </Link>
           ) : (
             <p className="text-body text-fg-muted">{BUSINESS.tagline ?? `Frase ${PENDING}`}</p>
           )}

@@ -43,6 +43,12 @@ export interface TimePickerProps {
   slotTaken?: boolean;
   /** No se pudieron leer las horas. */
   loadError?: boolean;
+  /**
+   * Rutas del paso y del siguiente, si no son las de la reserva. "Cambiar hora" (F5) usa
+   * `/mis-citas/<id>/cambiar`: la ruta ya dice qué cita es, así que la URL no lleva servicio ni
+   * barbero, solo `fecha` y `hora`.
+   */
+  paths?: { time: string; confirm: string };
 }
 
 /** Espera antes de mostrar el esqueleto: si la respuesta tarda menos, no se ve nada (docs/11). */
@@ -81,6 +87,7 @@ export function TimePicker({
   notice,
   slotTaken = false,
   loadError = false,
+  paths,
 }: TimePickerProps) {
   const router = useRouter();
   // Al volver atrás, Next pinta esta página desde su caché con las props de la primera visita;
@@ -99,9 +106,11 @@ export function TimePicker({
   // El servidor manda el día nuevo: la tira lo sigue.
   useEffect(() => setDay(date), [date]);
 
-  const base = { serviceId, barberId };
+  const base = paths ? {} : { serviceId, barberId };
+  const timePath = paths?.time ?? BOOKING_ROUTES.time;
+  const confirmPath = paths?.confirm ?? BOOKING_ROUTES.confirm;
   const hrefFor = (d: string, startAt: string | null = null, extra?: Record<string, string>) =>
-    selectionHref(BOOKING_ROUTES.time, { ...base, date: d, startAt }, extra);
+    selectionHref(timePath, { ...base, date: d, startAt }, extra);
 
   // Llegaron horas nuevas (aviso de Broadcast o volver a la pestaña): ¿sigue libre la elegida?
   useEffect(() => {
@@ -217,7 +226,7 @@ export function TimePicker({
         {selected ? (
           <Button asChild>
             <Link
-              href={selectionHref(BOOKING_ROUTES.confirm, {
+              href={selectionHref(confirmPath, {
                 ...base,
                 date: day,
                 startAt: selected,

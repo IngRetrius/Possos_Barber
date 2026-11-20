@@ -215,6 +215,12 @@ Solo aparece si hay más de un servicio activo. Lista de filas de 64 px: nombre,
 - "Cancelar" abre una hoja inferior: "¿Cancelar tu cita del jue 20 nov a las 3:00 p. m.?" con "Sí, cancelar" (rojo) y "No".
 - Abajo, las pasadas en una lista simple, cada una con "Volver a reservar".
 - Sin citas: "Todavía no tienes citas" y el botón "Reservar".
+- Construido en F5 (19/11/2026). Además de lo anterior:
+  - Si hay más de una cita próxima, las demás van en "También tienes"; cada fila abre su página (`/mis-citas/<id>`), que es también el destino de los botones de WhatsApp (F7).
+  - Pasado el límite, "Escríbele al barbero" solo aparece si el barbero tiene enlace de WhatsApp; si no, "Escríbele por Instagram" (el de la barbería). Nunca un botón roto.
+  - "Cambiar hora" son dos pasos, como la reserva: "Nueva hora" (el mismo selector de F4, con el servicio y el barbero de la cita) y "Confirmar". La hora actual no aparece en la cuadrícula: la ocupa la misma cita.
+  - El historial muestra las 10 más recientes y "Ver todas las citas pasadas".
+  - El inicio, con sesión de cliente, tiene "Mis citas" arriba, y la tarjeta "Tu próxima cita" lleva a la cita.
 
 ## Pantallas del barbero
 
@@ -397,6 +403,22 @@ Los textos de la tabla de arriba (paso de horario, hora tomada, política, aprob
 | "Listo" con aprobación | Título "Tu reserva quedó pendiente" y "Tu reserva queda pendiente de que el barbero la apruebe" |
 | "Listo" | "Agregar al calendario", "Instalar la app" (si no está instalada) y "Volver al inicio". El aviso del WhatsApp se activa en F7 |
 | Instalar en iPhone | Hoja "Instala la app en tu iPhone": tocar Compartir, "Agregar a inicio" y "Agregar" |
+
+### Mis citas (F5)
+
+Los textos de la tabla de arriba (fuera de la ventana de 2 h, hora tomada, aprobación) se usan tal cual. Además:
+
+| Lugar | Texto |
+|---|---|
+| Inicio con sesión de cliente | "Mis citas" y "Tu perfil" arriba. La tarjeta "Tu próxima cita" termina en "Ver, cambiar o cancelar" |
+| Lista | Título "Mis citas". Secciones "Próxima cita", "También tienes" y "Citas pasadas". Solo con pasadas: "No tienes citas próximas." y "Reservar". Sin ninguna: "Todavía no tienes citas" y "Reservar". "Ver todas las citas pasadas" cuando hay más de 10 |
+| Tarjeta de una cita próxima | El resumen de "Confirmar", el estado y "Puedes cancelarla o cambiarla hasta el vie 20 nov a las 1:00 p. m." (la hora sale de `cancel_window_min`; a la una, "a la 1:00"). "Cambiar hora", "Cancelar" y "Agregar al calendario". Pendiente de aprobación: "Tu reserva queda pendiente de que el barbero la apruebe" |
+| Pasado el límite | "Ya no puedes cambiarla desde aquí. Escríbele al barbero" con el botón "Escríbele al barbero" (su WhatsApp). Si el barbero no tiene WhatsApp: "Ya no puedes cambiarla desde aquí." y "Escríbele por Instagram" |
+| Cancelar | Hoja "¿Cancelar tu cita del jue 20 nov a las 3:00 p. m.?", "La hora queda libre para otros clientes.", "Sí, cancelar" (rojo, "Cancelando...") y "No". Después, arriba: "Cancelaste tu cita" |
+| Historial | Por cita: servicio, fecha y hora, estado y "Volver a reservar" (si el servicio sigue activo). Una cita que ya pasó y el barbero no marcó dice "Pasada" |
+| Página de una cita | Atrás "Mis citas", título "Tu cita" y la tarjeta. Después de cambiar la hora, arriba: "Cambiamos tu cita" |
+| Cambiar hora, paso 1 | "Paso 1 de 2 · Nueva hora", "[servicio] · 60 min · Con [barbero]", título "Elige la nueva hora", "Tu cita ahora: jue 20 nov, 3:00 p. m." y el selector de F4 |
+| Cambiar hora, paso 2 | "Paso 2 de 2 · Confirmar", título "Revisa el cambio", "Antes: jue 20 nov, 3:00 p. m.", el resumen con la hora nueva, "Tu cita de antes se cancela y la hora queda libre para otros clientes.", botón "Cambiar la hora" ("Cambiando..."). Si la hora se ocupó: vuelve al paso 1 con "Esa hora se acaba de ocupar, elige otra" |
 
 ### Panel (F6)
 

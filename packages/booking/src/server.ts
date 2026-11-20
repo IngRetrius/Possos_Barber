@@ -1,7 +1,7 @@
 import "server-only";
 import { createTimeOff } from "@possos/barbers/server";
 import type { BarbersErrorCode, TimeOff } from "@possos/barbers";
-import { errorCode, type DbClient, type Result } from "@possos/supabase";
+import { errorCode, type Database, type DbClient, type Result } from "@possos/supabase";
 import { normalizeInstant, OCCUPYING_STATUSES, parsePeriod, UPCOMING_STATUSES } from "./index";
 import type {
   AgendaAppointment,
@@ -14,6 +14,7 @@ import type {
   ConflictingAppointment,
   CustomerBookingStatus,
   DayAvailability,
+  MyAppointment,
 } from "./index";
 import { BOOKING_ERROR_CODES, type BookingErrorCode } from "./internal/errors";
 import type { ValidBookingSettings } from "./internal/settings";
@@ -245,6 +246,61 @@ export async function getNextAppointment(db: DbClient, customerId: string): R<Ap
     .limit(1)
     .maybeSingle();
   return error ? fail(error) : { ok: true, data };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Mis citas (F5): las citas del cliente de la sesión, con nombres aunque el servicio o el barbero
+// estén inactivos y el límite para cambiarlas que calcula la base (list_my_appointments).
+// ---------------------------------------------------------------------------------------------
+
+type MyAppointmentRow = Database["public"]["Functions"]["list_my_appointments"]["Returns"][number];
+
+function toMyAppointment(row: MyAppointmentRow): MyAppointment | null {
+  const start = normalizeInstant(row.start_at);
+  const end = normalizeInstant(row.end_at);
+  const deadline = normalizeInstant(row.change_deadline);
+  if (!start || !end || !deadline) return null;
+  return {
+    id: row.id,
+    status: row.status,
+    start,
+    end,
+    serviceId: row.service_id,
+    serviceName: row.service_name,
+    serviceActive: row.service_active,
+    barberId: row.barber_id,
+    barberName: row.barber_name,
+    barberActive: row.barber_active,
+    // El tipo generado no marca como null las columnas de una función; en la base sí pueden serlo.
+    barberWhatsappUrl: (row.barber_whatsapp_url as string | null) ?? null,
+    priceCop: (row.price_cop as number | null) ?? null,
+    changeDeadline: deadline,
+    replacedBy: (row.replaced_by as string | null) ?? null,
+  };
+}
+
+/**
+ * Citas del cliente de la sesión, la más nueva primero, sin las que se reprogramaron (las
+ * reemplaza la nueva). Para otra sesión (personal sin perfil de cliente) devuelve una lista vacía.
+ */
+export async function listMyAppointments(
+  db: DbClient,
+  input: { limit?: number } = {},
+): R<MyAppointment[]> {
+  const { data, error } = await db.rpc("list_my_appointments", { p_limit: input.limit ?? 50 });
+  if (error) return fail(error);
+  return { ok: true, data: data.map(toMyAppointment).filter((a) => a !== null) };
+}
+
+/**
+ * Una cita del cliente de la sesión, también si se reprogramó (`replacedBy` dice cuál la
+ * reemplazó). Null si no existe o es de otro cliente: nunca datos de otro (regla 7).
+ */
+export async function getMyAppointment(db: DbClient, id: string): R<MyAppointment | null> {
+  const { data, error } = await db.rpc("list_my_appointments", { p_id: id });
+  if (error) return fail(error);
+  const row = data[0];
+  return { ok: true, data: row ? toMyAppointment(row) : null };
 }
 
 // ---------------------------------------------------------------------------------------------

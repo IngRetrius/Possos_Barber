@@ -176,6 +176,7 @@ Las funciones internas van en el esquema `private`, que PostgREST no expone; cad
 | `get_available_slots(service_id, day, barber_id?)` | anon y authenticated | Devuelve solo `start_at` y `barber_ids` (los barberos libres). Sin datos de clientes. Horas alineadas al `slot_interval_min` del barbero desde el inicio de cada rango del horario |
 | `get_available_days(service_id, barber_id?)` | anon y authenticated | F4. Cuántas horas libres tiene cada día, de hoy a `max_days_ahead`, para la tira de días. Cuenta lo mismo que `get_available_slots` |
 | `my_booking_requires_approval()` | authenticated | F4. Si la próxima reserva del cliente de la sesión quedará `pending_approval`. El cliente no ve su contador de inasistencias (docs/06), solo este aviso |
+| `list_my_appointments(id?, limit?)` | authenticated | F5. Las citas del cliente de la sesión (nunca las de otro), con el nombre del servicio y del barbero aunque estén inactivos, el WhatsApp del barbero, `change_deadline` (inicio menos `cancel_window_min`: hasta cuándo puede cancelar o cambiar) y `replaced_by` (la cita que la reemplazó al reprogramarla). Sin `id`, deja fuera las reprogramadas. El personal sin perfil de cliente recibe una lista vacía |
 | `book_appointment(service_id, start_at, barber_id?)` | cliente | Aplica anticipación y horario, resuelve "cualquiera disponible", pone `pending_approval` si el cliente lo requiere y enlaza el cliente con el barbero |
 | `staff_create_appointment(customer_id, service_id, barber_id, start_at)` | barbero (su agenda) y admin | Igual, sin las reglas de anticipación ni la alineación al intervalo; la cita sí debe caber en el horario. El barbero solo agenda a clientes que ya ve |
 | `cancel_appointment(id, reason)` | cliente (dentro de la ventana), barbero y admin | El personal debe dar un motivo |
@@ -263,7 +264,7 @@ Envolver `auth.uid()` y las funciones en `(select ...)` hace que Postgres las ev
 
 ## Pruebas obligatorias (pgTAP)
 
-Están en `supabase/tests/database/` (`02_booking`, `03_rls`, `04_commissions` y, desde F3, `05_accounts`: perfil, autorización y borrar la cuenta; F4 agregó `06_reserva` y F6 `07_panel`: Realtime, horario semanal, cliente creado por el personal, roles y la matriz de docs/06 del barbero frente al administrador), con el fixture compartido `supabase/tests/fixtures/setup.psql`. Cada prueba obligatoria lleva su número al inicio de la descripción.
+Están en `supabase/tests/database/` (`02_booking`, `03_rls`, `04_commissions` y, desde F3, `05_accounts`: perfil, autorización y borrar la cuenta; F4 agregó `06_reserva`, F5 `08_mis_citas` y F6 `07_panel`: Realtime, horario semanal, cliente creado por el personal, roles y la matriz de docs/06 del barbero frente al administrador), con el fixture compartido `supabase/tests/fixtures/setup.psql`. Cada prueba obligatoria lleva su número al inicio de la descripción.
 
 1. Dos `book_appointment` a la misma hora para el mismo barbero: uno pasa y el otro falla con `SLOT_TAKEN`.
 2. Una cita cancelada libera la hora.

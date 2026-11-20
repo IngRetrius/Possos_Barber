@@ -233,6 +233,43 @@ export async function pastWalkInAppointment(name: string): Promise<{ id: string 
   throw new Error("No hay horas pasadas libres en los últimos 20 días");
 }
 
+/** Límite para cancelar o cambiar (`booking_settings.cancel_window_min`), como administrador. */
+export async function setCancelWindow(minutes: number): Promise<void> {
+  const token = await signInApi(SEED.admin);
+  await rest("booking_settings?id=eq.true", {
+    method: "PATCH",
+    token,
+    body: JSON.stringify({ cancel_window_min: minutes }),
+  });
+}
+
+/** Enlace de WhatsApp del barbero de la semilla (null lo quita), como administrador. */
+export async function setBarberWhatsapp(url: string | null): Promise<void> {
+  const token = await signInApi(SEED.admin);
+  await rest(`barbers?id=eq.${SEED.barberId}`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify({ whatsapp_url: url }),
+  });
+}
+
+/** "Mis citas" de una cuenta, según la base (`list_my_appointments`). */
+export async function myAppointments(
+  email: string,
+): Promise<{ id: string; status: string; start_at: string }[]> {
+  return rpc("list_my_appointments", {}, await signInApi(email));
+}
+
+/** De qué cita viene una cita reprogramada, leído como su dueño. */
+export async function rescheduledFrom(email: string, id: string): Promise<string | null> {
+  const token = await signInApi(email);
+  const rows = await rest<{ rescheduled_from: string | null }[]>(
+    `appointments?select=rescheduled_from&id=eq.${id}`,
+    { token },
+  );
+  return rows[0]?.rescheduled_from ?? null;
+}
+
 /** Liquidación de hoy del barbero de la semilla, según la base. */
 export async function todaySettlement(): Promise<{
   amount: number;
