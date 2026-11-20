@@ -105,6 +105,8 @@ Lo que F7 no tiene que hacer: otra ruta, otro cron, otro secreto ni otro trigger
 
 ## Configurar en producción
 
+Hecho el 19/11/2026, después del `db:push` de Juan: las tres variables en Vercel (Production; `VAPID_PRIVATE_KEY` y `CRON_SECRET` como sensibles, no se pueden leer desde el panel), los dos secretos en Vault y un nuevo despliegue. Comprobado: la ruta responde 401 sin el secreto y 200 con él, y `private.notifications_request_dispatch()` desde la base recibió 200. Los valores se generaron en un archivo temporal, se cargaron con las CLIs y se borraron; no quedaron en ningún otro lado. Para cambiarlos, se repiten los pasos con valores nuevos (con claves VAPID nuevas, cada celular vuelve a activar los avisos).
+
 Nada de esto va en el repo (regla 6).
 
 1. **Claves VAPID.** Generarlas en el equipo de Juan:
@@ -128,7 +130,7 @@ Nada de esto va en el repo (regla 6).
 
 ## Pendiente
 
-- **De Juan:** las tres variables en Vercel, los dos secretos en Vault, el `db:push` y la lista de verificación en celulares reales de [F8-pwa-push.md](F8-pwa-push.md#lista-de-verificación-en-celulares-reales): instalar en iPhone y Android, push con la app cerrada (menos de 1 minuto), modo avión en "Mis citas", "Continuar con Google" dentro de la PWA instalada en iPhone ([riesgo 6](../docs/10-riesgos-decisiones-abiertas.md)) y la descarga del `.ics` desde la PWA de iOS (pendiente de F5).
+- **De Juan:** la lista de verificación en celulares reales de [F8-pwa-push.md](F8-pwa-push.md#lista-de-verificación-en-celulares-reales): instalar en iPhone y Android, push con la app cerrada (menos de 1 minuto), modo avión en "Mis citas", "Continuar con Google" dentro de la PWA instalada en iPhone ([riesgo 6](../docs/10-riesgos-decisiones-abiertas.md)) y la descarga del `.ics` desde la PWA de iOS (pendiente de F5).
 - **Del dueño:** instalar la app en su celular y tocar "Activar avisos" en "Más"; el logo en SVG (decisión 11) para cambiar los íconos cuando llegue.
 - **Para F7:** su consumidor `whatsapp`, ver [arriba](#cómo-se-conecta-f7-al-despacho).
 - **Mejoras posibles, no pedidas:** que la app instalada lleve al personal directo al panel (hoy abre el inicio, con el enlace "Panel"), y avisar a un barbero de lo que el administrador hace en su agenda (contrato de eventos versión 2).
