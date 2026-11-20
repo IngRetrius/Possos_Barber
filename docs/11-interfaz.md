@@ -103,6 +103,7 @@ Reglas:
 - Peso: el precio de cada servicio y el del total van en 600, para que se lean primero.
 - Respeta las zonas seguras del iPhone con la PWA instalada: `padding-bottom: env(safe-area-inset-bottom)` en la barra inferior y `viewport-fit=cover`.
 - Íconos: Lucide (viene con shadcn/ui), trazo de 1,5, 20 px, siempre con etiqueta en la navegación.
+- Redes (20/11/2026, pedido de Juan): Instagram y TikTok van en Contacto solo con su ícono, en línea en `apps/web/app/_components/social-links.tsx`. Son de Phosphor 2.1.1, peso regular (MIT), porque Lucide ya no trae marcas; son de contorno y con el mismo grosor de trazo que Lucide a 24 px. Van monocromos (`--fg`), sin los colores de cada marca. Es la única excepción a "siempre con etiqueta": el nombre ("Instagram @possosbarber") va en `aria-label`, cada enlace mide 48 × 48 px con 8 px entre ellos, y el borde se refuerza al pasar o presionar. La lista se llama "Redes sociales". Las dos cuentas también van en `sameAs` de los datos estructurados.
 - Movimiento: 150 a 200 ms con *ease-out* para entrar, sin rebotes. Con `prefers-reduced-motion: reduce`, solo cambios de opacidad.
 
 ### Logo
@@ -169,7 +170,7 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 │ └──────────────────────────────┘ │
 │ El barbero · foto y presentación │
 │ Ubicación · mapa · horario       │
-│ Instagram · WhatsApp             │
+│ [IG] [TikTok] · WhatsApp         │  redes solo con ícono, 48 px
 │ ──────────────────────────────── │
 │ [文A English]                    │  pie: botón de idioma
 ├──────────────────────────────────┤

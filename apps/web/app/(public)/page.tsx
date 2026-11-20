@@ -33,6 +33,7 @@ import { BookLink } from "../_components/book-link";
 import { HomeBookBar } from "../_components/home-book-bar";
 import { LocaleSwitch } from "../_components/locale-switch";
 import { ServiceBooking } from "../_components/service-booking";
+import { SocialLinks } from "../_components/social-links";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("web.home.meta");
@@ -140,7 +141,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     name: BUSINESS.name,
     url: siteUrl(),
     image: `${siteUrl()}/icons/icon-512.png`,
-    sameAs: [BUSINESS.instagram.url],
+    sameAs: [BUSINESS.instagram.url, BUSINESS.tiktok.url],
     address: {
       "@type": "PostalAddress",
       ...(BUSINESS.address ? { streetAddress: BUSINESS.address } : {}),
@@ -364,22 +365,30 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           <h2 id="contacto" className="text-heading">
             {t("contact")}
           </h2>
-          <ul className="grid gap-2 text-body">
-            <li>
-              <a href={BUSINESS.instagram.url} className={linkClass} rel="noopener noreferrer">
-                {t("instagram", { handle: BUSINESS.instagram.handle })}
+          <SocialLinks
+            label={t("social")}
+            links={[
+              {
+                network: "instagram",
+                url: BUSINESS.instagram.url,
+                label: t("instagram", { handle: BUSINESS.instagram.handle }),
+              },
+              {
+                network: "tiktok",
+                url: BUSINESS.tiktok.url,
+                label: t("tiktok", { handle: BUSINESS.tiktok.handle }),
+              },
+            ]}
+          />
+          {whatsapp ? (
+            <p className="text-body">
+              <a href={whatsapp} className={linkClass} rel="noopener noreferrer">
+                {t("whatsapp")}
               </a>
-            </li>
-            {whatsapp ? (
-              <li>
-                <a href={whatsapp} className={linkClass} rel="noopener noreferrer">
-                  {t("whatsapp")}
-                </a>
-              </li>
-            ) : SHOW_PENDING ? (
-              <li className="text-fg-muted">{t("whatsappPending")}</li>
-            ) : null}
-          </ul>
+            </p>
+          ) : SHOW_PENDING ? (
+            <p className="text-body text-fg-muted">{t("whatsappPending")}</p>
+          ) : null}
           <p className="text-caption text-fg-muted">
             <Link href="/politica-de-datos" className={linkClass}>
               {t("policy")}

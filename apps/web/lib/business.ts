@@ -35,6 +35,8 @@ export const BUSINESS = {
   region: "Cundinamarca",
   country: "CO",
   instagram: { handle: "possosbarber", url: "https://www.instagram.com/possosbarber/" },
+  /** TikTok de la barbería (Juan, 20/11/2026). */
+  tiktok: { handle: "possosbarber", url: "https://www.tiktok.com/@possosbarber" },
   /**
    * Ficha de Google Maps que dio el dueño (19/11/2026). Las direcciones por manzana y casa no se
    * geocodifican bien, así que el mapa usa las coordenadas de la ficha y no el texto.

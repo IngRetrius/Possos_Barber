@@ -129,6 +129,27 @@ test.afterAll(async () => {
   await cancelTestAppointments();
 });
 
+test("Contacto muestra Instagram y TikTok solo con su ícono y con nombre accesible", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const contact = page.locator('section[aria-labelledby="contacto"]');
+  const social = contact.getByRole("list", { name: "Redes sociales" });
+  for (const [name, href] of [
+    ["Instagram @possosbarber", "https://www.instagram.com/possosbarber/"],
+    ["TikTok @possosbarber", "https://www.tiktok.com/@possosbarber"],
+  ] as const) {
+    const link = social.getByRole("link", { name });
+    await expect(link).toHaveAttribute("href", href);
+    // Solo el ícono: el nombre viene de aria-label, sin texto visible.
+    await expect(link).toHaveText("");
+    const box = await link.boundingBox();
+    expect(box?.width).toBeGreaterThanOrEqual(48);
+    expect(box?.height).toBeGreaterThanOrEqual(48);
+  }
+  await expectAccessible(page);
+});
+
 test("la página pública se lee sin JavaScript", async ({ browser }) => {
   const context = await browser.newContext({
     javaScriptEnabled: false,
