@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { withSerwist } from "@serwist/turbopack";
+import createNextIntlPlugin from "next-intl/plugin";
 
 /**
  * Las páginas `page.dev.tsx` (como /muestras) solo existen con `next dev`: en el build de
@@ -37,6 +38,9 @@ const nextConfig: NextConfig = {
   ],
 };
 
+// next-intl lee el idioma y los textos de cada petición en `i18n/request.ts` (docs/11, "Idiomas").
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+
 // Serwist (F8): ajusta la configuración para servir el service worker de `app/sw.ts` desde la
 // ruta `app/serwist/[path]`.
-export default withSerwist(nextConfig);
+export default withSerwist(withNextIntl(nextConfig));

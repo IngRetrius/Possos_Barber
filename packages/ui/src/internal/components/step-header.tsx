@@ -1,5 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { cn } from "../cn";
 import { Button } from "./button";
 
@@ -13,6 +15,8 @@ export interface StepHeaderProps {
   backHref?: string;
   onBack?: () => void;
   backLabel?: string;
+  /** Lo que va a la derecha del encabezado (el botón ES/EN). */
+  actions?: ReactNode;
   className?: string;
 }
 
@@ -23,9 +27,12 @@ export function StepHeader({
   name,
   backHref,
   onBack,
-  backLabel = "Atrás",
+  backLabel,
+  actions,
   className,
 }: StepHeaderProps) {
+  const t = useTranslations("ui.stepHeader");
+  const back = backLabel ?? t("back");
   const icon = <ArrowLeft strokeWidth={1.5} aria-hidden="true" />;
   return (
     <header
@@ -34,21 +41,22 @@ export function StepHeader({
     >
       {backHref ? (
         <Button asChild variant="ghost" size="icon">
-          <Link href={backHref} aria-label={backLabel}>
+          <Link href={backHref} aria-label={back}>
             {icon}
           </Link>
         </Button>
       ) : onBack ? (
-        <Button variant="ghost" size="icon" aria-label={backLabel} onClick={onBack}>
+        <Button variant="ghost" size="icon" aria-label={back} onClick={onBack}>
           {icon}
         </Button>
       ) : null}
-      <p className="text-label text-fg-muted tabular-nums">
-        Paso {step} de {total}
+      <p className="min-w-0 flex-1 text-label text-fg-muted tabular-nums">
+        {t("step", { step, total })}
         <span aria-hidden="true"> · </span>
         <span className="sr-only">: </span>
         <span className="text-fg">{name}</span>
       </p>
+      {actions}
     </header>
   );
 }

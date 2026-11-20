@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { Drawer } from "vaul";
 import { cn } from "../cn";
 import { Button } from "./button";
@@ -111,6 +112,7 @@ export function Sheet({
   closeOnBack = true,
   className,
 }: SheetProps) {
+  const t = useTranslations("ui.sheet");
   const [openState, setOpenState] = useState(false);
   const open = openProp ?? openState;
   const setOpen = useCallback(
@@ -152,7 +154,7 @@ export function Sheet({
             </div>
             <Drawer.Close asChild>
               <Button variant="ghost" className="px-3">
-                Cerrar
+                {t("close")}
               </Button>
             </Drawer.Close>
           </div>

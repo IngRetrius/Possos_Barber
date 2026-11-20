@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LOCALE, TIMEZONE } from "./constants";
+import { DEFAULT_LOCALE, HTML_LANG, LOCALE, parseLocale, TIMEZONE } from "./constants";
 
 describe("constantes compartidas", () => {
   it("usa la zona horaria de Bogotá", () => {
@@ -13,7 +13,16 @@ describe("constantes compartidas", () => {
     expect(offset("2026-07-15T12:00:00Z")).toBe("GMT-05:00");
   });
 
-  it("usa español de Colombia", () => {
+  it("usa español de Colombia por omisión", () => {
+    expect(DEFAULT_LOCALE).toBe("es");
     expect(LOCALE).toBe("es-CO");
+    expect(HTML_LANG.en).toBe("en");
+  });
+
+  it("acepta solo los idiomas de la interfaz", () => {
+    expect(parseLocale("en")).toBe("en");
+    expect(parseLocale("es")).toBe("es");
+    expect(parseLocale("fr")).toBe("es");
+    expect(parseLocale(undefined)).toBe("es");
   });
 });

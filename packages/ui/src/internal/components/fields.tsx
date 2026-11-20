@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react";
 import { createContext, useContext, useId, type ComponentProps, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "../cn";
 
 /*
@@ -98,6 +99,7 @@ export function Textarea({ className, ...props }: ComponentProps<"textarea">) {
  * el módulo que guarda el número.
  */
 export function PhoneInput({ className, ...props }: Omit<ComponentProps<"input">, "type">) {
+  const t = useTranslations("ui.phone");
   const field = useFieldProps(props);
   const prefixId = useId();
   return (
@@ -122,7 +124,7 @@ export function PhoneInput({ className, ...props }: Omit<ComponentProps<"input">
         id={prefixId}
         className="flex items-center border-r border-border-strong px-3 text-body text-fg-muted tabular-nums"
       >
-        <span className="sr-only">Prefijo </span>+57
+        <span className="sr-only">{t("prefix")} </span>+57
       </span>
       <input
         type="tel"

@@ -1,6 +1,8 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useId } from "react";
+import { parseLocale } from "@possos/config/constants";
 import { cn } from "../cn";
 import {
   DAY_PERIOD_LABEL,
@@ -28,13 +30,9 @@ const PERIODS: DayPeriod[] = ["morning", "afternoon", "evening"];
  * Radios nativos: las flechas recorren todas las horas. En la cuadrícula la hora va corta
  * ("3:00"); el lector de pantalla la oye completa ("3:00 p. m.").
  */
-export function SlotGrid({
-  slots,
-  value,
-  onChange,
-  label = "Horas libres",
-  className,
-}: SlotGridProps) {
+export function SlotGrid({ slots, value, onChange, label, className }: SlotGridProps) {
+  const t = useTranslations("ui.slotGrid");
+  const locale = parseLocale(useLocale());
   const id = useId();
   if (slots.length === 0) return null;
 
@@ -46,7 +44,7 @@ export function SlotGrid({
   return (
     <div
       role="radiogroup"
-      aria-label={label}
+      aria-label={label ?? t("label")}
       data-slot="slot-grid"
       className={cn("grid gap-6", className)}
     >
@@ -55,7 +53,7 @@ export function SlotGrid({
         return (
           <div key={group.period} role="group" aria-labelledby={headingId} className="grid gap-3">
             <h3 id={headingId} className="text-heading">
-              {DAY_PERIOD_LABEL[group.period]}
+              {DAY_PERIOD_LABEL[locale][group.period]}
             </h3>
             <div className="grid grid-cols-3 gap-2">
               {group.slots.map((slot) => {
@@ -76,7 +74,7 @@ export function SlotGrid({
                       name={id}
                       value={slot}
                       checked={checked}
-                      aria-label={formatTime(slot)}
+                      aria-label={formatTime(slot, locale)}
                       onChange={() => onChange(slot)}
                       className="sr-only"
                     />

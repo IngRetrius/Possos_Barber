@@ -145,3 +145,22 @@ describe("precios y duraciones", () => {
     expect(plain(formatDuration(65))).toBe("1 h 5 min");
   });
 });
+
+describe("en inglés", () => {
+  const plainText = (s: string) => s.replaceAll(" ", " ");
+
+  it("formatea fechas y horas", () => {
+    expect(formatDate("2026-11-20", "en")).toBe("Fri, Nov 20");
+    expect(formatDateLong("2026-11-20", "en")).toBe("Friday, November 20");
+    expect(formatMonthYear("2026-11-20", "en")).toBe("November 2026");
+    expect(plainText(formatTime("2026-11-19T20:00:00Z", "en"))).toBe("3:00 PM");
+    expect(plainText(formatTime("2026-11-20T05:00:00Z", "en"))).toBe("12:00 AM");
+    expect(plainText(formatTimeRange("2026-11-19T20:00:00Z", "2026-11-19T21:00:00Z", "en"))).toBe(
+      "3:00 PM to 4:00 PM",
+    );
+  });
+
+  it("usa coma de miles en los precios", () => {
+    expect(formatPrice(1234567, "en")).toBe("$1,234,567");
+  });
+});

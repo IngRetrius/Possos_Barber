@@ -1,6 +1,8 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useRef } from "react";
+import { parseLocale } from "@possos/config/constants";
 import { cn } from "../cn";
 import { bogotaParts, formatDateLong, formatMonthYear, formatWeekdayShort } from "../format";
 
@@ -22,16 +24,8 @@ export interface DateStripProps {
   className?: string;
 }
 
-function dayName(day: DateStripDay) {
-  const slots =
-    day.slots === 0 ? "sin horas" : day.slots === 1 ? "1 hora libre" : `${day.slots} horas libres`;
-  return `${formatDateLong(day.date)}, ${slots}`;
-}
-
-/** Encabezado del mes en escritorio, de lunes a domingo (2026-01-05 fue lunes). */
-const WEEK_HEADER = ["05", "06", "07", "08", "09", "10", "11"].map((d) =>
-  formatWeekdayShort(`2026-01-${d}`),
-);
+/** Días de una semana de lunes a domingo (2026-01-05 fue lunes), para el encabezado del mes. */
+const WEEK = ["05", "06", "07", "08", "09", "10", "11"].map((d) => `2026-01-${d}`);
 
 /**
  * Tira horizontal de días. Es un grupo de radios nativos: Tab entra al día elegido y las flechas
@@ -40,7 +34,9 @@ const WEEK_HEADER = ["05", "06", "07", "08", "09", "10", "11"].map((d) =>
  * Desde `md:` los mismos radios se acomodan como un mes de 7 columnas, de lunes a domingo
  * (docs/11: en escritorio, la tira se vuelve un mes). Solo cambia el CSS; el flujo es el mismo.
  */
-export function DateStrip({ days, value, onChange, label = "Día", className }: DateStripProps) {
+export function DateStrip({ days, value, onChange, label, className }: DateStripProps) {
+  const t = useTranslations("ui.dateStrip");
+  const locale = parseLocale(useLocale());
   const name = useId();
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -63,21 +59,21 @@ export function DateStrip({ days, value, onChange, label = "Día", className }: 
     <div data-slot="date-strip" className={cn("grid gap-2", className)}>
       {month ? (
         <p className="px-gutter text-label text-fg-muted" aria-hidden="true">
-          {formatMonthYear(month)}
+          {formatMonthYear(month, locale)}
         </p>
       ) : null}
       <div
         aria-hidden="true"
         className="hidden grid-cols-7 gap-2 px-gutter text-center text-caption text-fg-muted md:grid"
       >
-        {WEEK_HEADER.map((name) => (
-          <span key={name}>{name}</span>
+        {WEEK.map((date) => (
+          <span key={date}>{formatWeekdayShort(date, locale)}</span>
         ))}
       </div>
       <div
         ref={scroller}
         role="radiogroup"
-        aria-label={label}
+        aria-label={label ?? t("label")}
         className="flex snap-x gap-2 overflow-x-auto scroll-px-gutter px-gutter py-1 [scrollbar-width:none] md:grid md:snap-none md:grid-cols-7 md:overflow-visible [&::-webkit-scrollbar]:hidden"
       >
         {Array.from({ length: offset }, (_, i) => (
@@ -108,12 +104,15 @@ export function DateStrip({ days, value, onChange, label = "Día", className }: 
                 value={day.date}
                 checked={checked}
                 disabled={day.disabled}
-                aria-label={dayName(day)}
+                aria-label={t("dayName", {
+                  date: formatDateLong(day.date, locale),
+                  slots: day.slots,
+                })}
                 onChange={() => onChange(day.date)}
                 className="peer sr-only"
               />
               <span aria-hidden="true" className="text-caption md:hidden">
-                {formatWeekdayShort(day.date)}
+                {formatWeekdayShort(day.date, locale)}
               </span>
               <span aria-hidden="true" className="text-heading tabular-nums">
                 {bogotaParts(day.date).day}
@@ -125,7 +124,7 @@ export function DateStrip({ days, value, onChange, label = "Día", className }: 
                   !empty && "invisible",
                 )}
               >
-                Sin horas
+                {t("noSlots")}
               </span>
             </label>
           );

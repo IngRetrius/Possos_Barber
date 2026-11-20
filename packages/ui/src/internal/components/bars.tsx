@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "../cn";
 
@@ -42,16 +43,17 @@ export interface TabBarItem {
 /** Navegación inferior de 4 pestañas con ícono y etiqueta. El acento no se usa aquí. */
 export function TabBar({
   items,
-  label = "Principal",
+  label,
   className,
 }: {
   items: TabBarItem[];
   label?: string;
   className?: string;
 }) {
+  const t = useTranslations("ui.tabBar");
   return (
     <nav
-      aria-label={label}
+      aria-label={label ?? t("label")}
       data-slot="tab-bar"
       className={cn("sticky bottom-0 z-30 mt-auto border-t border-border bg-bg pb-safe", className)}
     >

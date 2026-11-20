@@ -3,6 +3,9 @@ packages:
   - packages/*
 # Serwist (F8) compila el service worker con esbuild y @swc/core. Sus scripts de instalación solo
 # verifican el binario de la plataforma.
+# next-intl trae @parcel/watcher (para su extractor de mensajes, que no se usa). Viene con binarios
+# ya compilados para cada plataforma, así que su script de instalación no hace falta.
 allowBuilds:
+  "@parcel/watcher": false
   "@swc/core": true
   esbuild: true
