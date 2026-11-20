@@ -157,9 +157,12 @@ export function formatPrice(pesos: number): string {
   return `${pesos < 0 && rounded !== 0 ? "-" : ""}$${digits}`;
 }
 
-/** "60 min" */
+/** Hasta 60 minutos, "45 min" o "60 min"; desde ahí, en horas: "2 h", "1 h 30 min". */
 export function formatDuration(minutes: number): string {
-  return `${minutes}${NBSP}min`;
+  if (minutes <= 60) return `${minutes}${NBSP}min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest ? `${hours}${NBSP}h ${rest}${NBSP}min` : `${hours}${NBSP}h`;
 }
 
 /** Franja del día en Bogotá: mañana antes de las 12, tarde de 12 a 6 p. m. y noche desde las 6. */

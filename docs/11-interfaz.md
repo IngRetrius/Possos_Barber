@@ -127,7 +127,7 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 │ │ [ Reservar este servicio ]   │ │
 │ ├──────────────────────────────┤ │
 │ │ Corte con barba    $40.000 ˅ │ │
-│ │ 120 min                      │ │
+│ │ 2 h                          │ │
 │ └──────────────────────────────┘ │
 │ El barbero · foto y portafolio   │
 │ Ubicación · mapa · horario       │
@@ -143,7 +143,7 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 
 ### Paso: Servicio
 
-Solo aparece si hay más de un servicio activo. Lista de filas de 64 px: nombre, duración y precio. Tocar una fila avanza; no hay botón "Continuar" en este paso.
+Solo aparece si hay más de un servicio activo. Lista de filas de 64 px: nombre, duración y precio. La duración va en minutos hasta 60 ("45 min", "60 min") y en horas desde ahí ("2 h", "1 h 30 min"), en todas las pantallas. Tocar una fila avanza; no hay botón "Continuar" en este paso.
 
 ### Paso: Horario
 

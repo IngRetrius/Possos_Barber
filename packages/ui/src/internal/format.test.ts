@@ -133,7 +133,15 @@ describe("precios y duraciones", () => {
     expect(() => formatPrice(Number.NaN)).toThrow(RangeError);
   });
 
-  it("formatea minutos", () => {
+  it("formatea hasta 60 minutos en minutos", () => {
+    expect(plain(formatDuration(30))).toBe("30 min");
     expect(plain(formatDuration(60))).toBe("60 min");
+  });
+
+  it("formatea más de 60 minutos en horas", () => {
+    expect(plain(formatDuration(120))).toBe("2 h");
+    expect(plain(formatDuration(300))).toBe("5 h");
+    expect(plain(formatDuration(90))).toBe("1 h 30 min");
+    expect(plain(formatDuration(65))).toBe("1 h 5 min");
   });
 });
