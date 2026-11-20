@@ -33,8 +33,8 @@ export default function DataPolicyPage() {
         <section className="grid gap-2">
           <h2 className="text-heading">Responsable del tratamiento</h2>
           <p className="text-body text-fg-muted">
-            Possos Barber, Ibagué. [PENDIENTE] Razón social, NIT, dirección, correo y teléfono de
-            contacto.
+            Possos Barber, Manzana 26 Casa 13, barrio Kennedy, Girardot. [PENDIENTE] Razón social,
+            NIT, correo y teléfono de contacto.
           </p>
         </section>
 

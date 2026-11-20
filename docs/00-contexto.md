@@ -4,7 +4,7 @@ Actualizado el 18/11/2026.
 
 ## El negocio
 
-- **Possos Barber**, barbería en Ibagué, Tolima (Colombia). Instagram: @possosbarber.
+- **Possos Barber**, barbería en Girardot, Cundinamarca (Colombia), en Manzana 26 Casa 13, barrio Kennedy (casa esquinera naranja). Ficha de Google Maps: https://maps.app.goo.gl/3GL17XxTGt2TCffm8. Hasta el 19/11/2026 los documentos decían Ibagué por error. Instagram: @possosbarber.
 - **Una sede y un barbero.** El dueño corta y además administra. El sistema se diseña para varios barberos (el flujo tiene el paso "elegir barbero"), pero mientras haya uno solo activo ese paso se salta.
 - **Hoy usa Beunik PRO.** Paga un plan de unos 50.000 COP al mes. Los recordatorios automáticos por WhatsApp se le acaban y Beunik le cobra **150.000 COP por un paquete de 3.000 mensajes**, es decir, **50 COP por mensaje**.
 - **El problema que se quiere resolver:** los clientes olvidan sus citas y el barbero pierde cortes. Los recordatorios por WhatsApp son la herramienta principal, y su costo es lo que hace caro a Beunik.

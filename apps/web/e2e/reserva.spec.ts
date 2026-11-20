@@ -128,14 +128,14 @@ test("la página pública se lee sin JavaScript", async ({ browser }) => {
   await expect(page.getByRole("heading", { name: "Horario" })).toBeVisible();
   await expect(page.getByText("Lunes a sábado")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Ubicación" })).toBeVisible();
-  await expect(page.getByText("Ibagué, Tolima")).toBeVisible();
+  await expect(page.getByText("Girardot, Cundinamarca")).toBeVisible();
   await expect(page.getByRole("link", { name: "Reservar" })).toBeVisible();
 
   const jsonLd = await page.locator('script[type="application/ld+json"]').textContent();
   expect(JSON.parse(jsonLd ?? "{}")).toMatchObject({
     "@type": "BarberShop",
     name: "Possos Barber",
-    address: { addressLocality: "Ibagué" },
+    address: { addressLocality: "Girardot" },
   });
   await context.close();
 });

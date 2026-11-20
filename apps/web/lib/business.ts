@@ -9,15 +9,26 @@ export const PENDING = "[PENDIENTE]";
 export const BUSINESS = {
   name: "Possos Barber",
   /** Línea fija bajo el nombre (docs/11). */
-  kind: "Barbería en Ibagué",
+  kind: "Barbería en Girardot",
   /** Frase de presentación del dueño. [PENDIENTE] */
   tagline: null as string | null,
-  /** Dirección para mostrar y para el mapa. [PENDIENTE] (decisión 4 de docs/10) */
-  address: null as string | null,
-  city: "Ibagué",
-  region: "Tolima",
+  /** Dirección para mostrar, el .ics y los datos estructurados (dueño, 19/11/2026). */
+  address: "Manzana 26 Casa 13, barrio Kennedy" as string | null,
+  /** Cómo reconocer la casa (dueño, 19/11/2026). */
+  addressReference: "Casa esquinera naranja" as string | null,
+  city: "Girardot",
+  region: "Cundinamarca",
   country: "CO",
   instagram: { handle: "possosbarber", url: "https://www.instagram.com/possosbarber/" },
+  /**
+   * Ficha de Google Maps que dio el dueño (19/11/2026). Las direcciones por manzana y casa no se
+   * geocodifican bien, así que el mapa usa las coordenadas de la ficha y no el texto.
+   */
+  maps: {
+    url: "https://maps.app.goo.gl/3GL17XxTGt2TCffm8",
+    latitude: 4.3131339,
+    longitude: -74.7898099,
+  },
 } as const;
 
 /** Dirección para mostrar, o [PENDIENTE]. */
@@ -25,18 +36,19 @@ export function addressLabel(): string {
   return BUSINESS.address ?? PENDING;
 }
 
-/** Enlace a Google Maps con la dirección (sin clave de API), o null sin dirección. */
+/** Enlace a la ficha de Google Maps (sin clave de API). */
 export function mapsUrl(): string | null {
-  if (!BUSINESS.address) return null;
-  const query = encodeURIComponent(`${BUSINESS.address}, ${BUSINESS.city}, Colombia`);
-  return `https://www.google.com/maps/search/?api=1&query=${query}`;
+  return BUSINESS.maps.url;
 }
 
-/** Mapa embebido de Google Maps (sin clave de API), o null sin dirección. */
+/**
+ * Mapa embebido de Google Maps (sin clave de API): busca el nombre del negocio alrededor de las
+ * coordenadas de la ficha, para que el pin salga con "Possos Barber" y en español.
+ */
 export function mapsEmbedUrl(): string | null {
-  if (!BUSINESS.address) return null;
-  const query = encodeURIComponent(`${BUSINESS.address}, ${BUSINESS.city}, Colombia`);
-  return `https://www.google.com/maps?q=${query}&output=embed`;
+  const { latitude, longitude } = BUSINESS.maps;
+  const query = encodeURIComponent(BUSINESS.name);
+  return `https://www.google.com/maps?q=${query}&ll=${latitude},${longitude}&z=17&hl=es&output=embed`;
 }
 
 /**

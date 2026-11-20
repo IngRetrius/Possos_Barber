@@ -116,7 +116,7 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 ┌──────────────────────────────────┐
 │ [P]  Possos Barber      Ingresar │
 │                                  │
-│ Barbería en Ibagué               │
+│ Barbería en Girardot             │
 │ [PENDIENTE: frase del dueño]     │
 │                                  │
 │ Servicios                        │
@@ -383,7 +383,7 @@ Los textos de la tabla de arriba (paso de horario, hora tomada, política, aprob
 
 | Lugar | Texto |
 |---|---|
-| Inicio | Nombre, "Barbería en Ibagué" y la frase del dueño (**[PENDIENTE]**). Secciones "Servicios", "El barbero", "Ubicación", "Horario" y "Contacto". Con una cita próxima: "Tu próxima cita" con fecha, hora, servicio y estado |
+| Inicio | Nombre, "Barbería en Girardot" y la frase del dueño (**[PENDIENTE]**). Secciones "Servicios", "El barbero", "Ubicación", "Horario" y "Contacto". Con una cita próxima: "Tu próxima cita" con fecha, hora, servicio y estado |
 | Paso "Servicio" | "¿Qué servicio quieres?". Sin servicios: "Todavía no hay servicios para reservar" |
 | Paso "Barbero" | "¿Con quién?". Primera fila "Cualquiera disponible", con "El que esté libre a la hora que elijas" |
 | Horario sin hora elegida | La barra inferior dice "Elige una hora" y "Continuar" está apagado |

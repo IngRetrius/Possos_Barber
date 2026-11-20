@@ -1,6 +1,6 @@
 # Sitio web de Possos Barber
 
-Una PWA de agendamiento para Possos Barber, una barbería de Ibagué (Colombia), @possosbarber en Instagram. Por ahora hay un solo barbero, que también es el dueño y el administrador. El sitio reemplaza a Beunik. El motivo principal es abaratar los recordatorios por WhatsApp, porque se pierden cortes cuando al cliente se le olvida la cita.
+Una PWA de agendamiento para Possos Barber, una barbería de Girardot, Cundinamarca (Colombia), @possosbarber en Instagram. Por ahora hay un solo barbero, que también es el dueño y el administrador. El sitio reemplaza a Beunik. El motivo principal es abaratar los recordatorios por WhatsApp, porque se pierden cortes cuando al cliente se le olvida la cita.
 
 - Estado: investigación terminada el 18/11/2026 y diseño de interfaz el 19/11/2026. Construcción desde el 19/11/2026: F1, F2 y F3 terminadas en código, F0 solo espera el trámite con Meta; el desarrollo local está en `README.md`. Los documentos están en `docs/`; el índice, en `README.md`. El plan de construcción está en `fases/` (F0 a F10); al cerrar una fase se actualiza su estado en `fases/README.md`.
 - Interfaz: `docs/11-interfaz.md` manda sobre colores, tipografía y pantallas. Monocromo con el amarillo `#F2F824` como único acento.
@@ -17,6 +17,7 @@ Una PWA de agendamiento para Possos Barber, una barbería de Ibagué (Colombia),
 7. **Datos personales.** Se cumple la Ley 1581 de 2012 (habeas data): hay autorización explícita al registrarse y una política de tratamiento visible. El teléfono de un cliente nunca se muestra a otro cliente.
 8. **No inventar datos del negocio.** Precios, horarios, servicios y textos de la barbería salen del dueño. Lo que todavía no confirmó queda marcado como **[PENDIENTE]**.
 9. **Mobile first.** Se diseña y se prueba primero en un viewport de 390 px. Escritorio es una adaptación.
+10. **Skill de interfaz.** Antes de diseñar o crear cualquier pantalla, componente o estilo, y antes de revisar una interfaz, se carga la skill `ui-ux-pro-max` (en `.claude/skills/`). Sus resultados son recomendaciones: si chocan con `docs/11-interfaz.md` o con estas reglas, mandan el documento y las reglas. Por eso no se adoptan paletas, tipografías ni estilos que proponga la skill.
 
 ## Decisiones del dueño (18/11/2026)
 

@@ -8,7 +8,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: "Possos Barber",
-  description: "Reserva tu corte en Possos Barber, Ibagué.",
+  description: "Reserva tu corte en Possos Barber, Girardot.",
   // Los PNG de F1 (public/icons). El manifiesto de la PWA llega en F8.
   icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
 };

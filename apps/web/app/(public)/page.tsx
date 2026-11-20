@@ -115,6 +115,12 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       addressRegion: BUSINESS.region,
       addressCountry: BUSINESS.country,
     },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: BUSINESS.maps.latitude,
+      longitude: BUSINESS.maps.longitude,
+    },
+    hasMap: BUSINESS.maps.url,
     ...(ranges.length
       ? {
           openingHoursSpecification: ranges.map((r) => ({
@@ -213,6 +219,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           </h2>
           <p className="text-body">
             {BUSINESS.address ?? `Dirección ${PENDING}`}
+            {BUSINESS.addressReference ? (
+              <span className="block text-fg-muted">{BUSINESS.addressReference}</span>
+            ) : null}
             <span className="block text-fg-muted">
               {BUSINESS.city}, {BUSINESS.region}
             </span>

@@ -141,7 +141,7 @@ En unos 5 minutos el botón "Continuar con Google" aparece solo en `/ingresar` y
 
 La cuenta de Juan (desarrollador, con Google) es administradora en producción desde el 19/11/2026, sin rol de barbero ni fila en `barbers`, para no aparecer en la agenda ni en "cualquiera disponible". Se dio con un `insert` en `staff_roles`, no con el script, que también la volvería barbero. Como administrador ve los datos de todos los clientes: es encargado del tratamiento (Ley 1581) y la política del dueño debe contemplarlo.
 
-Falta después (F6 o F9): enlazar al barbero con sus servicios (`barber_services`) y cargar su horario, cuando el dueño los dé.
+El 19/11/2026 el dueño creó su cuenta con Google y quedó como administrador y barbero ("Santiago Possos", 50 %), con el mismo SQL del script corrido con `supabase db query --remote`. En la misma transacción se cargaron sus 9 servicios de Beunik con precio y duración, enlazados en `barber_services`. Falta su horario, cuando lo dé.
 
 ## Pendiente
 

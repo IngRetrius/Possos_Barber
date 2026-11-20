@@ -1,6 +1,6 @@
 # Possos Barber: sitio web y agendamiento
 
-Sitio web de Possos Barber, una barbería de Ibagué (Colombia): una PWA donde los clientes reservan su corte y una agenda para el barbero. Su objetivo es reemplazar Beunik con recordatorios automáticos por WhatsApp que cuesten mucho menos, para que se pierdan menos citas por olvido.
+Sitio web de Possos Barber, una barbería de Girardot, Cundinamarca (Colombia): una PWA donde los clientes reservan su corte y una agenda para el barbero. Su objetivo es reemplazar Beunik con recordatorios automáticos por WhatsApp que cuesten mucho menos, para que se pierdan menos citas por olvido.
 
 **Estado:** investigación y diseño terminados (19/11/2026). Construcción en curso: F1 (sistema de diseño), F2 (base de datos de la agenda y de los cobros), F3 (cuentas y datos personales) y F4 (página pública y reserva) terminadas en código; el estado de cada fase está en [fases/](fases/README.md).
 
