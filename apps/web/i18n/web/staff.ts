@@ -145,6 +145,8 @@ const es = {
     },
     timeOff: {
       title: "Bloqueos",
+      weeklyHint:
+        "Lo que se repite cada semana, como el almuerzo, va en el <link>Horario semanal</link> con dos rangos por día. Los bloqueos son para fechas puntuales: vacaciones, una diligencia o un festivo.",
       allDay: "{date}, todo el día",
       allDayRange: "{from} a {to}, todo el día",
       range: "{from}, {start} a {end}",
@@ -401,6 +403,8 @@ const en: typeof es = {
     },
     timeOff: {
       title: "Time off",
+      weeklyHint:
+        "Things that repeat every week, like lunch, go in <link>Weekly hours</link> with two ranges per day. Blocks are for specific dates: vacation, an errand or a holiday.",
       allDay: "{date}, all day",
       allDayRange: "{from} to {to}, all day",
       range: "{from}, {start} to {end}",

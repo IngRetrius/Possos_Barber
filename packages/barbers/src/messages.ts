@@ -67,7 +67,9 @@ const es = {
     end: "Hora de fin",
     reason: "Motivo",
     reasonHint: "Opcional. Solo lo ve el personal.",
-    reasonPlaceholder: "Almuerzo, vacaciones...",
+    reasonPlaceholder: "Vacaciones, diligencia...",
+    continuous:
+      "Con fechas distintas, el bloqueo va de corrido: empieza el primer día a la hora de inicio y termina el último día a la hora de fin. Para unas horas todos los días, usa el Horario semanal.",
     blocking: "Bloqueando...",
     block: "Bloquear",
     conflicts:
@@ -156,7 +158,9 @@ const en: typeof es = {
     end: "End time",
     reason: "Reason",
     reasonHint: "Optional. Only staff see it.",
-    reasonPlaceholder: "Lunch, vacation...",
+    reasonPlaceholder: "Vacation, errand...",
+    continuous:
+      "With different dates, the block is continuous: it starts on the first day at the start time and ends on the last day at the end time. For a few hours every day, use Weekly hours.",
     blocking: "Blocking...",
     block: "Block",
     conflicts:

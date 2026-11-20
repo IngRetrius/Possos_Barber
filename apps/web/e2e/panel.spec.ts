@@ -209,9 +209,21 @@ test("un bloqueo encima de una cita la muestra para moverla o cancelarla", async
   const booked = await bookFreeSlot(SEED.customer, day);
 
   await signIn(page, SEED.admin, "/panel/bloqueos");
+  // Lo que se repite, como el almuerzo, va en el horario semanal; con fechas distintas y horas,
+  // el formulario avisa que el bloqueo es de corrido (pedido del dueño, 20/11/2026).
+  await expect(page.getByRole("link", { name: "Horario semanal" })).toHaveAttribute(
+    "href",
+    "/panel/horario",
+  );
+  const nextDay = new Date(Date.parse(`${day}T12:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+  const continuous = page.getByText(/el bloqueo va de corrido/);
   await page.getByLabel("Desde").fill(day);
-  await page.getByLabel("Hasta").fill(day);
+  await page.getByLabel("Hasta").fill(nextDay);
+  await expect(continuous).toHaveCount(0);
   await page.getByText("Todo el día").click();
+  await expect(continuous).toBeVisible();
+  await page.getByLabel("Hasta").fill(day);
+  await expect(continuous).toHaveCount(0);
   await page.getByLabel("Hora de inicio").fill(bogotaTime(booked.startAt));
   await page.getByLabel("Hora de fin").fill(bogotaTime(booked.startAt, 60));
   await page.getByLabel("Motivo").fill(`${E2E_PREFIX} bloqueo`);

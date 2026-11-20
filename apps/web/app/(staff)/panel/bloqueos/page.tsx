@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { holidaysBetween } from "@possos/barbers";
 import { listTimeOff } from "@possos/barbers/server";
@@ -96,6 +97,15 @@ export default async function TimeOffPage() {
           <>
             <section className="grid gap-3">
               <h2 className="text-heading">{t("timeOff.newBlock")}</h2>
+              <p className="text-body text-fg-muted">
+                {t.rich("timeOff.weeklyHint", {
+                  link: (chunks) => (
+                    <Link href="/panel/horario" className="text-fg underline underline-offset-4">
+                      {chunks}
+                    </Link>
+                  ),
+                })}
+              </p>
               <TimeOffForm
                 key={barber.id}
                 action={createTimeOffAction}

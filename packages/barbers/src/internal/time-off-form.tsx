@@ -51,6 +51,17 @@ export function TimeOffForm({ action, barberId, defaultDate }: TimeOffFormProps)
         noValidate
       >
         <input type="hidden" name="barbero" value={barberId} />
+        <Checkbox
+          name="todo_el_dia"
+          value="si"
+          checked={allDay}
+          onChange={(e) => setAllDay(e.target.checked)}
+        >
+          {t("allDay")}
+        </Checkbox>
+        {/* Cada fecha lleva su hora al lado: el bloqueo va de un momento a otro, de corrido. Con
+            las dos fechas en una fila y las dos horas debajo se leía "cada día de tal a tal hora",
+            y un almuerzo "hasta 2030" tapaba la agenda entera (pedido del dueño, 20/11/2026). */}
         <div className="grid grid-cols-2 gap-3">
           <Field label={t("from")} error={errors.from} className="min-w-0">
             <Input
@@ -65,6 +76,18 @@ export function TimeOffForm({ action, barberId, defaultDate }: TimeOffFormProps)
               }}
             />
           </Field>
+          {allDay ? null : (
+            <Field label={t("start")} error={errors.time} className="min-w-0">
+              <Input
+                type="time"
+                name="inicio"
+                step={300}
+                defaultValue="12:00"
+                required
+                className="w-0 min-w-full px-3"
+              />
+            </Field>
+          )}
           <Field label={t("to")} error={errors.to} className="min-w-0">
             <Input
               type="date"
@@ -76,27 +99,7 @@ export function TimeOffForm({ action, barberId, defaultDate }: TimeOffFormProps)
               onChange={(e) => setTo(e.target.value)}
             />
           </Field>
-        </div>
-        <Checkbox
-          name="todo_el_dia"
-          value="si"
-          checked={allDay}
-          onChange={(e) => setAllDay(e.target.checked)}
-        >
-          {t("allDay")}
-        </Checkbox>
-        {allDay ? null : (
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={t("start")} error={errors.time} className="min-w-0">
-              <Input
-                type="time"
-                name="inicio"
-                step={300}
-                defaultValue="12:00"
-                required
-                className="w-0 min-w-full px-3"
-              />
-            </Field>
+          {allDay ? null : (
             <Field label={t("end")} className="min-w-0">
               <Input
                 type="time"
@@ -107,8 +110,11 @@ export function TimeOffForm({ action, barberId, defaultDate }: TimeOffFormProps)
                 className="w-0 min-w-full px-3"
               />
             </Field>
-          </div>
-        )}
+          )}
+        </div>
+        <p aria-live="polite" className="text-caption text-fg-muted empty:hidden">
+          {!allDay && from !== to ? t("continuous") : null}
+        </p>
         <Field label={t("reason")} hint={t("reasonHint")}>
           <Input name="motivo" maxLength={80} placeholder={t("reasonPlaceholder")} />
         </Field>
