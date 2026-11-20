@@ -218,6 +218,60 @@ test("la barra Reservar se esconde mientras se ven los servicios", async ({ page
   await expect(page.getByRole("heading", { name: "Servicios" })).toBeFocused();
 });
 
+test("la portada lleva el logo, el nombre y Reservar, y el tijeretazo sale una vez por sesión", async ({
+  browser,
+}) => {
+  // Cuenta las animaciones del mango del logo (LogoIntro usa Element.animate).
+  const countSnips = () => {
+    const original = Element.prototype.animate;
+    (window as unknown as { snips: number }).snips = 0;
+    Element.prototype.animate = function (...args) {
+      if (this.getAttribute("data-part") === "handle") {
+        (window as unknown as { snips: number }).snips++;
+      }
+      return original.apply(this, args);
+    };
+  };
+  const snips = (page: Page) => page.evaluate(() => (window as unknown as { snips: number }).snips);
+  // La barra pasa de "pending" a "hidden" en un efecto: para entonces ya hidrató el logo.
+  const hydrated = (page: Page) => expect(bottomBar(page)).toHaveAttribute("data-state", "hidden");
+
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await page.addInitScript(countSnips);
+  await page.goto("/");
+  const hero = page.locator("#portada");
+  await expect(hero.getByRole("heading", { name: "Possos Barber", level: 1 })).toBeVisible();
+  // El logo es decorativo: el nombre ya está escrito al lado.
+  await expect(hero.locator('[data-slot="logo"]')).toHaveAttribute("aria-hidden", "true");
+  await hydrated(page);
+  await expect.poll(() => snips(page)).toBe(1);
+  await expectAccessible(page);
+
+  // Al volver en la misma sesión, el logo queda quieto.
+  await page.reload();
+  await hydrated(page);
+  expect(await snips(page)).toBe(0);
+
+  // "Reservar" de la portada sube a la lista, como el de la barra.
+  await hero.getByRole("link", { name: "Reservar" }).tap();
+  await expect(page).toHaveURL("/");
+  await expect(page.getByRole("heading", { name: "Servicios" })).toBeFocused();
+  await context.close();
+
+  // Con movimiento reducido no hay tijeretazo.
+  const calm = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    reducedMotion: "reduce",
+  });
+  const calmPage = await calm.newPage();
+  await calmPage.addInitScript(countSnips);
+  await calmPage.goto("/");
+  await hydrated(calmPage);
+  expect(await snips(calmPage)).toBe(0);
+  await calm.close();
+});
+
 test("con varios servicios, Reservar de la barra sube a la lista", async ({ page }) => {
   try {
     await addTestService(`${E2E_PREFIX} servicio de la barra`);

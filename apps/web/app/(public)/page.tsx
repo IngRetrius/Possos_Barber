@@ -25,10 +25,11 @@ import { getMyProfile } from "@possos/customers/server";
 import { createClient } from "@possos/supabase/server";
 import { parseLocale } from "@possos/config/constants";
 import type { Enums } from "@possos/supabase";
-import { Button, formatters, Logo, StatusBadge } from "@possos/ui";
+import { Button, formatters, LogoIntro, StatusBadge } from "@possos/ui";
 import { BUSINESS, mapsEmbedUrl, mapsUrl, SHOW_PENDING, siteUrl } from "../../lib/business";
 import { loadBookingFlow, loadServiceEntries, timeStepHref } from "../../lib/booking-flow";
 import { MY_APPOINTMENTS_PATH, PROFILE_PATH, STAFF_HOME } from "../../lib/session";
+import { BookLink } from "../_components/book-link";
 import { HomeBookBar } from "../_components/home-book-bar";
 import { LocaleSwitch } from "../_components/locale-switch";
 import { ServiceBooking } from "../_components/service-booking";
@@ -131,6 +132,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
   const whatsapp = barberList.find((b) => b.whatsapp_url)?.whatsapp_url ?? null;
   const map = mapsEmbedUrl(f.locale);
   const mapLink = mapsUrl();
+  const tagline = BUSINESS.tagline?.[f.locale] ?? (SHOW_PENDING ? t("taglinePending") : null);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -171,14 +173,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         // JSON sin "<" para que no cierre la etiqueta (recomendación de Next).
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      {/* El nombre va junto al logo y es el título de la página (pedido de Juan, 19/11/2026). */}
-      <header className="flex min-h-14 items-center justify-between gap-2 pr-2 pl-gutter pt-safe">
-        <div className="flex min-w-0 items-center gap-2">
-          <Logo label="" />
-          <h1 className="truncate text-heading text-brand">{BUSINESS.name}</h1>
-        </div>
-        {/* El botón de idioma va en el pie, no aquí: el encabezado queda con lo de la cuenta
-            (pedido de Juan, 20/11/2026). */}
+      {/* El logo y el nombre están en la portada; arriba solo queda lo de la cuenta. El botón de
+          idioma va en el pie (pedido de Juan, 20/11/2026). */}
+      <header className="flex min-h-14 items-center justify-end gap-2 pr-2 pl-gutter pt-safe">
         <nav aria-label={t("nav.label")} className="flex shrink-0 items-center">
           {viewer && !viewer.isStaff ? (
             <Button asChild variant="ghost" className="px-2 text-fg-muted hover:text-fg">
@@ -199,7 +196,42 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             {t("profileSaved")}
           </p>
         ) : null}
-        {/* Sin frase ni cita no se pinta nada: un contenedor vacío dejaría un hueco de separación. */}
+        {/* Portada (pedido del dueño, 20/11/2026: "le falta el logo, medio animación, un tiz de
+            color"): el monograma grande con su tijeretazo, el nombre (el título de la página), la
+            frase y "Reservar" en amarillo. Mientras se ve, la barra fija se esconde. */}
+        <section
+          id="portada"
+          aria-labelledby="nombre"
+          className="grid justify-items-center gap-5 pt-2 text-center"
+        >
+          <div className="relative grid animate-rise place-items-center">
+            <div
+              aria-hidden
+              className="absolute size-64 rounded-full bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--brand)_12%,transparent),transparent)]"
+            />
+            <LogoIntro size={128} label="" className="relative" />
+          </div>
+          <div className="grid gap-2">
+            <h1
+              id="nombre"
+              className="animate-rise text-title tracking-[0.2em] text-brand uppercase [animation-delay:70ms]"
+            >
+              {BUSINESS.name}
+            </h1>
+            {tagline ? (
+              <p className="animate-rise text-body text-fg-muted [animation-delay:140ms]">
+                {tagline}
+              </p>
+            ) : null}
+          </div>
+          <BookLink
+            href={bookHref}
+            targetId="lista-servicios"
+            scrollToTarget={chooseService}
+            className="w-full animate-rise [animation-delay:210ms] md:max-w-xs"
+          />
+        </section>
+
         {upcoming ? (
           <Link
             href={MY_APPOINTMENTS_ROUTES.detail(upcoming.id)}
@@ -217,10 +249,6 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             </span>
             <span className="text-label underline underline-offset-4">{t("upcoming.open")}</span>
           </Link>
-        ) : BUSINESS.tagline || SHOW_PENDING ? (
-          <p className="text-body text-fg-muted">
-            {BUSINESS.tagline?.[f.locale] ?? t("taglinePending")}
-          </p>
         ) : null}
 
         {works.length > 0 || SHOW_PENDING ? (
@@ -371,7 +399,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       <HomeBookBar
         href={bookHref}
         targetId="lista-servicios"
-        hideWhileVisible={["lista-servicios"]}
+        hideWhileVisible={["portada", "lista-servicios"]}
         scrollToTarget={chooseService}
       />
     </div>

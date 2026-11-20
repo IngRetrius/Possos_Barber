@@ -18,7 +18,7 @@ Ordenadas por lo que bloquean. Cada una trae un valor por omisión para no deten
 | 8 | **Intervalo de inicio** cuando haya servicios de 30 o 45 min | Dueño | 60 min hasta que lo cambie | Disponibilidad |
 | 9 | **Dominio** del sitio | Dueño y Juan | [PENDIENTE] | Lanzamiento, OAuth de Google y webhook de Meta |
 | 10 | **Migrar clientes de Beunik:** ¿Beunik permite exportarlos? | Juan (preguntar a Beunik) | Sin migración en el MVP | Fase 2 |
-| 11 | **Logo en vector (SVG)** y fotos propias para la página y el portafolio | Dueño | El PNG de [marca/logo-possos-negro.png](marca/logo-possos-negro.png), recortado ([11](11-interfaz.md#logo)) | Diseño de la página |
+| 11 | **Logo en vector (SVG)** y fotos propias para la página y el portafolio | Dueño | Logo: vector pasado desde el PNG el 20/11/2026 ([marca/logo-possos.svg](marca/logo-possos.svg), ver [11](11-interfaz.md#logo)); falta el visto bueno del dueño, o el archivo original si lo tiene. Fotos: [PENDIENTE] | Diseño de la página |
 | 12 | Detalles de la **tarjeta de sellos** (cuántos cortes, qué premio) | Dueño | 10 cortes, 1 gratis | Fase 2 |
 | 13 | **Resuelta el 19/11/2026.** Porcentaje del barbero: 50 % para todos los servicios ([09](09-modelo-datos.md#commissions)) | Dueño | | |
 | 14 | **Reseñas de Beunik** (161, con 5,0): ¿se pueden exportar o enlazar? | Juan (preguntar a Beunik) | Se pierden; se piden reseñas en Google en la fase 2 | Ninguno |

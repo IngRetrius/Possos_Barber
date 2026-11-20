@@ -10,7 +10,7 @@ Estado de `packages/ui` al cerrar [F1](F1-sistema-diseno.md), el 19/11/2026. Es 
 | Colores para lo que no es CSS | `colors` de `@possos/ui` | Para `themeColor`, el manifiesto de F8 o un correo. En componentes se usan clases |
 | Formato | `formatDate`, `formatDateLong`, `formatTime`, `formatTimeShort`, `formatTimeRange`, `formatMonthYear`, `formatPrice`, `formatDuration`, `formatWeekdayShort`, `dayPeriod`, `toDateKey`, `bogotaParts` | Todo en hora de Bogotá, sin importar la zona del servidor |
 | Componentes | `@possos/ui` | `Button`, `BottomBar`, `TabBar`, `StepHeader`, `DateStrip`, `SlotGrid`, `SlotGridSkeleton`, `Sheet`, `SheetTrigger`, `SheetClose`, `List`, `ListRow`, `StatusBadge`, `Skeleton`, `EmptyState`, `InlineError`, `Toaster`, `toast`, `Field`, `Input`, `PhoneInput`, `Textarea`, `Checkbox`, `Logo`, `cn` |
-| Monograma | `packages/ui/src/assets/monograma{,@2x,@3x}.png` | Recortado del PNG del dueño. Se reemplaza por el SVG cuando llegue |
+| Monograma | `packages/ui/src/internal/components/logo-paths.ts` | Trazos del vector pasado desde el PNG del dueño el 20/11/2026 (antes, tres PNG recortados). El archivo está en `docs/marca/logo-possos.svg` |
 | Íconos de la PWA | `apps/web/public/icons/` | `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png`. Todavía no los usa ningún manifiesto (F8) |
 | Página de muestras | `apps/web/app/muestras/page.dev.tsx` | Todos los componentes y estados. Ver [Cómo verla](#cómo-ver-la-página-de-muestras) |
 | Reglas de lint | `packages/config/eslint/possos-plugin.js` | `possos/no-raw-color` y `possos/no-emoji`, en todos los paquetes |
@@ -42,7 +42,7 @@ Estado de `packages/ui` al cerrar [F1](F1-sistema-diseno.md), el 19/11/2026. Es 
 - **`PhoneInput` no valida**: muestra el +57 fijo y pide hasta 10 dígitos. La validación del celular colombiano y el formato E.164 son de F3.
 - **`StatusBadge` recibe un tono** (`success`, `warning`, `danger`, `neutral`) y un texto, porque `ui` no conoce las citas. La tabla de estado a tono y texto está en la página de muestras y debe pasar a `@possos/booking`: `confirmed` Confirmada (success), `booked` Sin confirmar (warning), `pending_approval` Pendiente de aprobación (warning), "Por cerrar" (warning), `no_show` No vino (danger), `completed` Completada, `cancelled` Cancelada y `rejected` Rechazada (neutral).
 - **`Toaster` no está en el layout raíz**; solo en la página de muestras. Se agrega al layout cuando la primera pantalla real use `toast`.
-- **`Logo`** pinta el PNG como máscara con el color `--brand`. `label=""` lo vuelve decorativo (cuando el nombre ya está escrito al lado).
+- **`Logo`** pinta el SVG en línea con `currentColor` en `--brand`. `label=""` lo vuelve decorativo (cuando el nombre ya está escrito al lado). `LogoIntro` es el mismo logo con el tijeretazo de la portada del inicio ([docs/11](../docs/11-interfaz.md#logo)).
 
 ### Formato
 

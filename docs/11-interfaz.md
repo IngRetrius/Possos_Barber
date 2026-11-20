@@ -107,9 +107,11 @@ Reglas:
 
 ### Logo
 
-- Archivo actual: [marca/logo-possos-negro.png](marca/logo-possos-negro.png), 1490 × 1600 px, gris `#BCBCBC` sobre negro puro. Es un PNG; hace falta el **vector (SVG)** para que se vea nítido en cualquier tamaño ([10](10-riesgos-decisiones-abiertas.md), decisión 11).
-- Mientras llega el SVG, se recorta el monograma, se quita el fondo y se exporta a 1x, 2x y 3x (hecho en F1: `packages/ui/src/assets/`; íconos de la PWA en `apps/web/public/icons/`).
-- Usos: encabezado de la página pública (28 px de alto), ícono de la PWA (monograma centrado sobre `#0B0B0B`, con margen para la versión *maskable*) y pantalla de inicio de la PWA.
+- Original del dueño: [marca/logo-possos-negro.png](marca/logo-possos-negro.png), 1490 × 1600 px, gris `#BCBCBC` sobre negro puro.
+- **Vector** (20/11/2026, pedido de Juan): [marca/logo-possos.svg](marca/logo-possos.svg), pasado desde ese PNG con potrace (suavizado antes de trazar para quitar el ruido de compresión, unos 130 segmentos de curva). Coincide con el original superpuesto; a 4 aumentos se notan ondulaciones mínimas en algunos bordes rectos, invisibles a los tamaños de la app. Si el dueño tiene el archivo original de quien diseñó el logo, se cambia por ese ([10](10-riesgos-decisiones-abiertas.md), decisión 11).
+- Tiene dos piezas: el **cuerpo** (la P, la diagonal y el aro izquierdo) y el **mango** (el aro derecho con su tallo, que pasa por debajo de la diagonal). `Logo` de `@possos/ui` lo pinta como SVG en línea con `currentColor` en `--brand`; con colores forzados toma el color del sistema. Los trazos viven en `packages/ui/src/internal/components/logo-paths.ts`.
+- **Tijeretazo** (`LogoIntro`, solo en la portada del inicio): el mango gira 14° hacia el otro aro y vuelve, en 520 ms, 300 ms después de hidratar. Es la excepción a los 150 a 200 ms de [Espacio, forma y movimiento](#espacio-forma-y-movimiento): es la firma de la marca, no una transición de la interfaz. No esconde nada (antes de hidratar y sin JavaScript el logo se ve quieto), sale una vez por sesión del navegador (`sessionStorage`) y no sale con `prefers-reduced-motion`.
+- Usos: encabezados de las pantallas de cuenta (28 px de alto), portada del inicio (128 px), ícono de la PWA (monograma centrado sobre `#0B0B0B`, con margen para la versión *maskable*) y pantalla de inicio de la PWA. Los íconos de la PWA (`apps/web/public/icons/`) siguen saliendo del recorte en PNG de F1.
 
 ## Pantallas del cliente
 
@@ -119,10 +121,16 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 
 ```
 ┌──────────────────────────────────┐
-│ [P] Possos Barber   Ingresar     │  el nombre es el título (h1); la navegación, en gris
+│                        Ingresar  │  arriba solo la navegación, en gris
 │                                  │
-│ ¡El barbero más viral de         │  frase del dueño (20/11/2026), en gris
-│ Girardot!                        │
+│               ▄▄▄                │  portada (20/11/2026): monograma de 128 px
+│              [ P ]               │  con un brillo gris detrás y su tijeretazo
+│               ▀▀▀                │
+│        P O S S O S  B A R B E R  │  el nombre es el título (h1), en mayúsculas
+│                                  │  espaciadas y en el gris del logo
+│  ¡El barbero más viral de        │  frase del dueño, en gris
+│            Girardot!             │
+│ [           Reservar           ] │  amarillo: el único de la zona
 │                                  │
 │ Trabajos    Ver más en Instagram │
 │ ┌───────────┐ ┌───────────┐ ┌──  │  fotos 3:4 que se deslizan de lado;
@@ -165,11 +173,16 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 │ ──────────────────────────────── │
 │ [文A English]                    │  pie: botón de idioma
 ├──────────────────────────────────┤
-│ [          Reservar          ]   │  barra fija; escondida mientras se ven los servicios
-└──────────────────────────────────┘
+│ [          Reservar          ]   │  barra fija; escondida mientras se ven la portada
+└──────────────────────────────────┘  o los servicios
 ```
 
-- Si el cliente ya tiene una cita próxima, la primera tarjeta es esa cita ("Tu cita: jue 20 nov, 3:00 p. m.") en vez de la frase.
+- **Portada** (20/11/2026, pedido del dueño: "le falta como un toque: el logo, medio animación, un tiz de color"; referencia: la portada de El Acicale, en Cali). Antes el logo solo salía a 28 px junto al nombre y el amarillo casi no se veía en el inicio, porque la barra "Reservar" se esconde mientras están los servicios.
+  - El monograma a 128 px con su tijeretazo ([Logo](#logo)) y un brillo detrás: un degradado radial de `--brand` al 12 % que se desvanece, monocromo. Debajo, el nombre como título (h1) en mayúsculas espaciadas (0,2 em) y en `--brand`, la frase del dueño y "Reservar" a todo el ancho (hasta 320 px en escritorio).
+  - El amarillo de la zona es "Reservar", que es la acción principal (principio 2 del color). Lleva a lo mismo que la barra: con un solo servicio sin adicionales, al horario; si no, sube a la lista y pone el foco en "Servicios". Mientras la portada se ve, la barra se esconde.
+  - Entrada: el logo, el nombre, la frase y el botón aparecen y suben 8 px en 200 ms cada uno, escalonados cada 70 ms (`animate-rise`, en `@possos/ui/styles.css`). Con movimiento reducido aparecen sin moverse.
+  - El Acicale usa dorado; aquí no se agrega otro color: el toque es el amarillo de los videos del dueño.
+- Si el cliente ya tiene una cita próxima, su tarjeta va justo debajo de la portada ("Tu cita: jue 20 nov, 3:00 p. m.").
 - **Próxima hora libre** se probó el 20/11/2026 (una tarjeta arriba con la hora más cercana del primer servicio y el botón amarillo a "Confirmar") y se quitó el mismo día por pedido de Juan: no hacía falta. Las próximas horas siguen en la tarjeta abierta de cada servicio.
 - **Trabajos** (20/11/2026, con las primeras fotos de Juan). El portafolio sube de la ficha del barbero a una sección arriba de "Servicios": en una barbería el cliente elige por los cortes que ve, y es lo que le da imagen al inicio sin usar el amarillo.
   - Una fila que se desliza de lado (`PortfolioStrip` de `@possos/barbers/ui`), con *scroll snap* y sin flechas, puntos ni rotación automática. Cada foto ocupa el 44 % del ancho: se ven dos y asoma la tercera, que es la pista de que hay más (NN/g, *Mobile Carousels*: el deslizamiento es familiar, pero lo que queda fuera de pantalla se descubre menos, así que aquí solo va contenido de apoyo). En escritorio caben tres sin deslizar. La fila es enfocable para moverla con el teclado.
@@ -368,7 +381,7 @@ Aparece si hay más de un servicio activo o si el único tiene adicionales. List
 Pedido de Juan el 20/11/2026: la app también en inglés, para quien no lee español.
 
 - **Botón ES/EN**. Dice el idioma al que cambia, escrito en ese idioma, con su `lang` para el lector de pantalla. Es un formulario con una acción de servidor: funciona sin JavaScript.
-  - **Inicio**: en el pie, debajo de Contacto, con el ícono de idiomas y el nombre completo ("English" en español, "Español" en inglés). No va en el encabezado, para que arriba solo queden el logo y la cuenta (pedido de Juan, 20/11/2026). La barra "Reservar" es sticky: al final de la página queda debajo del pie y no lo tapa.
+  - **Inicio**: en el pie, debajo de Contacto, con el ícono de idiomas y el nombre completo ("English" en español, "Español" en inglés). No va en el encabezado, para que arriba solo quede lo de la cuenta (pedido de Juan, 20/11/2026; el logo pasó a la portada el mismo día). La barra "Reservar" es sticky: al final de la página queda debajo del pie y no lo tapa.
   - **Demás pantallas** (cuentas, pasos de la reserva, Mis citas y panel): arriba a la derecha, corto ("EN" o "ES").
 - **Idioma automático**. Sin cookie, la app sale en el idioma del dispositivo (encabezado `Accept-Language` del navegador): el primero de la lista de preferencias que sea español o inglés, sin mirar la región. Si el dispositivo no está en ninguno de los dos, español. El botón manda sobre el dispositivo.
 - **El idioma elegido va en una cookie** (`NEXT_LOCALE`, un año), no en la URL. Así los enlaces de WhatsApp, de los correos y de los avisos sirven igual en los dos idiomas. `<html lang>` es `es-CO` o `en`.

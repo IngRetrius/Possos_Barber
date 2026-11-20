@@ -95,7 +95,7 @@ Se copian de shadcn/ui y se adaptan a los tokens. Ninguno sabe de citas ni de cl
 - **Las barras inferiores son `sticky`**: van como último hijo de un contenedor `flex min-h-dvh flex-col`. No necesitan espaciador.
 - **Casilla marcada en blanco, no en amarillo**, para que el amarillo siga siendo solo la acción principal.
 - **El botón principal deshabilitado se ve gris**, no amarillo apagado.
-- **`Logo`** usa el PNG como máscara y pinta con `--brand`; cambiar el gris es cambiar el token. Cuando llegue el SVG, se cambian los tres PNG por él.
+- **`Logo`** es un SVG en línea pintado con `--brand`; cambiar el gris es cambiar el token. Desde el 20/11/2026 usa el vector pasado desde el PNG (antes eran tres PNG como máscara).
 - **`Sheet` y la navegación:** si una acción de la hoja navega a otra página, se cierra primero y se navega en el siguiente render (comentario en `sheet.tsx`).
 - **Geist 1.9.2 tiene cifras tabulares**: sin `tnum` las cifras miden de 384 a 663 unidades, con `tnum` todas miden 600 (revisado con fontTools; Playwright lo comprueba en la página).
 

@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { useTranslations } from "next-intl";
-import { useEffect, useState, type MouseEvent } from "react";
-import { BottomBar, Button, cn, LinkPending } from "@possos/ui";
+import { useEffect, useState } from "react";
+import { BottomBar, cn } from "@possos/ui";
+import { BookLink } from "./book-link";
 
 interface HomeBookBarProps {
   /** A dónde lleva "Reservar" sin JavaScript (o con un solo servicio, al horario). */
@@ -11,9 +10,9 @@ interface HomeBookBarProps {
   /** Id de la sección de servicios: "Reservar" sube a ella. */
   targetId: string;
   /**
-   * Ids de lo que ya tiene su propio "Reservar" (la lista de servicios): mientras alguno se ve,
-   * la barra se esconde. Los que no estén en la página se ignoran; la
-   * lista siempre está.
+   * Ids de lo que ya tiene su propio "Reservar" (la portada y la lista de servicios): mientras
+   * alguno se ve, la barra se esconde. Los que no estén en la página se ignoran; la lista
+   * siempre está.
    */
   hideWhileVisible: string[];
   /** Con más de un servicio, "Reservar" sube a la lista en vez de abrir otra página con la misma. */
@@ -23,8 +22,9 @@ interface HomeBookBarProps {
 type BarState = "pending" | "visible" | "hidden";
 
 /**
- * Barra "Reservar" del inicio (docs/11). Mientras la lista de servicios está en pantalla se
- * esconde, porque ya tiene sus horas y su botón y no deben verse dos "Reservar". Al bajar al barbero o al mapa vuelve a aparecer.
+ * Barra "Reservar" del inicio (docs/11). Mientras la portada o la lista de servicios están en
+ * pantalla se esconde, porque ya tienen su propio "Reservar" y no deben verse dos. Al bajar al
+ * barbero o al mapa vuelve a aparecer.
  *
  * - Antes de hidratar (`pending`) se esconde solo si el navegador corre JavaScript
  *   (`scripting: enabled`): sin JavaScript queda fija y lleva a `href`, como siempre.
@@ -38,7 +38,6 @@ export function HomeBookBar({
   hideWhileVisible,
   scrollToTarget,
 }: HomeBookBarProps) {
-  const t = useTranslations("web.common");
   const [state, setState] = useState<BarState>("pending");
 
   // Un string para que el efecto no se repita en cada render por un arreglo nuevo.
@@ -64,17 +63,6 @@ export function HomeBookBar({
     return () => observer.disconnect();
   }, [watched]);
 
-  const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (!scrollToTarget) return;
-    const target = document.getElementById(targetId);
-    if (!target) return;
-    event.preventDefault();
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
-    // El foco va al título de la lista: el teclado y el lector de pantalla siguen desde ahí.
-    target.querySelector<HTMLElement>("[data-scroll-focus]")?.focus({ preventScroll: true });
-  };
-
   return (
     <BottomBar
       data-state={state}
@@ -86,12 +74,7 @@ export function HomeBookBar({
           "[@media(scripting:enabled)]:pointer-events-none [@media(scripting:enabled)]:invisible [@media(scripting:enabled)]:translate-y-full [@media(scripting:enabled)]:opacity-0",
       )}
     >
-      <Button asChild>
-        <Link href={href} onClick={onClick}>
-          {t("book")}
-          <LinkPending />
-        </Link>
-      </Button>
+      <BookLink href={href} targetId={targetId} scrollToTarget={scrollToTarget} />
     </BottomBar>
   );
 }
