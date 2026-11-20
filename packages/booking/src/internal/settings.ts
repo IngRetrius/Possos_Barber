@@ -18,7 +18,9 @@ export interface ValidBookingSettings {
 }
 
 export type BookingSettingsField = keyof BookingSettingsInput;
-export type BookingSettingsErrors = Partial<Record<BookingSettingsField, string>>;
+/** Clave del error; el formulario la traduce (`booking.settings`). */
+export type BookingSettingsError = "minutesRange" | "daysRange" | "thresholdRange";
+export type BookingSettingsErrors = Partial<Record<BookingSettingsField, BookingSettingsError>>;
 
 function whole(value: string, min: number, max: number): number | null {
   const text = value.trim();
@@ -33,13 +35,13 @@ export function validateBookingSettings(
 ): { ok: true; data: ValidBookingSettings } | { ok: false; errors: BookingSettingsErrors } {
   const errors: BookingSettingsErrors = {};
   const lead = whole(input.minLeadMin, 0, 10_080);
-  if (lead === null) errors.minLeadMin = "Escribe los minutos (0 a 10.080)";
+  if (lead === null) errors.minLeadMin = "minutesRange";
   const days = whole(input.maxDaysAhead, 1, 365);
-  if (days === null) errors.maxDaysAhead = "Escribe los días (1 a 365)";
+  if (days === null) errors.maxDaysAhead = "daysRange";
   const cancel = whole(input.cancelWindowMin, 0, 10_080);
-  if (cancel === null) errors.cancelWindowMin = "Escribe los minutos (0 a 10.080)";
+  if (cancel === null) errors.cancelWindowMin = "minutesRange";
   const threshold = whole(input.noShowThreshold, 1, 20);
-  if (threshold === null) errors.noShowThreshold = "Escribe un número de 1 a 20";
+  if (threshold === null) errors.noShowThreshold = "thresholdRange";
   if (Object.keys(errors).length) return { ok: false, errors };
   return {
     ok: true,

@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useId } from "react";
-import { Button, cn, formatDate, formatTime, LinkPending } from "@possos/ui";
+import { Button, cn, LinkPending, useFormat } from "@possos/ui";
 import type { QuickSlotDay } from "./quick-slots";
 
 export interface QuickSlotsProps {
@@ -16,9 +17,6 @@ export interface QuickSlotsProps {
   className?: string;
 }
 
-const RELATIVE = { today: "Hoy", tomorrow: "Mañana" } as const;
-const RELATIVE_IN_NAME = { today: "hoy", tomorrow: "mañana" } as const;
-
 /**
  * "Próximas horas" dentro de un servicio del inicio: hasta seis horas libres como enlaces que
  * llevan directo a "Confirmar", y "Ver todas las horas". Son enlaces armados en el servidor, así
@@ -27,19 +25,21 @@ const RELATIVE_IN_NAME = { today: "hoy", tomorrow: "mañana" } as const;
  * ("3:00 p. m., hoy, jue 20 nov"), para que la lista de enlaces del lector de pantalla no pierda el día.
  */
 export function QuickSlots({ days, hrefFor, moreHref, className }: QuickSlotsProps) {
+  const t = useTranslations("booking.quickSlots");
+  const f = useFormat();
   const id = useId();
   return (
     <div data-slot="quick-slots" className={cn("grid gap-4", className)}>
       {days === null ? null : days.length > 0 ? (
         <div className="grid gap-3">
-          <h3 className="text-label text-fg">Próximas horas</h3>
+          <h3 className="text-label text-fg">{t("title")}</h3>
           {days.map((day) => {
             const labelId = `${id}-${day.date}`;
             // "Mañana · vie 21 nov": la fecha evita confundir el día de mañana con la franja de
             // la mañana del paso de horario.
-            const date = formatDate(day.slots[0]!);
-            const dayLabel = day.relative ? `${RELATIVE[day.relative]} · ${date}` : date;
-            const dayInName = day.relative ? `${RELATIVE_IN_NAME[day.relative]}, ${date}` : date;
+            const date = f.date(day.slots[0]!);
+            const dayLabel = day.relative ? `${t(day.relative)} · ${date}` : date;
+            const dayInName = day.relative ? `${t(`${day.relative}InName`)}, ${date}` : date;
             return (
               <div key={day.date} role="group" aria-labelledby={labelId} className="grid gap-2">
                 <p id={labelId} className="text-caption text-fg-muted">
@@ -50,14 +50,14 @@ export function QuickSlots({ days, hrefFor, moreHref, className }: QuickSlotsPro
                     <li key={slot}>
                       <Link
                         href={hrefFor(slot)}
-                        aria-label={`${formatTime(slot)}, ${dayInName}`}
+                        aria-label={`${f.time(slot)}, ${dayInName}`}
                         className={cn(
                           "relative flex h-12 items-center justify-center rounded-card border border-border-strong px-1",
                           "text-label whitespace-nowrap text-fg tabular-nums transition-colors",
                           "hover:bg-surface-2 active:bg-surface-2",
                         )}
                       >
-                        {formatTime(slot)}
+                        {f.time(slot)}
                         <LinkPending />
                       </Link>
                     </li>
@@ -68,11 +68,11 @@ export function QuickSlots({ days, hrefFor, moreHref, className }: QuickSlotsPro
           })}
         </div>
       ) : (
-        <p className="text-body text-fg-muted">No hay horas libres en los próximos días.</p>
+        <p className="text-body text-fg-muted">{t("none")}</p>
       )}
       <Button asChild variant="secondary" className="w-full">
         <Link href={moreHref}>
-          Ver todas las horas
+          {t("more")}
           <LinkPending />
         </Link>
       </Button>

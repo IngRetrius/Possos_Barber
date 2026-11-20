@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { cn, formatDateLong, formatTimeRange } from "@possos/ui";
+import { useTranslations } from "next-intl";
+import { cn, useFormat } from "@possos/ui";
 
 export interface AppointmentSummaryProps {
   serviceName: string;
@@ -31,26 +32,28 @@ export function AppointmentSummary({
   footer,
   className,
 }: AppointmentSummaryProps) {
+  const t = useTranslations("booking.summary");
+  const f = useFormat();
   return (
     <section
-      aria-label="Resumen de la cita"
+      aria-label={t("label")}
       className={cn("grid gap-4 rounded-card border border-border bg-surface p-4", className)}
     >
       <div className="grid gap-1">
         <h2 className="text-heading">{serviceName}</h2>
-        <p className="text-body first-letter:uppercase">{formatDateLong(start)}</p>
-        <p className="text-body tabular-nums">{formatTimeRange(start, end)}</p>
+        <p className="text-body first-letter:uppercase">{f.dateLong(start)}</p>
+        <p className="text-body tabular-nums">{f.timeRange(start, end)}</p>
         <p className="text-body text-fg-muted">
-          {barberName ? `Con ${barberName}` : "Con el barbero que esté libre a esa hora"}
+          {barberName ? t("with", { name: barberName }) : t("anyBarber")}
         </p>
       </div>
       <dl className="grid gap-2 border-t border-border pt-4">
         <div className="flex items-baseline justify-between gap-4">
-          <dt className="text-body text-fg-muted">Total en la barbería</dt>
+          <dt className="text-body text-fg-muted">{t("total")}</dt>
           <dd className="text-label tabular-nums">{priceLabel}</dd>
         </div>
         <div className="flex items-baseline justify-between gap-4">
-          <dt className="text-body text-fg-muted">Dónde</dt>
+          <dt className="text-body text-fg-muted">{t("where")}</dt>
           <dd className="text-right text-body">{location}</dd>
         </div>
       </dl>

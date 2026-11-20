@@ -1,7 +1,8 @@
 import { MessageCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { whatsappChatUrl } from "@possos/customers";
-import { Button, formatDateLong, formatTimeRange, StatusBadge } from "@possos/ui";
+import { Button, StatusBadge, useFormat } from "@possos/ui";
 import type { AgendaAppointment } from "./agenda";
 import { APPOINTMENT_STATUS_DISPLAY, TO_CLOSE_DISPLAY } from "./status";
 
@@ -25,7 +26,11 @@ export function AppointmentDetail({
   toClose,
   children,
 }: AppointmentDetailProps) {
-  const display = toClose ? TO_CLOSE_DISPLAY : APPOINTMENT_STATUS_DISPLAY[a.status];
+  const t = useTranslations("booking.detail");
+  const f = useFormat();
+  const display = toClose
+    ? TO_CLOSE_DISPLAY[f.locale]
+    : APPOINTMENT_STATUS_DISPLAY[f.locale][a.status];
   const chat = whatsappChatUrl(a.customerPhone);
   return (
     <div className="grid gap-4">
@@ -33,38 +38,36 @@ export function AppointmentDetail({
         <Button asChild variant="secondary">
           <a href={chat} target="_blank" rel="noreferrer">
             <MessageCircle aria-hidden="true" strokeWidth={1.5} />
-            WhatsApp<span className="sr-only"> de {a.customerName}</span>
+            WhatsApp<span className="sr-only">{t("whatsappOf", { name: a.customerName })}</span>
           </a>
         </Button>
       ) : (
-        <p className="text-caption text-fg-muted">Este cliente no tiene celular registrado.</p>
+        <p className="text-caption text-fg-muted">{t("noPhone")}</p>
       )}
       <dl className="grid gap-3 rounded-card border border-border bg-surface p-4">
         <div className="grid gap-0.5">
-          <dt className="text-caption text-fg-muted">Fecha y hora</dt>
+          <dt className="text-caption text-fg-muted">{t("when")}</dt>
           <dd className="text-label tabular-nums">
-            {formatDateLong(a.start)}, {formatTimeRange(a.start, a.end)}
+            {f.dateLong(a.start)}, {f.timeRange(a.start, a.end)}
           </dd>
         </div>
         <div className="grid gap-0.5">
-          <dt className="text-caption text-fg-muted">Servicio</dt>
+          <dt className="text-caption text-fg-muted">{t("service")}</dt>
           <dd className="text-label">{a.serviceName}</dd>
         </div>
         <div className="grid gap-0.5">
-          <dt className="text-caption text-fg-muted">Estado</dt>
+          <dt className="text-caption text-fg-muted">{t("status")}</dt>
           <dd>
             <StatusBadge tone={display.tone}>{display.label}</StatusBadge>
           </dd>
         </div>
         <div className="grid gap-0.5">
-          <dt className="text-caption text-fg-muted">Valor de la reserva</dt>
+          <dt className="text-caption text-fg-muted">{t("price")}</dt>
           <dd className="text-label tabular-nums">{priceLabel}</dd>
         </div>
         <div className="grid gap-0.5">
-          <dt className="text-caption text-fg-muted">Origen</dt>
-          <dd className="text-body">
-            {a.source === "customer" ? "La reservó el cliente" : "La creó el personal"}
-          </dd>
+          <dt className="text-caption text-fg-muted">{t("source")}</dt>
+          <dd className="text-body">{a.source === "customer" ? t("byCustomer") : t("byStaff")}</dd>
         </div>
       </dl>
       {children}

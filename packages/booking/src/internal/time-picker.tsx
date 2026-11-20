@@ -2,18 +2,17 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createClient } from "@possos/supabase/client";
 import {
   BottomBar,
   Button,
   DateStrip,
-  formatDate,
-  formatDateLong,
-  formatTime,
   InlineError,
   SlotGrid,
   SlotGridSkeleton,
+  useFormat,
 } from "@possos/ui";
 import { bookingErrorMessage } from "./errors";
 import {
@@ -89,6 +88,8 @@ export function TimePicker({
   loadError = false,
   paths,
 }: TimePickerProps) {
+  const t = useTranslations("booking.timePicker");
+  const f = useFormat();
   const router = useRouter();
   // Al volver atrás, Next pinta esta página desde su caché con las props de la primera visita;
   // la URL sí tiene la hora que se eligió después (replaceState).
@@ -171,11 +172,11 @@ export function TimePicker({
       <InlineError
         action={
           <Button variant="secondary" onClick={() => startTransition(() => router.refresh())}>
-            Intentar de nuevo
+            {t("retry")}
           </Button>
         }
       >
-        No pudimos cargar las horas. Revisa tu conexión e intenta de nuevo
+        {t("loadError")}
       </InlineError>
     );
   } else if (loading) {
@@ -186,13 +187,11 @@ export function TimePicker({
     body = (
       <div className="grid gap-4 rounded-card border border-border bg-surface p-4">
         <p className="text-body text-fg-muted">
-          {nextDay
-            ? `El ${formatDateLong(day)} no tiene horas libres.`
-            : "No hay horas libres en los próximos días."}
+          {nextDay ? t("noSlotsDay", { date: f.dateLong(day) }) : t("noSlots")}
         </p>
         {nextDay ? (
           <Button variant="secondary" onClick={() => changeDay(nextDay)}>
-            Ver la próxima hora libre
+            {t("nextFree")}
           </Button>
         ) : null}
       </div>
@@ -200,11 +199,11 @@ export function TimePicker({
   }
 
   const summary = taken ? (
-    <span className="text-danger">{bookingErrorMessage("SLOT_TAKEN")}</span>
+    <span className="text-danger">{bookingErrorMessage("SLOT_TAKEN", f.locale)}</span>
   ) : selected ? (
-    `${formatDate(selected)} · ${formatTime(selected)}`
+    `${f.date(selected)} · ${f.time(selected)}`
   ) : (
-    <span className="text-fg-muted">Elige una hora</span>
+    <span className="text-fg-muted">{t("choose")}</span>
   );
 
   return (
@@ -232,11 +231,11 @@ export function TimePicker({
                 startAt: selected,
               })}
             >
-              Continuar
+              {t("continue")}
             </Link>
           </Button>
         ) : (
-          <Button disabled>Continuar</Button>
+          <Button disabled>{t("continue")}</Button>
         )}
       </BottomBar>
     </>

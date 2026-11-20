@@ -4,7 +4,9 @@
  * (`change_deadline` sale de `cancel_window_min` en `list_my_appointments`); aquí solo se decide
  * qué botones mostrar. No importa ./index para que dependency-cruiser no vea un ciclo.
  */
+import { DEFAULT_LOCALE, type Locale } from "@possos/config/constants";
 import { formatTime, type StatusTone } from "@possos/ui";
+import { messages } from "../messages";
 import type { Enums } from "@possos/supabase";
 import { APPOINTMENT_STATUS_DISPLAY } from "./status";
 
@@ -75,16 +77,18 @@ export function splitMyAppointments(
 export function myStatusDisplay(
   appointment: MyAppointment,
   now: Date,
+  locale: Locale = DEFAULT_LOCALE,
 ): { label: string; tone: StatusTone } {
   if (UPCOMING.includes(appointment.status) && !isUpcoming(appointment, now)) {
-    return { label: "Pasada", tone: "neutral" };
+    return { label: messages[locale].status.past, tone: "neutral" };
   }
-  return APPOINTMENT_STATUS_DISPLAY[appointment.status];
+  return APPOINTMENT_STATUS_DISPLAY[locale][appointment.status];
 }
 
-/** "a las 3:00 p. m." o, a la una, "a la 1:00 p. m.". */
-export function atTime(iso: string): string {
-  const time = formatTime(iso);
+/** "a las 3:00 p. m." o, a la una, "a la 1:00 p. m."; en inglés, "at 3:00 PM". */
+export function atTime(iso: string, locale: Locale = DEFAULT_LOCALE): string {
+  const time = formatTime(iso, locale);
+  if (locale === "en") return `at ${time}`;
   return `${time.startsWith("1:") ? "a la" : "a las"} ${time}`;
 }
 

@@ -1,24 +1,46 @@
 /*
- * Cómo se muestra cada estado de una cita (docs/11 y la página de muestras de F1). El tono es el
- * de `StatusBadge` de @possos/ui. No importa ./index para que dependency-cruiser no vea un ciclo.
+ * Cómo se muestra cada estado de una cita (docs/11 y la página de muestras de F1), en cada idioma.
+ * El tono es el de `StatusBadge` de @possos/ui. No importa ./index para que dependency-cruiser no
+ * vea un ciclo.
  */
+import { LOCALES, type Locale } from "@possos/config/constants";
 import type { StatusTone } from "@possos/ui";
 import type { Enums } from "@possos/supabase";
+import { messages } from "../messages";
 
 type AppointmentStatus = Enums<"appointment_status">;
+type StatusDisplay = { label: string; tone: StatusTone };
 
-export const APPOINTMENT_STATUS_DISPLAY: Record<
-  AppointmentStatus,
-  { label: string; tone: StatusTone }
-> = {
-  confirmed: { label: "Confirmada", tone: "success" },
-  booked: { label: "Sin confirmar", tone: "warning" },
-  pending_approval: { label: "Pendiente de aprobación", tone: "warning" },
-  no_show: { label: "No vino", tone: "danger" },
-  completed: { label: "Completada", tone: "neutral" },
-  cancelled: { label: "Cancelada", tone: "neutral" },
-  rejected: { label: "Rechazada", tone: "neutral" },
+const TONE: Record<AppointmentStatus, StatusTone> = {
+  confirmed: "success",
+  booked: "warning",
+  pending_approval: "warning",
+  no_show: "danger",
+  completed: "neutral",
+  cancelled: "neutral",
+  rejected: "neutral",
 };
 
+function byLocale<T>(build: (locale: Locale) => T): Record<Locale, T> {
+  return Object.fromEntries(LOCALES.map((locale) => [locale, build(locale)])) as Record<Locale, T>;
+}
+
+/** `APPOINTMENT_STATUS_DISPLAY[locale][status]`: nombre del estado y tono. */
+export const APPOINTMENT_STATUS_DISPLAY: Record<
+  Locale,
+  Record<AppointmentStatus, StatusDisplay>
+> = byLocale(
+  (locale) =>
+    Object.fromEntries(
+      (Object.keys(TONE) as AppointmentStatus[]).map((status) => [
+        status,
+        { label: messages[locale].status[status], tone: TONE[status] },
+      ]),
+    ) as Record<AppointmentStatus, StatusDisplay>,
+);
+
 /** "Por cerrar": cita pasada que el barbero todavía no marca (no es un estado de la base). */
-export const TO_CLOSE_DISPLAY = { label: "Por cerrar", tone: "warning" } as const;
+export const TO_CLOSE_DISPLAY: Record<Locale, StatusDisplay> = byLocale((locale) => ({
+  label: messages[locale].status.toClose,
+  tone: "warning",
+}));

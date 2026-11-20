@@ -94,6 +94,7 @@ export {
 export { BOOKING_ERROR_CODES, bookingErrorMessage, type BookingErrorCode } from "./internal/errors";
 export {
   validateBookingSettings,
+  type BookingSettingsError,
   type BookingSettingsErrors,
   type BookingSettingsField,
   type BookingSettingsInput,

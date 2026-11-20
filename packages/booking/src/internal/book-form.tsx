@@ -1,10 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useActionState, type ReactNode } from "react";
 import { BottomBar, Button } from "@possos/ui";
 
 export interface BookFormState {
-  /** Error ya en español (`bookingErrorMessage`). */
+  /** Error ya en el idioma de la persona (`bookingErrorMessage`). */
   error?: string;
 }
 
@@ -25,6 +26,7 @@ export interface BookFormProps {
 
 /** Barra inferior de "Confirmar" con el botón "Reservar". */
 export function BookForm({ action, serviceId, barberId, date, startAt, summary }: BookFormProps) {
+  const t = useTranslations("booking.book");
   const [state, formAction, pending] = useActionState(action, {});
   return (
     <BottomBar summary={state.error ? <span className="text-danger">{state.error}</span> : summary}>
@@ -34,7 +36,7 @@ export function BookForm({ action, serviceId, barberId, date, startAt, summary }
         <input type="hidden" name="fecha" value={date} />
         <input type="hidden" name="hora" value={startAt} />
         <Button type="submit" disabled={pending} aria-busy={pending}>
-          {pending ? "Reservando..." : "Reservar"}
+          {pending ? t("pending") : t("submit")}
         </Button>
       </form>
     </BottomBar>

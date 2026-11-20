@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Button, cn, formatDate, formatTime, StatusBadge } from "@possos/ui";
+import { useTranslations } from "next-intl";
+import { Button, cn, StatusBadge, useFormat } from "@possos/ui";
 import { rebookHref } from "./my-appointment-card";
 import { myStatusDisplay, type MyAppointment } from "./my-appointments";
 
@@ -15,6 +16,8 @@ export interface MyAppointmentHistoryProps {
  * reservar" (si el servicio sigue activo). No abre la cita: lo que importa es volver a reservar.
  */
 export function MyAppointmentHistory({ appointments, now, className }: MyAppointmentHistoryProps) {
+  const t = useTranslations("booking.card");
+  const f = useFormat();
   const at = new Date(now);
   return (
     <ul
@@ -24,21 +27,24 @@ export function MyAppointmentHistory({ appointments, now, className }: MyAppoint
       )}
     >
       {appointments.map((appointment) => {
-        const status = myStatusDisplay(appointment, at);
+        const status = myStatusDisplay(appointment, at, f.locale);
         const href = rebookHref(appointment);
         return (
           <li key={appointment.id} className="flex min-h-16 items-center gap-3 px-4 py-3">
             <div className="grid min-w-0 flex-1 gap-1">
               <p className="truncate text-label">{appointment.serviceName}</p>
               <p className="text-caption text-fg-muted tabular-nums">
-                {formatDate(appointment.start)}, {formatTime(appointment.start)}
+                {f.date(appointment.start)}, {f.time(appointment.start)}
               </p>
               <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
             </div>
             {href ? (
               <Button asChild variant="secondary" className="shrink-0 px-4">
-                <Link href={href} aria-label={`Volver a reservar ${appointment.serviceName}`}>
-                  Volver a reservar
+                <Link
+                  href={href}
+                  aria-label={t("rebookService", { service: appointment.serviceName })}
+                >
+                  {t("rebook")}
                 </Link>
               </Button>
             ) : null}

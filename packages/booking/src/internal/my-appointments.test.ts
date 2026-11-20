@@ -1,3 +1,4 @@
+import { APPOINTMENT_STATUS_DISPLAY } from "./status";
 import { describe, expect, it } from "vitest";
 import {
   atTime,
@@ -120,5 +121,13 @@ describe("atTime", () => {
     expect(atTime("2026-11-20T20:00:00.000Z")).toBe("a las 3:00\u00a0p.\u00a0m.");
     expect(atTime("2026-11-20T18:00:00.000Z")).toBe("a la 1:00\u00a0p.\u00a0m.");
     expect(atTime("2026-11-20T16:00:00.000Z")).toBe("a las 11:00\u00a0a.\u00a0m.");
+  });
+});
+
+describe("en inglés", () => {
+  it("dice la hora con at y los estados en inglés", () => {
+    expect(atTime("2026-11-20T18:00:00.000Z", "en").replaceAll(" ", " ")).toBe("at 1:00 PM");
+    expect(APPOINTMENT_STATUS_DISPLAY.en.booked.label).toBe("Not confirmed");
+    expect(APPOINTMENT_STATUS_DISPLAY.es.booked.label).toBe("Sin confirmar");
   });
 });

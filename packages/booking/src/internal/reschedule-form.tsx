@@ -1,10 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useActionState, type ReactNode } from "react";
 import { BottomBar, Button } from "@possos/ui";
 
 export interface RescheduleFormState {
-  /** Error ya en español (`bookingErrorMessage`). */
+  /** Error ya en el idioma de la persona (`bookingErrorMessage`). */
   error?: string;
 }
 
@@ -32,6 +33,7 @@ export function RescheduleForm({
   startAt,
   summary,
 }: RescheduleFormProps) {
+  const t = useTranslations("booking.reschedule");
   const [state, formAction, pending] = useActionState(action, {});
   return (
     <BottomBar summary={state.error ? <span className="text-danger">{state.error}</span> : summary}>
@@ -40,7 +42,7 @@ export function RescheduleForm({
         <input type="hidden" name="fecha" value={date} />
         <input type="hidden" name="hora" value={startAt} />
         <Button type="submit" disabled={pending} aria-busy={pending}>
-          {pending ? "Cambiando..." : "Cambiar la hora"}
+          {pending ? t("pending") : t("submit")}
         </Button>
       </form>
     </BottomBar>

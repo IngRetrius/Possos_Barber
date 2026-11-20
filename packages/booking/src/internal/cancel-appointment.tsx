@@ -1,21 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useState, useTransition } from "react";
-import {
-  Button,
-  formatDate,
-  InlineError,
-  Sheet,
-  SheetClose,
-  SheetTrigger,
-  toast,
-} from "@possos/ui";
+import { Button, InlineError, Sheet, SheetClose, SheetTrigger, toast, useFormat } from "@possos/ui";
 import { atTime } from "./my-appointments";
 
 export type CancelResult = { ok: true } | { ok: false; error: string };
 
-/** Server Action que llama a `cancel()` con la sesión del cliente. Error ya en español. */
+/** Server Action que llama a `cancel()` con la sesión del cliente. Error ya en su idioma. */
 export type CancelAppointmentAction = (appointmentId: string) => Promise<CancelResult>;
 
 export interface CancelAppointmentProps {
@@ -38,6 +31,8 @@ const POPSTATE_TIMEOUT_MS = 500;
  * en el historial podía pintar otra vez la página de antes, con la cita sin cancelar (F3).
  */
 export function CancelAppointment({ appointmentId, start, action }: CancelAppointmentProps) {
+  const t = useTranslations("booking");
+  const f = useFormat();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +47,7 @@ export function CancelAppointment({ appointmentId, start, action }: CancelAppoin
       finished = true;
       window.removeEventListener("popstate", finish);
       setDone(false);
-      toast("Cancelaste tu cita");
+      toast(t("cancel.done"));
       router.refresh();
     };
     window.addEventListener("popstate", finish);
@@ -61,7 +56,7 @@ export function CancelAppointment({ appointmentId, start, action }: CancelAppoin
       window.removeEventListener("popstate", finish);
       window.clearTimeout(timer);
     };
-  }, [done, open, router]);
+  }, [done, open, router, t]);
 
   const confirm = () => {
     setError(null);
@@ -71,11 +66,7 @@ export function CancelAppointment({ appointmentId, start, action }: CancelAppoin
         result = await action(appointmentId);
       } catch {
         // La acción no llegó al servidor (sin conexión, F8): la cita sigue igual.
-        setError(
-          navigator.onLine
-            ? "No pudimos completar la acción. Intenta de nuevo"
-            : "Sin conexión. Para cancelar tu cita necesitas conexión",
-        );
+        setError(navigator.onLine ? t("errors.UNKNOWN") : t("cancel.offline"));
         return;
       }
       if (!result.ok) {
@@ -94,23 +85,23 @@ export function CancelAppointment({ appointmentId, start, action }: CancelAppoin
         setOpen(next);
         if (next) setError(null);
       }}
-      title={`¿Cancelar tu cita del ${formatDate(start)} ${atTime(start)}?`}
-      description="La hora queda libre para otros clientes."
+      title={t("cancel.title", { date: f.date(start), at: atTime(start, f.locale) })}
+      description={t("cancel.description")}
       trigger={
         <SheetTrigger asChild>
           <Button variant="secondary" className="text-danger" disabled={done}>
-            Cancelar
+            {t("cancel.cancel")}
           </Button>
         </SheetTrigger>
       }
       footer={
         <>
           <Button variant="danger" onClick={confirm} disabled={pending} aria-busy={pending}>
-            {pending ? "Cancelando..." : "Sí, cancelar"}
+            {pending ? t("cancel.pending") : t("cancel.confirm")}
           </Button>
           <SheetClose asChild>
             <Button variant="secondary" disabled={pending}>
-              No
+              {t("cancel.no")}
             </Button>
           </SheetClose>
         </>
