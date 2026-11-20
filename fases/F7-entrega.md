@@ -99,7 +99,7 @@ Meta ──▶ /api/whatsapp/webhook: estados (delivered, read, failed) y botone
 
 ## Despliegue
 
-- Las dos migraciones se aplican con `pnpm db:push` después del CI en verde (primero `--dry-run`). Sin ellas, la ruta de despacho falla al llamar a `claim_message_jobs` y "Configuración" no guarda los recordatorios (falta la columna). **Sin las variables de Meta no cambia nada visible para el cliente:** el cursor avanza sin programar y "Listo" no promete WhatsApp.
+- Las dos migraciones (`20261120130000_notifications_whatsapp` y `20261120130100_booking_phone_lookup`) se aplicaron a producción el 20/11/2026 con `pnpm db:push`, después del CI en verde y de un `--dry-run` que solo mostraba esas dos. Sin ellas, la ruta de despacho falla al llamar a `claim_message_jobs` y "Configuración" no guarda los recordatorios (falta la columna). **Sin las variables de Meta no cambia nada visible para el cliente:** el cursor avanza sin programar y "Listo" no promete WhatsApp.
 
 ## Configurar en producción (cuando Meta esté listo)
 
