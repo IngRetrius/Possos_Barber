@@ -1,15 +1,16 @@
+import { DEFAULT_LOCALE, type Locale } from "@possos/config/constants";
+
 /*
  * Datos de la barbería para la página pública, el resumen de la cita y los datos estructurados.
  * Regla 8 de CLAUDE.md: lo que el dueño todavía no confirmó va en null y la página dice
  * [PENDIENTE]. El horario, los servicios y el barbero salen de la base.
  */
 
-export const PENDING = "[PENDIENTE]";
+/** Marca de un dato que el dueño todavía no confirma, en cada idioma. */
+export const PENDING: Record<Locale, string> = { es: "[PENDIENTE]", en: "[PENDING]" };
 
 export const BUSINESS = {
   name: "Possos Barber",
-  /** Línea fija bajo el nombre (docs/11). */
-  kind: "Barbería en Girardot",
   /** Frase de presentación del dueño. [PENDIENTE] */
   tagline: null as string | null,
   /** Dirección para mostrar, el .ics y los datos estructurados (dueño, 19/11/2026). */
@@ -32,8 +33,8 @@ export const BUSINESS = {
 } as const;
 
 /** Dirección para mostrar, o [PENDIENTE]. */
-export function addressLabel(): string {
-  return BUSINESS.address ?? PENDING;
+export function addressLabel(locale: Locale = DEFAULT_LOCALE): string {
+  return BUSINESS.address ?? PENDING[locale];
 }
 
 /** Enlace a la ficha de Google Maps (sin clave de API). */
@@ -43,12 +44,12 @@ export function mapsUrl(): string | null {
 
 /**
  * Mapa embebido de Google Maps (sin clave de API): busca el nombre del negocio alrededor de las
- * coordenadas de la ficha, para que el pin salga con "Possos Barber" y en español.
+ * coordenadas de la ficha, para que el pin salga con "Possos Barber" y en el idioma de la persona.
  */
-export function mapsEmbedUrl(): string | null {
+export function mapsEmbedUrl(locale: Locale = DEFAULT_LOCALE): string | null {
   const { latitude, longitude } = BUSINESS.maps;
   const query = encodeURIComponent(BUSINESS.name);
-  return `https://www.google.com/maps?q=${query}&ll=${latitude},${longitude}&z=17&hl=es&output=embed`;
+  return `https://www.google.com/maps?q=${query}&ll=${latitude},${longitude}&z=17&hl=${locale}&output=embed`;
 }
 
 /**

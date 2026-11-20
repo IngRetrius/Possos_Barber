@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { CloudOff, RefreshCw } from "lucide-react";
 import { Button } from "@possos/ui";
 import { SKIP_WAITING, SW_URL } from "../../lib/pwa";
@@ -23,6 +24,7 @@ function subscribeOnline(onChange: () => void) {
  * foco y los lectores de pantalla los anuncian (`role="status"`).
  */
 export function PwaRuntime() {
+  const t = useTranslations("web.common.pwa");
   const pathname = usePathname();
   const online = useSyncExternalStore(
     subscribeOnline,
@@ -83,7 +85,7 @@ export function PwaRuntime() {
   if (!online) {
     return (
       <StatusBanner icon={<CloudOff aria-hidden="true" strokeWidth={1.5} />}>
-        Sin conexión. Para reservar, cambiar o cancelar necesitas conexión.
+        {t("offline")}
       </StatusBanner>
     );
   }
@@ -100,11 +102,11 @@ export function PwaRuntime() {
             disabled={updating}
             aria-busy={updating}
           >
-            {updating ? "Actualizando..." : "Actualizar"}
+            {updating ? t("updating") : t("update")}
           </Button>
         }
       >
-        Hay una versión nueva.
+        {t("newVersion")}
       </StatusBanner>
     );
   }

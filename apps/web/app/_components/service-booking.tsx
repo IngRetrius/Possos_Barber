@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Suspense } from "react";
 import { BOOKING_ROUTES, groupQuickSlots, selectionHref } from "@possos/booking";
 import { QuickSlots } from "@possos/booking/ui";
@@ -19,12 +20,13 @@ interface ServiceBookingProps {
  * las horas", que siempre funciona. Con varios barberos, "Reservar este servicio" lleva a elegirlo.
  */
 export function ServiceBooking({ db, serviceId, entry }: ServiceBookingProps) {
+  const t = useTranslations("web.common");
   const { barberId } = entry;
   if (!barberId) {
     return (
       <Button asChild variant="secondary" className="w-full">
         <Link href={entry.href}>
-          Reservar este servicio
+          {t("bookService")}
           <LinkPending />
         </Link>
       </Button>

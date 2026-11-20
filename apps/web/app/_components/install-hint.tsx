@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button, Sheet } from "@possos/ui";
 
@@ -35,6 +36,7 @@ const noSubscription = () => () => {};
  * citas"). Si la app ya está instalada, no se muestra nada, tampoco la frase.
  */
 export function InstallHint({ lead }: { lead?: string } = {}) {
+  const t = useTranslations("web.common.install");
   // En el servidor no se sabe: no se muestra nada hasta hidratar.
   const iosBrowser = useSyncExternalStore(
     noSubscription,
@@ -75,21 +77,18 @@ export function InstallHint({ lead }: { lead?: string } = {}) {
           setCanPrompt(false);
         }}
       >
-        Instalar la app
+        {t("install")}
       </Button>,
     );
   }
 
   if (iosBrowser) {
     return withLead(
-      <Sheet
-        title="Instala la app en tu iPhone"
-        trigger={<Button variant="secondary">Instalar la app</Button>}
-      >
+      <Sheet title={t("iosTitle")} trigger={<Button variant="secondary">{t("install")}</Button>}>
         <ol className="grid list-decimal gap-3 pl-5 text-body">
-          <li>En Safari, toca el botón Compartir.</li>
-          <li>Busca en la lista &quot;Agregar a inicio&quot; y tócalo.</li>
-          <li>Toca &quot;Agregar&quot;. Possos Barber queda en tu pantalla de inicio.</li>
+          <li>{t("step1")}</li>
+          <li>{t("step2")}</li>
+          <li>{t("step3")}</li>
         </ol>
       </Sheet>,
     );

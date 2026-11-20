@@ -1,8 +1,10 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Button } from "@possos/ui";
 
 /** Vuelve a pedir la página donde está la persona (la pantalla sin conexión no tiene ruta propia). */
 export function ReloadButton() {
-  return <Button onClick={() => window.location.reload()}>Intentar de nuevo</Button>;
+  const t = useTranslations("web.common");
+  return <Button onClick={() => window.location.reload()}>{t("retry")}</Button>;
 }

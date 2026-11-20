@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 import { AUTH_ROUTES } from "@possos/auth";
 import { getViewer } from "@possos/auth/server";
 import { groupOpeningHours } from "@possos/barbers";
@@ -22,26 +23,33 @@ import { ServiceList } from "@possos/catalog/ui";
 import { needsConsent } from "@possos/customers";
 import { getMyProfile } from "@possos/customers/server";
 import { createClient } from "@possos/supabase/server";
-import { Button, formatDate, formatTime, Logo, StatusBadge } from "@possos/ui";
-import { BUSINESS, mapsEmbedUrl, mapsUrl, PENDING, siteUrl } from "../../lib/business";
+import { parseLocale } from "@possos/config/constants";
+import type { Enums } from "@possos/supabase";
+import { Button, formatters, Logo, StatusBadge } from "@possos/ui";
+import { BUSINESS, mapsEmbedUrl, mapsUrl, siteUrl } from "../../lib/business";
 import { loadBookingFlow, loadServiceEntries, timeStepHref } from "../../lib/booking-flow";
 import { MY_APPOINTMENTS_PATH, PROFILE_PATH, STAFF_HOME } from "../../lib/session";
 import { HomeBookBar } from "../_components/home-book-bar";
+import { LocaleSwitch } from "../_components/locale-switch";
 import { ServiceBooking } from "../_components/service-booking";
 
-export const metadata: Metadata = {
-  title: `${BUSINESS.name} · ${BUSINESS.kind}`,
-  description: `Reserva tu corte en ${BUSINESS.name}, barbería en ${BUSINESS.city}. Elige el día y la hora en pocos toques.`,
-  alternates: { canonical: "/" },
-  openGraph: {
-    type: "website",
-    locale: "es_CO",
-    siteName: BUSINESS.name,
-    title: `${BUSINESS.name} · ${BUSINESS.kind}`,
-    description: `Reserva tu corte en ${BUSINESS.name}, ${BUSINESS.city}.`,
-    url: "/",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("web.home.meta");
+  const locale = parseLocale(await getLocale());
+  return {
+    title: t("title"),
+    description: t("description"),
+    alternates: { canonical: "/" },
+    openGraph: {
+      type: "website",
+      locale: locale === "en" ? "en_US" : "es_CO",
+      siteName: BUSINESS.name,
+      title: t("title"),
+      description: t("ogDescription"),
+      url: "/",
+    },
+  };
+}
 
 const ISO_DAY = [
   "Monday",
@@ -62,6 +70,8 @@ const linkClass = "text-fg underline underline-offset-4 hover:text-fg-muted";
  */
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
+  const t = await getTranslations("web.home");
+  const f = formatters(parseLocale(await getLocale()));
   const db = await createClient();
   const [flow, barbers, hours, viewer] = await Promise.all([
     loadBookingFlow(db, parseSelection({})),
@@ -78,14 +88,14 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     loadServiceEntries(db, flow.services),
   ]);
   const ranges = hours.ok ? hours.data : [];
-  const groups = groupOpeningHours(ranges);
+  const groups = groupOpeningHours(ranges, f.locale);
 
   // Cita próxima del cliente con sesión y perfil completo.
   let upcoming: {
     id: string;
     start: string;
     serviceName: string;
-    status: keyof typeof APPOINTMENT_STATUS_DISPLAY;
+    status: Enums<"appointment_status">;
   } | null = null;
   if (viewer && !viewer.isStaff) {
     const profile = await getMyProfile(db, viewer.userId);
@@ -96,7 +106,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         upcoming = {
           id: next.data.id,
           start: period.start,
-          serviceName: flow.services.find((s) => s.id === next.data!.service_id)?.name ?? "Tu cita",
+          serviceName:
+            flow.services.find((s) => s.id === next.data!.service_id)?.name ??
+            t("upcoming.fallbackService"),
           status: next.data.status,
         };
       }
@@ -106,7 +118,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
   const bookHref =
     flow.services.length > 1 ? BOOKING_ROUTES.service : timeStepHref(flow, parseSelection({}));
   const whatsapp = barberList.find((b) => b.whatsapp_url)?.whatsapp_url ?? null;
-  const map = mapsEmbedUrl();
+  const map = mapsEmbedUrl(f.locale);
   const mapLink = mapsUrl();
 
   const jsonLd = {
@@ -148,52 +160,57 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         // JSON sin "<" para que no cierre la etiqueta (recomendación de Next).
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      <header className="flex min-h-14 items-center justify-between gap-2 px-gutter pt-safe">
-        <Logo label="" />
-        <nav aria-label="Tu cuenta" className="flex items-center">
-          {viewer && !viewer.isStaff ? (
-            <Button asChild variant="ghost" className="px-3">
-              <Link href={MY_APPOINTMENTS_PATH}>Mis citas</Link>
+      {/* El nombre va junto al logo y es el título de la página (pedido de Juan, 19/11/2026). */}
+      <header className="flex min-h-14 items-center justify-between gap-2 pr-2 pl-gutter pt-safe">
+        <div className="flex min-w-0 items-center gap-2">
+          <Logo label="" />
+          <h1 className="truncate text-heading text-brand">{BUSINESS.name}</h1>
+        </div>
+        <div className="flex shrink-0 items-center">
+          <nav aria-label={t("nav.label")} className="flex items-center">
+            {viewer && !viewer.isStaff ? (
+              <Button asChild variant="ghost" className="px-2">
+                <Link href={MY_APPOINTMENTS_PATH}>{t("nav.myAppointments")}</Link>
+              </Button>
+            ) : null}
+            <Button asChild variant="ghost" className="px-2">
+              <Link
+                href={viewer ? (viewer.isStaff ? STAFF_HOME : PROFILE_PATH) : AUTH_ROUTES.signIn}
+              >
+                {viewer ? (viewer.isStaff ? t("nav.panel") : t("nav.profile")) : t("nav.signIn")}
+              </Link>
             </Button>
-          ) : null}
-          <Button asChild variant="ghost" className="px-3">
-            <Link href={viewer ? (viewer.isStaff ? STAFF_HOME : PROFILE_PATH) : AUTH_ROUTES.signIn}>
-              {viewer ? (viewer.isStaff ? "Panel" : "Tu perfil") : "Ingresar"}
-            </Link>
-          </Button>
-        </nav>
+          </nav>
+          <LocaleSwitch />
+        </div>
       </header>
 
       <main className="grid flex-1 content-start gap-10 px-gutter pt-4 pb-10 md:mx-auto md:w-full md:max-w-2xl">
         {viewer && params.aviso === "perfil-guardado" ? (
           <p role="status" className="rounded-card border border-border bg-surface p-4 text-body">
-            Guardamos tus cambios.
+            {t("profileSaved")}
           </p>
         ) : null}
         <section className="grid gap-2">
-          <h1 className="text-title text-brand">{BUSINESS.name}</h1>
-          <p className="text-body text-fg">{BUSINESS.kind}</p>
           {upcoming ? (
             <Link
               href={MY_APPOINTMENTS_ROUTES.detail(upcoming.id)}
-              className="mt-4 grid gap-2 rounded-card border border-border bg-surface p-4 transition-colors hover:bg-surface-2 active:bg-surface-2"
+              className="grid gap-2 rounded-card border border-border bg-surface p-4 transition-colors hover:bg-surface-2 active:bg-surface-2"
             >
-              <span className="text-caption text-fg-muted">Tu próxima cita</span>
+              <span className="text-caption text-fg-muted">{t("upcoming.label")}</span>
               <span className="text-heading tabular-nums">
-                {formatDate(upcoming.start)}, {formatTime(upcoming.start)}
+                {f.date(upcoming.start)}, {f.time(upcoming.start)}
               </span>
               <span className="flex items-center justify-between gap-3">
                 <span className="text-body text-fg-muted">{upcoming.serviceName}</span>
-                <StatusBadge tone={APPOINTMENT_STATUS_DISPLAY[upcoming.status].tone}>
-                  {APPOINTMENT_STATUS_DISPLAY[upcoming.status].label}
+                <StatusBadge tone={APPOINTMENT_STATUS_DISPLAY[f.locale][upcoming.status].tone}>
+                  {APPOINTMENT_STATUS_DISPLAY[f.locale][upcoming.status].label}
                 </StatusBadge>
               </span>
-              <span className="text-label underline underline-offset-4">
-                Ver, cambiar o cancelar
-              </span>
+              <span className="text-label underline underline-offset-4">{t("upcoming.open")}</span>
             </Link>
           ) : (
-            <p className="text-body text-fg-muted">{BUSINESS.tagline ?? `Frase ${PENDING}`}</p>
+            <p className="text-body text-fg-muted">{BUSINESS.tagline ?? t("taglinePending")}</p>
           )}
         </section>
 
@@ -203,7 +220,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           className="grid scroll-mt-4 gap-3"
         >
           <h2 id="servicios" tabIndex={-1} data-scroll-focus className="text-heading">
-            Servicios
+            {t("services")}
           </h2>
           {flow.services.length ? (
             <ServiceList
@@ -216,13 +233,13 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
               }}
             />
           ) : (
-            <p className="text-body text-fg-muted">{`Servicios ${PENDING}`}</p>
+            <p className="text-body text-fg-muted">{t("servicesPending")}</p>
           )}
         </section>
 
         <section aria-labelledby="barbero" className="grid gap-3">
           <h2 id="barbero" className="text-heading">
-            {barberList.length > 1 ? "Los barberos" : "El barbero"}
+            {barberList.length > 1 ? t("barbers") : t("barber")}
           </h2>
           {barberList.length ? (
             barberList.map((barber) => (
@@ -242,16 +259,16 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
               />
             ))
           ) : (
-            <p className="text-body text-fg-muted">{`Barbero ${PENDING}`}</p>
+            <p className="text-body text-fg-muted">{t("barberPending")}</p>
           )}
         </section>
 
         <section aria-labelledby="ubicacion" className="grid gap-3">
           <h2 id="ubicacion" className="text-heading">
-            Ubicación
+            {t("location")}
           </h2>
           <p className="text-body">
-            {BUSINESS.address ?? `Dirección ${PENDING}`}
+            {BUSINESS.address ?? t("addressPending")}
             {BUSINESS.addressReference ? (
               <span className="block text-fg-muted">{BUSINESS.addressReference}</span>
             ) : null}
@@ -262,51 +279,51 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           {map ? (
             <iframe
               src={map}
-              title={`Mapa de la ubicación de ${BUSINESS.name}`}
+              title={t("mapTitle", { name: BUSINESS.name })}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               className="aspect-video w-full rounded-card border border-border"
             />
           ) : (
-            <p className="text-caption text-fg-subtle">{`Mapa ${PENDING}`}</p>
+            <p className="text-caption text-fg-subtle">{t("mapPending")}</p>
           )}
           {mapLink ? (
             <a href={mapLink} className={`text-body ${linkClass}`} rel="noopener noreferrer">
-              Abrir en Google Maps
+              {t("openMaps")}
             </a>
           ) : null}
         </section>
 
         <section aria-labelledby="horario" className="grid gap-3">
           <h2 id="horario" className="text-heading">
-            Horario
+            {t("hours")}
           </h2>
           <OpeningHoursList groups={groups} className="text-body text-fg-muted" />
         </section>
 
         <section aria-labelledby="contacto" className="grid gap-3">
           <h2 id="contacto" className="text-heading">
-            Contacto
+            {t("contact")}
           </h2>
           <ul className="grid gap-2 text-body">
             <li>
               <a href={BUSINESS.instagram.url} className={linkClass} rel="noopener noreferrer">
-                Instagram @{BUSINESS.instagram.handle}
+                {t("instagram", { handle: BUSINESS.instagram.handle })}
               </a>
             </li>
             <li>
               {whatsapp ? (
                 <a href={whatsapp} className={linkClass} rel="noopener noreferrer">
-                  WhatsApp
+                  {t("whatsapp")}
                 </a>
               ) : (
-                <span className="text-fg-muted">{`WhatsApp ${PENDING}`}</span>
+                <span className="text-fg-muted">{t("whatsappPending")}</span>
               )}
             </li>
           </ul>
           <p className="text-caption text-fg-muted">
             <Link href="/politica-de-datos" className={linkClass}>
-              Política de tratamiento de datos
+              {t("policy")}
             </Link>
           </p>
         </section>

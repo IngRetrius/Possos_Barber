@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useEffect, useState, type MouseEvent } from "react";
 import { BottomBar, Button, cn, LinkPending } from "@possos/ui";
 
@@ -27,6 +28,7 @@ type BarState = "pending" | "visible" | "hidden";
  * - Entra en 200 ms con *ease-out*; con `prefers-reduced-motion`, solo cambia la opacidad.
  */
 export function HomeBookBar({ href, targetId, scrollToTarget }: HomeBookBarProps) {
+  const t = useTranslations("web.common");
   const [state, setState] = useState<BarState>("pending");
 
   useEffect(() => {
@@ -65,7 +67,7 @@ export function HomeBookBar({ href, targetId, scrollToTarget }: HomeBookBarProps
     >
       <Button asChild>
         <Link href={href} onClick={onClick}>
-          Reservar
+          {t("book")}
           <LinkPending />
         </Link>
       </Button>

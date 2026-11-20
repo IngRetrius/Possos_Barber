@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useSyncExternalStore } from "react";
 import { Button } from "@possos/ui";
 
@@ -18,6 +19,7 @@ function subscribeOnline(onChange: () => void) {
  * En vez de la pantalla genérica de Next, dice qué pasó y deja intentar de nuevo.
  */
 export default function AppError({ reset }: { error: Error; reset: () => void }) {
+  const t = useTranslations("web.common");
   const online = useSyncExternalStore(
     subscribeOnline,
     () => navigator.onLine,
@@ -26,14 +28,12 @@ export default function AppError({ reset }: { error: Error; reset: () => void })
   return (
     <main className="grid min-h-dvh content-start gap-6 px-gutter pt-safe pb-10 md:mx-auto md:w-full md:max-w-2xl">
       <div className="grid gap-2 pt-10">
-        <h1 className="text-title">{online ? "Algo salió mal" : "Sin conexión"}</h1>
+        <h1 className="text-title">{online ? t("error.title") : t("error.offlineTitle")}</h1>
         <p className="text-body text-fg-muted">
-          {online
-            ? "No pudimos completar la acción. Intenta de nuevo."
-            : "No pudimos completar la acción. Para reservar, cambiar o cancelar necesitas conexión."}
+          {online ? t("error.body") : t("error.offlineBody")}
         </p>
       </div>
-      <Button onClick={reset}>Intentar de nuevo</Button>
+      <Button onClick={reset}>{t("retry")}</Button>
     </main>
   );
 }
