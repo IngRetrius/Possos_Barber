@@ -71,5 +71,6 @@ export { LinkPending } from "./internal/components/link-pending";
 export { Logo, type LogoProps } from "./internal/components/logo";
 export { Sheet, SheetClose, SheetTrigger, type SheetProps } from "./internal/components/sheet";
 export { SlotGrid, SlotGridSkeleton, type SlotGridProps } from "./internal/components/slot-grid";
+export { slotClass } from "./internal/components/slot";
 export { StepHeader, type StepHeaderProps } from "./internal/components/step-header";
 export { Toaster, toast } from "./internal/components/toaster";

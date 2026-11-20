@@ -81,3 +81,20 @@ describe("contrastes", () => {
     expect(ratio("border", "bg")).toBeLessThan(3);
   });
 });
+
+/*
+ * Que las capas se distingan (docs/11, "Color", 20/11/2026): con la escala anterior la tarjeta y el
+ * fondo quedaban a 1,08:1 y la pantalla se veía plana. Si alguien oscurece un tono, esto falla.
+ */
+describe("separación entre capas", () => {
+  it.each([
+    ["surface", "bg"],
+    ["surface-2", "surface"],
+  ] as const)("%s se separa de %s", (upper, lower) => {
+    expect(ratio(upper, lower)).toBeGreaterThanOrEqual(1.1);
+  });
+
+  it("el borde se nota sobre la tarjeta", () => {
+    expect(ratio("border", "surface")).toBeGreaterThanOrEqual(1.3);
+  });
+});

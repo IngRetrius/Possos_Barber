@@ -45,7 +45,7 @@ Son reglas que se pueden revisar en cada pantalla:
 | Carga | NN/g (*Skeleton Screens*): los esqueletos indican la estructura mientras carga; no reemplazan la optimización | Esqueleto de la cuadrícula de horas al cambiar de día. Los enlaces que abren un paso se cubren con un pulso suave mientras llega la página (`LinkPending`). En los dos casos, si la respuesta tarda menos de 300 ms no se muestra nada. Sin `loading.tsx` en la reserva: sin JavaScript dejaría la página en "Cargando" |
 | Una o varias páginas | Baymard (*one-page checkout*): una sola página no rinde más que varios pasos bien hechos; las comparaciones que la favorecen suelen enfrentarla a un flujo sin optimizar. Guías de diseño (Visa, Comisión Europea): no meter contenido largo ni interactivo en un acordeón | El inicio no carga la agenda completa: cada servicio muestra sus próximas horas, que llevan directo a "Confirmar". La agenda completa sigue en su paso |
 | Tamaño táctil | WCAG 2.2, criterio 2.5.8 (AA): 24 × 24 px como mínimo. Apple: 44 × 44 pt. Material: 48 × 48 dp | Mínimo de diseño: 48 px de alto para horas, filas y botones; 44 px para íconos sueltos (con área táctil ampliada) |
-| Modo oscuro | NN/g: la gente elige el modo en el sistema, no en cada app. El contraste excesivo produce halo al leer; hay que cuidar que el foco del teclado se vea | Solo modo oscuro en el MVP (decisión de marca). Texto `#F5F5F5` en vez de blanco puro y fondo `#0B0B0B` en vez de negro puro. Anillo de foco amarillo de 2 px |
+| Modo oscuro | NN/g: la gente elige el modo en el sistema, no en cada app. El contraste excesivo produce halo al leer; hay que cuidar que el foco del teclado se vea | Solo modo oscuro en el MVP (decisión de marca). Texto `#F5F5F5` en vez de blanco puro y fondo `#121212` en vez de negro puro (ver [Color](#color)). Anillo de foco amarillo de 2 px |
 
 ## Sistema visual
 
@@ -53,22 +53,24 @@ Son reglas que se pueden revisar en cada pantalla:
 
 Decisión del 19/11/2026: monocromo más un acento. El gris del logo, medido en el archivo, es `#BCBCBC` sobre `#000000`. Contrastes calculados con la fórmula de WCAG 2.2 y medidos con culori en F1 (coinciden). Los valores viven en `packages/ui/src/styles.css`; una prueba verifica que sean los de esta tabla.
 
+Escala subida un escalón el 20/11/2026 (pedido de Juan: el inicio se veía plano y muy oscuro). Con `#0B0B0B` y `#151515` las tarjetas casi no se separaban del fondo (1,08:1) y el borde tampoco se notaba (1,21:1 sobre la tarjeta); la pantalla parecía apagada de día. La guía de modo oscuro de Material y de la skill de interfaz pide superficies en capas de gris, no negro. Con la escala nueva, que es la de elevación de Material (`#121212` de fondo y `#1E1E1E` para 1 dp), la app se ve más clara, cada capa sube un tono que se nota (`#121212`, `#1E1E1E`, `#292929`) y el borde se ve (1,38:1 sobre la tarjeta). `--fg-subtle` y `--border-strong` subieron para seguir cumpliendo 4,5:1 y 3:1 sobre `--surface-2`. `--accent-fg` sigue en `#0B0B0B`: es texto sobre el amarillo, no fondo. Una prueba fija los mínimos de separación entre capas.
+
 | Token | Valor | Contraste sobre `--bg` | Uso |
 |---|---|---|---|
-| `--bg` | `#0B0B0B` | | Fondo de la app |
-| `--surface` | `#151515` | | Tarjetas y filas |
-| `--surface-2` | `#1F1F1F` | | Hojas inferiores, elemento presionado |
-| `--border` | `#262626` | 1,3 (decorativo) | Divisiones entre filas y tarjetas |
-| `--border-strong` | `#6B6B6B` | 3,7 (3,1 sobre `--surface-2`) | Bordes de campos y de horas libres: cumplen 3:1 para componentes |
-| `--fg` | `#F5F5F5` | 18,1 | Texto principal |
-| `--fg-muted` | `#A1A1A1` | 7,6 | Texto secundario: duración, etiquetas |
-| `--fg-subtle` | `#8A8A8A` | 5,7 (4,8 sobre `--surface-2`) | Texto terciario, deshabilitado con etiqueta |
-| `--brand` | `#BCBCBC` | 10,4 | El gris del logo. Logo, nombre del negocio |
-| `--accent` | `#F2F824` | 17,1 | Botón principal, hora elegida, anillo de foco, línea de "ahora" en la agenda |
+| `--bg` | `#121212` | | Fondo de la app |
+| `--surface` | `#1E1E1E` | | Tarjetas y filas |
+| `--surface-2` | `#292929` | | Hojas inferiores, elemento presionado, horas libres y panel de adicionales |
+| `--border` | `#363636` | 1,6 (1,38 sobre `--surface`; decorativo) | Divisiones entre filas y tarjetas |
+| `--border-strong` | `#757575` | 4,0 (3,2 sobre `--surface-2`) | Bordes de campos, chips y botones secundarios: cumplen 3:1 para componentes. En las horas libres, solo al pasar o presionar |
+| `--fg` | `#F5F5F5` | 17,2 | Texto principal |
+| `--fg-muted` | `#A1A1A1` | 7,3 (5,6 sobre `--surface-2`) | Texto secundario: duración, etiquetas |
+| `--fg-subtle` | `#959595` | 6,2 (4,9 sobre `--surface-2`) | Texto terciario, deshabilitado con etiqueta |
+| `--brand` | `#BCBCBC` | 9,9 | El gris del logo. Logo, nombre del negocio |
+| `--accent` | `#F2F824` | 16,3 | Botón principal, hora elegida, anillo de foco, línea de "ahora" en la agenda |
 | `--accent-fg` | `#0B0B0B` | 17,1 sobre el acento | Texto sobre el amarillo |
-| `--success` | `#00F818` | 13,5 | Solo el estado "Confirmada" (punto y texto) |
-| `--warning` | `#F5A524` | 9,6 | "Sin confirmar", "Pendiente de aprobación", "Por cerrar" |
-| `--danger` | `#FF6B6B` | 7,1 | Errores, "Cancelar cita", "No vino" |
+| `--success` | `#00F818` | 12,9 | Solo el estado "Confirmada" (punto y texto) |
+| `--warning` | `#F5A524` | 9,2 | "Sin confirmar", "Pendiente de aprobación", "Por cerrar" |
+| `--danger` | `#FF6B6B` | 6,8 | Errores, "Cancelar cita", "No vino" |
 
 Reglas:
 
@@ -97,6 +99,8 @@ Reglas:
 
 - Rejilla base de 4 px. Margen lateral de 16 px en el celular. Separación de 12 px entre tarjetas y de 8 px entre horas.
 - Radios: 12 px en tarjetas, horas y botones; 20 px en la parte superior de las hojas inferiores; píldora en los chips de días.
+- Horas libres (20/11/2026): relleno `--surface-2` sin contorno; el contorno `--border-strong` aparece al pasar o presionar y la elegida es amarilla. Una cuadrícula de horas con contorno se veía como una pared de rectángulos iguales. La hora se reconoce por su texto, así que el relleno no necesita 3:1 (WCAG 1.4.11 pide el contraste para lo que identifica al control). El estilo vive en `slotClass` de `@possos/ui` y lo usan el paso de horario y las horas rápidas del inicio.
+- Peso: el precio de cada servicio y el del total van en 600, para que se lean primero.
 - Respeta las zonas seguras del iPhone con la PWA instalada: `padding-bottom: env(safe-area-inset-bottom)` en la barra inferior y `viewport-fit=cover`.
 - Íconos: Lucide (viene con shadcn/ui), trazo de 1,5, 20 px, siempre con etiqueta en la navegación.
 - Movimiento: 150 a 200 ms con *ease-out* para entrar, sin rebotes. Con `prefers-reduced-motion: reduce`, solo cambios de opacidad.
@@ -115,9 +119,17 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 
 ```
 ┌──────────────────────────────────┐
-│ [P] Possos Barber   Ingresar     │  el nombre es el título (h1)
+│ [P] Possos Barber   Ingresar     │  el nombre es el título (h1); la navegación, en gris
 │                                  │
-│ [PENDIENTE: frase del dueño]     │
+│ [PENDIENTE: frase del dueño]     │  en producción se omite mientras falte
+│ ┌──────────────────────────────┐ │
+│ │ Próxima hora libre           │ │
+│ │ 2:00 p. m.                   │ │  title, cifras tabulares
+│ │ Hoy · vie 20 nov             │ │
+│ │ Corte · 60 min · $25.000     │ │
+│ │ [    Reservar esta hora    ] │ │  amarillo: lleva a "Confirmar"
+│ │   Otra hora o servicio ˅     │ │  baja a la lista
+│ └──────────────────────────────┘ │
 │                                  │
 │ Servicios                        │
 │ ┌──────────────────────────────┐ │
@@ -125,15 +137,18 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 │ │ 60 min                       │ │
 │ │ Servicio de corte que…       │ │
 │ │ Agrega                       │ │
-│ │ (+ Barba +$15.000 · +60 min) │ │  chips; marcado: invertido (✓)
-│ │ (✓ Cejas +$5.000)(+ Diseño…) │ │
-│ │ Total        $30.000 · 60 min│ │  se anuncia al cambiar
+│ │ ┌──────────────────────────┐ │ │  panel --surface-2: una sola zona
+│ │ │(+ Barba +$15.000 · +60 m)│ │ │  chips; marcado: invertido (✓)
+│ │ │(✓ Cejas +$5.000)(+ Dis…) │ │ │
+│ │ │ ──────────────────────── │ │ │
+│ │ │ Total    $30.000 · 60 min│ │ │  se anuncia al cambiar
+│ │ └──────────────────────────┘ │ │
 │ │ Próximas horas               │ │
 │ │ Hoy · jue 20 nov             │ │
-│ │ [3:00 p.m.][4:00 p.m.][5:00…]│ │  enlaces a "Confirmar"
+│ │ [3:00 p.m.][4:00 p.m.][5:00…]│ │  enlaces a "Confirmar", con relleno y sin contorno
 │ │ Mañana · vie 21 nov          │ │
 │ │ [9:00 a.m.][10:00 a.m.]      │ │
-│ │ [   Ver todas las horas    ] │ │
+│ │ Ver todas las horas        › │ │  enlace con flecha, no otra caja
 │ ├──────────────────────────────┤ │
 │ │ Corte a domicilio  $50.000 ˅ │ │
 │ │ 2 h                          │ │
@@ -154,7 +169,11 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 └──────────────────────────────────┘
 ```
 
-- Si el cliente ya tiene una cita próxima, la primera tarjeta es esa cita ("Tu cita: jue 20 nov, 3:00 p. m.") en vez de la frase.
+- Si el cliente ya tiene una cita próxima, la primera tarjeta es esa cita ("Tu cita: jue 20 nov, 3:00 p. m.") en vez de la frase y de "Próxima hora libre".
+- **Próxima hora libre** (20/11/2026, pedido de Juan: el inicio se veía plano y sin color). Arriba, una tarjeta con la hora libre más cercana del primer servicio de la lista que tenga un solo barbero; el dueño decide cuál es con el orden de los servicios en el panel. La hora va en `title`, el día debajo y el servicio con su duración y su precio en gris. El botón amarillo "Reservar esta hora" lleva a "Confirmar" sin adicionales: reservar el servicio principal queda en dos toques y el acento aparece donde primero se mira. "Otra hora o servicio" baja a la lista, donde están los adicionales.
+  - La hora llega en streaming y comparte la consulta con la tarjeta del mismo servicio (`cache` de React). Mientras tanto, y sin JavaScript, el botón dice "Reservar" y lleva al horario de ese servicio. Sin horas en la ventana dice "Sin horas libres en los próximos días" y el botón, secundario, "Ver todas las horas".
+  - La barra "Reservar" también se esconde mientras esta tarjeta se ve, para que no haya dos amarillos.
+- **Lo que falta no se ve en producción** (20/11/2026). La frase, la presentación y la foto del barbero, el portafolio, el mapa y el WhatsApp que el dueño todavía no entrega dicen [PENDIENTE] en local, en las pruebas y en las vistas previas de Vercel, y se omiten en producción (`SHOW_PENDING` en `apps/web/lib/business.ts`), porque el cliente veía una página a medio hacer. Sin foto, el barbero muestra sus iniciales. Los precios sin confirmar siguen diciendo [PENDIENTE] también en producción: el cliente debe saber que el valor falta antes de reservar.
 - La página se renderiza en el servidor para búsquedas locales ([05](05-alcance.md)).
 - Cada servicio es una fila que se despliega en el sitio (acordeón con `<details>`; abrir una cierra la otra) con la descripción completa. No es hoja inferior (principio 6) y se abre sin JavaScript. Pedido de Juan el 19/11/2026: la descripción cortada no se leía y desde el inicio no se podía reservar un servicio concreto.
 - **Próximas horas** (pedido de Juan el 19/11/2026, para reservar más rápido): al abrir un servicio con un solo barbero aparecen hasta 6 horas libres de sus dos primeros días con horas, agrupadas por día ("Hoy · jue 20 nov", "Mañana · vie 21 nov" o "sáb 22 nov"; la fecha evita confundir "Mañana" con la franja de la mañana). Cada hora va completa ("3:00 p. m.") en una cuadrícula de 3 columnas de 48 px y es un enlace a "Confirmar": desde el inicio se reserva en 3 toques (abrir el servicio, la hora y "Reservar"). El lector de pantalla oye la hora y el día ("3:00 p. m., hoy, jue 20 nov"). Debajo, "Ver todas las horas" (botón secundario) abre el paso de horario de ese servicio sin pasar por el del barbero. Sin horas en la ventana: "No hay horas libres en los próximos días."

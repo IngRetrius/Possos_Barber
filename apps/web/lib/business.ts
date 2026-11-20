@@ -9,6 +9,17 @@ import { DEFAULT_LOCALE, type Locale } from "@possos/config/constants";
 /** Marca de un dato que el dueño todavía no confirma, en cada idioma. */
 export const PENDING: Record<Locale, string> = { es: "[PENDIENTE]", en: "[PENDING]" };
 
+/**
+ * Si la página pública muestra los avisos [PENDIENTE] de lo que el dueño todavía no entrega (la
+ * frase, la foto, la presentación, el portafolio, el WhatsApp). En producción no: el cliente vería
+ * una página a medio hacer, así que ese bloque se omite. En local, en las pruebas y en las vistas
+ * previas de Vercel sí, para que no se olvide (docs/11, "Inicio público", 20/11/2026).
+ *
+ * No aplica a los precios: un servicio sin precio sigue diciendo [PENDIENTE], porque el cliente
+ * necesita saber que el valor falta antes de reservar.
+ */
+export const SHOW_PENDING = process.env.VERCEL_ENV !== "production";
+
 export const BUSINESS = {
   name: "Possos Barber",
   /** Frase de presentación del dueño. [PENDIENTE] */

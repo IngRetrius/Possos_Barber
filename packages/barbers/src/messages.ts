@@ -23,7 +23,6 @@ const es = {
   },
   profile: {
     photoAlt: "Foto de {name}",
-    photo: "Foto",
     bioPending: "Presentación [PENDIENTE]",
     photoPending: "Foto [PENDIENTE]",
     works: "Trabajos de {name}",
@@ -115,7 +114,6 @@ const en: typeof es = {
   },
   profile: {
     photoAlt: "Photo of {name}",
-    photo: "Photo",
     bioPending: "Introduction [PENDING]",
     photoPending: "Photo [PENDING]",
     works: "Work by {name}",

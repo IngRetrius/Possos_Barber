@@ -38,7 +38,9 @@ export function ListRow({ title, detail, value, href, onClick, className }: List
         <span className="truncate text-label text-fg">{title}</span>
         {detail ? <span className="truncate text-caption text-fg-muted">{detail}</span> : null}
       </span>
-      {value ? <span className="shrink-0 text-label text-fg tabular-nums">{value}</span> : null}
+      {value ? (
+        <span className="shrink-0 text-label font-semibold text-fg tabular-nums">{value}</span>
+      ) : null}
       {interactive ? (
         <ChevronRight
           aria-hidden="true"
@@ -119,7 +121,9 @@ export function ListDisclosureRow({
             <span className="truncate text-label text-fg">{title}</span>
             {detail ? <span className="truncate text-caption text-fg-muted">{detail}</span> : null}
           </span>
-          {value ? <span className="shrink-0 text-label text-fg tabular-nums">{value}</span> : null}
+          {value ? (
+            <span className="shrink-0 text-label font-semibold text-fg tabular-nums">{value}</span>
+          ) : null}
           <ChevronDown
             aria-hidden="true"
             strokeWidth={1.5}

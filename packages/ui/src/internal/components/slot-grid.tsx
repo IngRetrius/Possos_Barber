@@ -12,6 +12,7 @@ import {
   type DayPeriod,
 } from "../format";
 import { Skeleton } from "./feedback";
+import { slotClass } from "./slot";
 
 export interface SlotGridProps {
   /** Inicios de las horas libres (ISO en UTC). Las ocupadas no se pasan. */
@@ -62,11 +63,8 @@ export function SlotGrid({ slots, value, onChange, label, className }: SlotGridP
                   <label
                     key={slot}
                     className={cn(
-                      "relative flex h-12 cursor-pointer items-center justify-center rounded-card border text-label tabular-nums transition-colors",
-                      "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent",
-                      checked
-                        ? "border-accent bg-accent text-accent-fg"
-                        : "border-border-strong text-fg hover:bg-surface-2",
+                      slotClass(checked),
+                      "cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent",
                     )}
                   >
                     <input

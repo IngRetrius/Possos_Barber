@@ -85,57 +85,63 @@ export function AddonPicker({
       {Object.entries(hidden).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
-      <fieldset className="grid gap-2">
-        <legend className="mb-2 text-caption text-fg-muted">{t("legend")}</legend>
-        <div className="flex flex-wrap gap-2">
-          {addons.map((addon) => {
-            const on = checked.has(addon.id);
-            return (
-              <label
-                key={addon.id}
-                data-slot="addon-chip"
-                className={cn(
-                  "inline-flex min-h-12 cursor-pointer items-center gap-1.5 rounded-pill border px-3.5 text-label transition-colors",
-                  "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent",
-                  on
-                    ? "border-fg bg-fg text-bg"
-                    : "border-border-strong text-fg hover:bg-surface-2 active:bg-surface-2",
-                )}
-              >
-                <input
-                  type="checkbox"
-                  name={name}
-                  value={addon.id}
-                  checked={on}
-                  onChange={(event) => toggle(addon.id, event.currentTarget.checked)}
-                  className="sr-only"
-                />
-                {on ? (
-                  <Check aria-hidden="true" strokeWidth={2} className="size-4 shrink-0" />
-                ) : (
-                  <Plus aria-hidden="true" strokeWidth={1.5} className="size-4 shrink-0" />
-                )}
-                <span>{addon.name}</span>
-                <span className={cn("text-caption tabular-nums", on ? "text-bg" : "text-fg-muted")}>
-                  {extra(addon)}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-      </fieldset>
-      <p
-        role="status"
-        aria-atomic="true"
-        className="flex items-baseline justify-between gap-4 text-body"
-      >
-        <span className="text-fg-muted">{t("total")}</span>
-        <span className="text-label tabular-nums">
-          {servicePriceLabel(total.priceCop, locale)}
-          <span className="sr-only">, </span>
-          <span className="text-fg-muted"> · {formatDuration(total.durationMin)}</span>
-        </span>
-      </p>
+      {/* "Agrega" y el total van en un panel un tono más claro: se leen como una sola zona,
+          aparte de las horas (docs/11, 20/11/2026). */}
+      <div data-slot="addon-panel" className="grid gap-3 rounded-card bg-surface-2 p-3">
+        <fieldset className="grid gap-2">
+          <legend className="mb-2 text-caption text-fg-muted">{t("legend")}</legend>
+          <div className="flex flex-wrap gap-2">
+            {addons.map((addon) => {
+              const on = checked.has(addon.id);
+              return (
+                <label
+                  key={addon.id}
+                  data-slot="addon-chip"
+                  className={cn(
+                    "inline-flex min-h-12 cursor-pointer items-center gap-1.5 rounded-pill border px-3.5 text-label transition-colors",
+                    "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent",
+                    on
+                      ? "border-fg bg-fg text-bg"
+                      : "border-border-strong text-fg hover:border-fg-muted active:border-fg-muted",
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    name={name}
+                    value={addon.id}
+                    checked={on}
+                    onChange={(event) => toggle(addon.id, event.currentTarget.checked)}
+                    className="sr-only"
+                  />
+                  {on ? (
+                    <Check aria-hidden="true" strokeWidth={2} className="size-4 shrink-0" />
+                  ) : (
+                    <Plus aria-hidden="true" strokeWidth={1.5} className="size-4 shrink-0" />
+                  )}
+                  <span>{addon.name}</span>
+                  <span
+                    className={cn("text-caption tabular-nums", on ? "text-bg" : "text-fg-muted")}
+                  >
+                    {extra(addon)}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+        <p
+          role="status"
+          aria-atomic="true"
+          className="flex items-baseline justify-between gap-4 border-t border-border pt-3 text-body"
+        >
+          <span className="text-fg-muted">{t("total")}</span>
+          <span className="text-label tabular-nums">
+            <span className="font-semibold">{servicePriceLabel(total.priceCop, locale)}</span>
+            <span className="sr-only">, </span>
+            <span className="text-fg-muted"> · {formatDuration(total.durationMin)}</span>
+          </span>
+        </p>
+      </div>
       {mode === "continue" ? (
         <Button type="submit" className="w-full">
           {submitLabel}

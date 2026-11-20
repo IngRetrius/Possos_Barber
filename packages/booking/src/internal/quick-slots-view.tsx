@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useId } from "react";
-import { Button, cn, LinkPending, useFormat } from "@possos/ui";
+import { ChevronRight } from "lucide-react";
+import { Button, cn, LinkPending, slotClass, useFormat } from "@possos/ui";
 import type { QuickSlotDay } from "./quick-slots";
 
 export interface QuickSlotsProps {
@@ -51,11 +52,7 @@ export function QuickSlots({ days, hrefFor, moreHref, className }: QuickSlotsPro
                       <Link
                         href={hrefFor(slot)}
                         aria-label={`${f.time(slot)}, ${dayInName}`}
-                        className={cn(
-                          "relative flex h-12 items-center justify-center rounded-card border border-border-strong px-1",
-                          "text-label whitespace-nowrap text-fg tabular-nums transition-colors",
-                          "hover:bg-surface-2 active:bg-surface-2",
-                        )}
+                        className={slotClass()}
                       >
                         {f.time(slot)}
                         <LinkPending />
@@ -70,9 +67,13 @@ export function QuickSlots({ days, hrefFor, moreHref, className }: QuickSlotsPro
       ) : (
         <p className="text-body text-fg-muted">{t("none")}</p>
       )}
-      <Button asChild variant="secondary" className="w-full">
+      {/* Enlace con flecha y no otra caja: debajo de las horas, una caja más se confundía con
+          ellas (docs/11, 20/11/2026). El margen negativo alinea el texto con las horas y deja el
+          área táctil a todo lo ancho. */}
+      <Button asChild variant="ghost" className="-mx-3 justify-between px-3">
         <Link href={moreHref}>
           {t("more")}
+          <ChevronRight aria-hidden="true" strokeWidth={1.5} className="text-fg-muted" />
           <LinkPending />
         </Link>
       </Button>

@@ -34,13 +34,30 @@ export interface BarberProfileProps {
   barber: Barber;
   photoUrl: string | null;
   portfolio: PortfolioImage[];
+  /**
+   * Si dice [PENDIENTE] lo que falta (presentación, foto, portafolio). La app lo apaga en
+   * producción para que el cliente no vea una ficha a medio hacer; sin foto quedan las iniciales.
+   */
+  showPending?: boolean;
+}
+
+/** Iniciales para el avatar sin foto: "Santiago Possos" da "SP". */
+export function initials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const picked = words.length > 1 ? [words[0]!, words[words.length - 1]!] : words.slice(0, 1);
+  return picked.map((word) => word[0]!.toLocaleUpperCase()).join("");
 }
 
 /**
  * El barbero en la página pública: foto, nombre, presentación y portafolio. Lo que el dueño
- * todavía no entrega dice [PENDIENTE].
+ * todavía no entrega dice [PENDIENTE], o se omite con `showPending={false}`.
  */
-export function BarberProfile({ barber, photoUrl, portfolio }: BarberProfileProps) {
+export function BarberProfile({
+  barber,
+  photoUrl,
+  portfolio,
+  showPending = true,
+}: BarberProfileProps) {
   const t = useTranslations("barbers.profile");
   const name = barber.display_name;
   return (
@@ -57,18 +74,20 @@ export function BarberProfile({ barber, photoUrl, portfolio }: BarberProfileProp
           />
         ) : (
           <div
-            className="flex size-16 shrink-0 items-center justify-center rounded-pill border border-border text-caption text-fg-subtle"
+            className="flex size-16 shrink-0 items-center justify-center rounded-pill bg-surface-2 text-heading text-brand"
             aria-hidden="true"
           >
-            {t("photo")}
+            {initials(name)}
           </div>
         )}
         <div className="grid min-w-0 gap-0.5">
           <h3 className="text-label text-fg">{barber.display_name}</h3>
-          <p className="text-caption text-fg-muted">
-            {barber.bio ?? t("bioPending")}
-            {photoUrl ? null : <span className="block">{t("photoPending")}</span>}
-          </p>
+          {barber.bio || showPending ? (
+            <p className="text-caption text-fg-muted">
+              {barber.bio ?? t("bioPending")}
+              {photoUrl || !showPending ? null : <span className="block">{t("photoPending")}</span>}
+            </p>
+          ) : null}
         </div>
       </div>
       {portfolio.length > 0 ? (
@@ -85,9 +104,9 @@ export function BarberProfile({ barber, photoUrl, portfolio }: BarberProfileProp
             </li>
           ))}
         </ul>
-      ) : (
+      ) : showPending ? (
         <p className="text-caption text-fg-muted">{t("portfolioPending")}</p>
-      )}
+      ) : null}
     </article>
   );
 }

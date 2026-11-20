@@ -8,8 +8,14 @@ import { BottomBar, Button, cn, LinkPending } from "@possos/ui";
 interface HomeBookBarProps {
   /** A dónde lleva "Reservar" sin JavaScript (o con un solo servicio, al horario). */
   href: string;
-  /** Id de la sección de servicios: mientras se ve, la barra se esconde. */
+  /** Id de la sección de servicios: "Reservar" sube a ella. */
   targetId: string;
+  /**
+   * Ids de lo que ya tiene su propio "Reservar" (la lista de servicios, "Próxima hora libre"):
+   * mientras alguno se ve, la barra se esconde. Los que no estén en la página se ignoran; la
+   * lista siempre está.
+   */
+  hideWhileVisible: string[];
   /** Con más de un servicio, "Reservar" sube a la lista en vez de abrir otra página con la misma. */
   scrollToTarget: boolean;
 }
@@ -17,9 +23,9 @@ interface HomeBookBarProps {
 type BarState = "pending" | "visible" | "hidden";
 
 /**
- * Barra "Reservar" del inicio (docs/11). Mientras la lista de servicios está en pantalla se
- * esconde, porque cada servicio ya tiene sus horas y su botón y no deben verse dos "Reservar". Al
- * bajar al barbero o al mapa vuelve a aparecer.
+ * Barra "Reservar" del inicio (docs/11). Mientras la lista de servicios o "Próxima hora libre"
+ * están en pantalla se esconde, porque ya tienen sus horas y su botón y no deben verse dos
+ * "Reservar". Al bajar al barbero o al mapa vuelve a aparecer.
  *
  * - Antes de hidratar (`pending`) se esconde solo si el navegador corre JavaScript
  *   (`scripting: enabled`): sin JavaScript queda fija y lleva a `href`, como siempre.
@@ -27,21 +33,37 @@ type BarState = "pending" | "visible" | "hidden";
  *   ni la lee el lector de pantalla.
  * - Entra en 200 ms con *ease-out*; con `prefers-reduced-motion`, solo cambia la opacidad.
  */
-export function HomeBookBar({ href, targetId, scrollToTarget }: HomeBookBarProps) {
+export function HomeBookBar({
+  href,
+  targetId,
+  hideWhileVisible,
+  scrollToTarget,
+}: HomeBookBarProps) {
   const t = useTranslations("web.common");
   const [state, setState] = useState<BarState>("pending");
 
+  // Un string para que el efecto no se repita en cada render por un arreglo nuevo.
+  const watched = hideWhileVisible.join(" ");
+
   useEffect(() => {
-    // La sección siempre se pinta en el inicio; IntersectionObserver está en todos los navegadores
-    // que soporta la app.
-    const target = document.getElementById(targetId);
-    if (!target) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      setState(entry?.isIntersecting ? "hidden" : "visible");
+    // IntersectionObserver está en todos los navegadores que soporta la app.
+    const targets = watched
+      .split(" ")
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    // La lista de servicios siempre se pinta en el inicio, así que hay al menos uno.
+    if (!targets.length) return;
+    const onScreen = new Set<Element>();
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) onScreen.add(entry.target);
+        else onScreen.delete(entry.target);
+      }
+      setState(onScreen.size > 0 ? "hidden" : "visible");
     });
-    observer.observe(target);
+    for (const target of targets) observer.observe(target);
     return () => observer.disconnect();
-  }, [targetId]);
+  }, [watched]);
 
   const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!scrollToTarget) return;

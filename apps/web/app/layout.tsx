@@ -17,8 +17,8 @@ export async function generateMetadata(): Promise<Metadata> {
     description: t("description"),
     // Los PNG de F1 (public/icons). El manifiesto está en app/manifest.ts (F8).
     icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
-    // Pantalla de inicio de iOS. Barra de estado negra (no translúcida): con el fondo #0B0B0B se
-    // ve igual, y ninguna pantalla queda debajo de la isla aunque le falte pt-safe.
+    // Pantalla de inicio de iOS. Barra de estado negra (no translúcida): casi igual al fondo de la
+    // app, y ninguna pantalla queda debajo de la isla aunque le falte pt-safe.
     appleWebApp: { capable: true, title: "Possos Barber", statusBarStyle: "black" },
   };
 }

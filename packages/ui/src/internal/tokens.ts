@@ -6,14 +6,14 @@
  * En los componentes se usan las clases de Tailwind (`bg-surface`, `text-fg-muted`...).
  */
 export const colors = {
-  bg: "#0B0B0B",
-  surface: "#151515",
-  "surface-2": "#1F1F1F",
-  border: "#262626",
-  "border-strong": "#6B6B6B",
+  bg: "#121212",
+  surface: "#1E1E1E",
+  "surface-2": "#292929",
+  border: "#363636",
+  "border-strong": "#757575",
   fg: "#F5F5F5",
   "fg-muted": "#A1A1A1",
-  "fg-subtle": "#8A8A8A",
+  "fg-subtle": "#959595",
   brand: "#BCBCBC",
   accent: "#F2F824",
   "accent-fg": "#0B0B0B",

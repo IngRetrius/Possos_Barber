@@ -19,6 +19,7 @@ import {
   parseSelection,
 } from "@possos/booking";
 import { getNextAppointment } from "@possos/booking/server";
+import type { Service } from "@possos/catalog";
 import { ServiceList } from "@possos/catalog/ui";
 import { needsConsent } from "@possos/customers";
 import { getMyProfile } from "@possos/customers/server";
@@ -26,11 +27,17 @@ import { createClient } from "@possos/supabase/server";
 import { parseLocale } from "@possos/config/constants";
 import type { Enums } from "@possos/supabase";
 import { Button, formatters, Logo, StatusBadge } from "@possos/ui";
-import { BUSINESS, mapsEmbedUrl, mapsUrl, siteUrl } from "../../lib/business";
-import { loadBookingFlow, loadServiceEntries, timeStepHref } from "../../lib/booking-flow";
+import { BUSINESS, mapsEmbedUrl, mapsUrl, SHOW_PENDING, siteUrl } from "../../lib/business";
+import {
+  loadBookingFlow,
+  loadServiceEntries,
+  timeStepHref,
+  type ServiceEntry,
+} from "../../lib/booking-flow";
 import { MY_APPOINTMENTS_PATH, PROFILE_PATH, STAFF_HOME } from "../../lib/session";
 import { HomeBookBar } from "../_components/home-book-bar";
 import { LocaleSwitch } from "../_components/locale-switch";
+import { NEXT_SLOT_ID, NextSlot } from "../_components/next-slot";
 import { ServiceBooking } from "../_components/service-booking";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -120,6 +127,14 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
   // Con varios servicios, o uno con adicionales, "Reservar" lleva a elegirlos (paso Servicio).
   const chooseService = flow.steps.includes("service");
   const bookHref = chooseService ? BOOKING_ROUTES.service : timeStepHref(flow, parseSelection({}));
+  // "Próxima hora libre": el primer servicio de la lista con un solo barbero. El dueño decide
+  // cuál es con el orden de los servicios en el panel.
+  const featured = flow.services
+    .map((service) => ({ service, entry: entries.get(service.id) }))
+    .find(
+      (item): item is { service: Service; entry: ServiceEntry & { barberId: string } } =>
+        item.entry?.barberId != null,
+    );
   const whatsapp = barberList.find((b) => b.whatsapp_url)?.whatsapp_url ?? null;
   const map = mapsEmbedUrl(f.locale);
   const mapLink = mapsUrl();
@@ -173,11 +188,11 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             (pedido de Juan, 20/11/2026). */}
         <nav aria-label={t("nav.label")} className="flex shrink-0 items-center">
           {viewer && !viewer.isStaff ? (
-            <Button asChild variant="ghost" className="px-2">
+            <Button asChild variant="ghost" className="px-2 text-fg-muted hover:text-fg">
               <Link href={MY_APPOINTMENTS_PATH}>{t("nav.myAppointments")}</Link>
             </Button>
           ) : null}
-          <Button asChild variant="ghost" className="px-2">
+          <Button asChild variant="ghost" className="px-2 text-fg-muted hover:text-fg">
             <Link href={viewer ? (viewer.isStaff ? STAFF_HOME : PROFILE_PATH) : AUTH_ROUTES.signIn}>
               {viewer ? (viewer.isStaff ? t("nav.panel") : t("nav.profile")) : t("nav.signIn")}
             </Link>
@@ -191,7 +206,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             {t("profileSaved")}
           </p>
         ) : null}
-        <section className="grid gap-2">
+        <div className="grid gap-4">
           {upcoming ? (
             <Link
               href={MY_APPOINTMENTS_ROUTES.detail(upcoming.id)}
@@ -210,9 +225,21 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
               <span className="text-label underline underline-offset-4">{t("upcoming.open")}</span>
             </Link>
           ) : (
-            <p className="text-body text-fg-muted">{BUSINESS.tagline ?? t("taglinePending")}</p>
+            <>
+              {BUSINESS.tagline || SHOW_PENDING ? (
+                <p className="text-body text-fg-muted">{BUSINESS.tagline ?? t("taglinePending")}</p>
+              ) : null}
+              {featured ? (
+                <NextSlot
+                  db={db}
+                  service={featured.service}
+                  entry={featured.entry}
+                  listId="lista-servicios"
+                />
+              ) : null}
+            </>
           )}
-        </section>
+        </div>
 
         <section
           id="lista-servicios"
@@ -252,6 +279,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
               <BarberProfile
                 key={barber.id}
                 barber={barber}
+                showPending={SHOW_PENDING}
                 photoUrl={
                   barber.photo_path ? publicImageUrl(db, "barber-photos", barber.photo_path) : null
                 }
@@ -290,9 +318,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
               referrerPolicy="no-referrer-when-downgrade"
               className="aspect-video w-full rounded-card border border-border"
             />
-          ) : (
+          ) : SHOW_PENDING ? (
             <p className="text-caption text-fg-subtle">{t("mapPending")}</p>
-          )}
+          ) : null}
           {mapLink ? (
             <a href={mapLink} className={`text-body ${linkClass}`} rel="noopener noreferrer">
               {t("openMaps")}
@@ -317,15 +345,15 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                 {t("instagram", { handle: BUSINESS.instagram.handle })}
               </a>
             </li>
-            <li>
-              {whatsapp ? (
+            {whatsapp ? (
+              <li>
                 <a href={whatsapp} className={linkClass} rel="noopener noreferrer">
                   {t("whatsapp")}
                 </a>
-              ) : (
-                <span className="text-fg-muted">{t("whatsappPending")}</span>
-              )}
-            </li>
+              </li>
+            ) : SHOW_PENDING ? (
+              <li className="text-fg-muted">{t("whatsappPending")}</li>
+            ) : null}
           </ul>
           <p className="text-caption text-fg-muted">
             <Link href="/politica-de-datos" className={linkClass}>
@@ -343,7 +371,12 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         </div>
       </footer>
 
-      <HomeBookBar href={bookHref} targetId="lista-servicios" scrollToTarget={chooseService} />
+      <HomeBookBar
+        href={bookHref}
+        targetId="lista-servicios"
+        hideWhileVisible={["lista-servicios", NEXT_SLOT_ID]}
+        scrollToTarget={chooseService}
+      />
     </div>
   );
 }
