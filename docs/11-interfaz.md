@@ -121,15 +121,15 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 ┌──────────────────────────────────┐
 │ [P] Possos Barber   Ingresar     │  el nombre es el título (h1); la navegación, en gris
 │                                  │
-│ [PENDIENTE: frase del dueño]     │  en producción se omite mientras falte
+│ ¡El barbero más viral de         │  frase del dueño (20/11/2026), en gris
+│ Girardot!                        │
 │                                  │
-│ Trabajos                         │
+│ Trabajos    Ver más en Instagram │
 │ ┌───────────┐ ┌───────────┐ ┌──  │  fotos 3:4 que se deslizan de lado;
 │ │           │ │           │ │    │  se ven dos y asoma la tercera
 │ │   foto    │ │   foto    │ │    │
 │ │           │ │           │ │    │
 │ └───────────┘ └───────────┘ └──  │
-│            Ver más en Instagram ›│  enlace abajo a la derecha
 │                                  │
 │ Servicios                        │
 │ ┌──────────────────────────────┐ │
@@ -174,7 +174,7 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 - **Trabajos** (20/11/2026, con las primeras fotos de Juan). El portafolio sube de la ficha del barbero a una sección arriba de "Servicios": en una barbería el cliente elige por los cortes que ve, y es lo que le da imagen al inicio sin usar el amarillo.
   - Una fila que se desliza de lado (`PortfolioStrip` de `@possos/barbers/ui`), con *scroll snap* y sin flechas, puntos ni rotación automática. Cada foto ocupa el 44 % del ancho: se ven dos y asoma la tercera, que es la pista de que hay más (NN/g, *Mobile Carousels*: el deslizamiento es familiar, pero lo que queda fuera de pantalla se descubre menos, así que aquí solo va contenido de apoyo). En escritorio caben tres sin deslizar. La fila es enfocable para moverla con el teclado.
   - Fotos en 3:4: las del celular son verticales (9:16) y en cuadrado se cortaba la cabeza; 3:4 es también la cuadrícula de Instagram. El panel muestra el mismo recorte para que el dueño vea cómo queda cada foto.
-  - "Ver más en Instagram ›" va abajo a la derecha de las fotos (pedido de Juan, 20/11/2026): se lee después de verlas. Lleva a @possosbarber y mide 48 px de alto.
+  - "Ver más en Instagram" a la derecha del título lleva a @possosbarber.
   - Orden: el de subida (`sort_order`). Texto alternativo: la descripción del trabajo o "Trabajo de {barbero}".
   - Las dos primeras cargan de inmediato y las demás al acercarse. Sin fotos, en producción la sección no aparece; en local dice "Portafolio [PENDIENTE]".
   - **Formato.** Las fotos se suben desde el panel (Barberos, Portafolio). El navegador las reduce a 1600 px como máximo, las guarda en JPEG (al volver a codificarlas se borran los metadatos, como la ubicación) y van al bucket `portfolio` con caché de un año. `next/image` las entrega en AVIF, o en WebP al navegador que no lo lea, del ancho que pide cada pantalla: una foto de WhatsApp de 83 KB llega en unos 11 KB. No se convierten a WebP antes de subirlas porque el panel las volvería a pasar a JPEG y `next/image` ya entrega el formato moderno.
