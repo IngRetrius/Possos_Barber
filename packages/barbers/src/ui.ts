@@ -5,9 +5,11 @@ export {
   BarberList,
   BarberProfile,
   OpeningHoursList,
+  PortfolioStrip,
   type BarberListProps,
   type BarberProfileProps,
   type PortfolioImage,
+  type PortfolioStripProps,
 } from "./internal/components";
 export {
   TimeOffForm,

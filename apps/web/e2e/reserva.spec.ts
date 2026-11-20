@@ -31,7 +31,6 @@ const bottomBar = (page: Page) => page.locator('[data-slot="bottom-bar"]');
 const servicesSection = (page: Page) => page.locator('section[aria-labelledby="servicios"]');
 const openService = (page: Page, name = "Corte normal") =>
   servicesSection(page).locator("summary", { hasText: name }).click();
-const nextSlot = (page: Page) => page.getByRole("region", { name: "Próxima hora libre" });
 const quickSlots = (page: Page) => servicesSection(page).locator('[data-slot="quick-slots"]');
 
 /** Las primeras horas libres de la semilla, como las calcula el inicio (dos días con horas). */
@@ -140,11 +139,6 @@ test("la página pública se lee sin JavaScript", async ({ browser }) => {
   await expect(page.getByRole("heading", { name: "Possos Barber", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Servicios" })).toBeVisible();
   await expect(servicesSection(page).getByText("Corte normal", { exact: true })).toBeVisible();
-  // "Próxima hora libre" se queda como mientras carga: "Reservar" lleva al horario del corte.
-  await expect(nextSlot(page).getByRole("link", { name: "Reservar", exact: true })).toHaveAttribute(
-    "href",
-    new RegExp(`^${TIME_PATH}\\?servicio=${SEED.serviceId}`),
-  );
   await expect(page.getByRole("heading", { name: "Horario" })).toBeVisible();
   await expect(page.getByText("Lunes a sábado")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Ubicación" })).toBeVisible();
@@ -222,28 +216,6 @@ test("la barra Reservar se esconde mientras se ven los servicios", async ({ page
   await bar.getByRole("link", { name: "Reservar" }).tap();
   await expect(page).toHaveURL("/");
   await expect(page.getByRole("heading", { name: "Servicios" })).toBeFocused();
-});
-
-test("Próxima hora libre lleva a Confirmar con la hora más cercana del corte", async ({ page }) => {
-  const [first] = await firstFreeStarts();
-  await page.goto("/");
-  const card = nextSlot(page);
-  await expect(card.getByText("Corte normal · 60 min")).toBeVisible();
-  // Con la tarjeta en pantalla no se ven dos amarillos: la barra sigue escondida.
-  await expect(bottomBar(page)).toHaveAttribute("data-state", "hidden");
-  await expectAccessible(page);
-
-  // "Otra hora o servicio" baja a la lista, donde están los adicionales.
-  await expect(card.getByRole("link", { name: "Otra hora o servicio" })).toHaveAttribute(
-    "href",
-    "#lista-servicios",
-  );
-
-  await card.getByRole("link", { name: /^Reservar esta hora/ }).click();
-  await expect(page).toHaveURL(new RegExp(`${CONFIRM_PATH}\\?`));
-  const params = new URL(page.url()).searchParams;
-  expect(params.get("hora")).toBe(first);
-  expect(params.getAll("adicional")).toEqual([]);
 });
 
 test("con varios servicios, Reservar de la barra sube a la lista", async ({ page }) => {

@@ -10,7 +10,7 @@ import {
   listPortfolio,
   publicImageUrl,
 } from "@possos/barbers/server";
-import { BarberProfile, OpeningHoursList } from "@possos/barbers/ui";
+import { BarberProfile, OpeningHoursList, PortfolioStrip } from "@possos/barbers/ui";
 import {
   APPOINTMENT_STATUS_DISPLAY,
   BOOKING_ROUTES,
@@ -19,7 +19,6 @@ import {
   parseSelection,
 } from "@possos/booking";
 import { getNextAppointment } from "@possos/booking/server";
-import type { Service } from "@possos/catalog";
 import { ServiceList } from "@possos/catalog/ui";
 import { needsConsent } from "@possos/customers";
 import { getMyProfile } from "@possos/customers/server";
@@ -28,16 +27,10 @@ import { parseLocale } from "@possos/config/constants";
 import type { Enums } from "@possos/supabase";
 import { Button, formatters, Logo, StatusBadge } from "@possos/ui";
 import { BUSINESS, mapsEmbedUrl, mapsUrl, SHOW_PENDING, siteUrl } from "../../lib/business";
-import {
-  loadBookingFlow,
-  loadServiceEntries,
-  timeStepHref,
-  type ServiceEntry,
-} from "../../lib/booking-flow";
+import { loadBookingFlow, loadServiceEntries, timeStepHref } from "../../lib/booking-flow";
 import { MY_APPOINTMENTS_PATH, PROFILE_PATH, STAFF_HOME } from "../../lib/session";
 import { HomeBookBar } from "../_components/home-book-bar";
 import { LocaleSwitch } from "../_components/locale-switch";
-import { NEXT_SLOT_ID, NextSlot } from "../_components/next-slot";
 import { ServiceBooking } from "../_components/service-booking";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -96,6 +89,14 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     ),
     loadServiceEntries(db, flow.services),
   ]);
+  const barberNames = new Map(barberList.map((b) => [b.id, b.display_name]));
+  // Trabajos de todos los barberos activos, en el orden que fija el panel.
+  const works = (portfolio.ok ? portfolio.data : []).map((item) => ({
+    id: item.id,
+    url: publicImageUrl(db, "portfolio", item.image_path),
+    caption: item.caption,
+    barberName: barberNames.get(item.barber_id) ?? BUSINESS.name,
+  }));
   const ranges = hours.ok ? hours.data : [];
   const groups = groupOpeningHours(ranges, f.locale);
 
@@ -127,14 +128,6 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
   // Con varios servicios, o uno con adicionales, "Reservar" lleva a elegirlos (paso Servicio).
   const chooseService = flow.steps.includes("service");
   const bookHref = chooseService ? BOOKING_ROUTES.service : timeStepHref(flow, parseSelection({}));
-  // "Próxima hora libre": el primer servicio de la lista con un solo barbero. El dueño decide
-  // cuál es con el orden de los servicios en el panel.
-  const featured = flow.services
-    .map((service) => ({ service, entry: entries.get(service.id) }))
-    .find(
-      (item): item is { service: Service; entry: ServiceEntry & { barberId: string } } =>
-        item.entry?.barberId != null,
-    );
   const whatsapp = barberList.find((b) => b.whatsapp_url)?.whatsapp_url ?? null;
   const map = mapsEmbedUrl(f.locale);
   const mapLink = mapsUrl();
@@ -224,22 +217,32 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
               </span>
               <span className="text-label underline underline-offset-4">{t("upcoming.open")}</span>
             </Link>
-          ) : (
-            <>
-              {BUSINESS.tagline || SHOW_PENDING ? (
-                <p className="text-body text-fg-muted">{BUSINESS.tagline ?? t("taglinePending")}</p>
-              ) : null}
-              {featured ? (
-                <NextSlot
-                  db={db}
-                  service={featured.service}
-                  entry={featured.entry}
-                  listId="lista-servicios"
-                />
-              ) : null}
-            </>
-          )}
+          ) : BUSINESS.tagline || SHOW_PENDING ? (
+            <p className="text-body text-fg-muted">{BUSINESS.tagline ?? t("taglinePending")}</p>
+          ) : null}
         </div>
+
+        {works.length > 0 || SHOW_PENDING ? (
+          <section aria-labelledby="trabajos" className="grid gap-3">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 id="trabajos" className="text-heading">
+                {t("works")}
+              </h2>
+              <a
+                href={BUSINESS.instagram.url}
+                className={`text-label ${linkClass}`}
+                rel="noopener noreferrer"
+              >
+                {t("worksMore")}
+              </a>
+            </div>
+            {works.length > 0 ? (
+              <PortfolioStrip items={works} labelledBy="trabajos" />
+            ) : (
+              <p className="text-caption text-fg-muted">{t("worksPending")}</p>
+            )}
+          </section>
+        ) : null}
 
         <section
           id="lista-servicios"
@@ -283,13 +286,6 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                 photoUrl={
                   barber.photo_path ? publicImageUrl(db, "barber-photos", barber.photo_path) : null
                 }
-                portfolio={(portfolio.ok ? portfolio.data : [])
-                  .filter((item) => item.barber_id === barber.id)
-                  .map((item) => ({
-                    id: item.id,
-                    url: publicImageUrl(db, "portfolio", item.image_path),
-                    caption: item.caption,
-                  }))}
               />
             ))
           ) : (
@@ -374,7 +370,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       <HomeBookBar
         href={bookHref}
         targetId="lista-servicios"
-        hideWhileVisible={["lista-servicios", NEXT_SLOT_ID]}
+        hideWhileVisible={["lista-servicios"]}
         scrollToTarget={chooseService}
       />
     </div>

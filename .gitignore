@@ -25,3 +25,7 @@ test-results/
 
 # Credenciales de Google OAuth descargadas de Google Cloud
 client_secret_*.json
+
+# Fotos de clientes para el portafolio: se suben desde el panel a Supabase Storage. El repo es
+# público, así que nunca van aquí (Ley 1581, regla 7).
+fotos/

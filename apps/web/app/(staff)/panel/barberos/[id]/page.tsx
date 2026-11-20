@@ -89,9 +89,10 @@ export default async function EditBarberPage({ params }: PageProps<"/panel/barbe
                     src={publicImageUrl(db, "portfolio", w.image_path)}
                     alt={w.caption ?? t("workAlt", { name: b.display_name })}
                     width={120}
-                    height={120}
+                    height={160}
                     sizes="120px"
-                    className="aspect-square w-full rounded-card border border-border object-cover"
+                    // El mismo recorte 3:4 de la página pública, para ver cómo queda cada foto.
+                    className="aspect-[3/4] w-full rounded-card border border-border object-cover"
                   />
                   <RemoveWorkButton id={w.id} />
                 </li>

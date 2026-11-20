@@ -184,7 +184,8 @@ const es = {
       changePhoto: "Cambiar la foto",
       uploadPhoto: "Subir una foto",
       portfolio: "Portafolio",
-      portfolioIntro: "Fotos de cortes para la página pública. Se guardan apenas las subes.",
+      portfolioIntro:
+        "Fotos de cortes para el inicio, en el orden en que las subes. Se ven mejor verticales y con el corte en el centro. Se guardan apenas las subes.",
       workAlt: "Trabajo de {name}",
       addPhoto: "Agregar una foto",
     },
@@ -425,7 +426,7 @@ const en: typeof es = {
       uploadPhoto: "Upload a photo",
       portfolio: "Portfolio",
       portfolioIntro:
-        "Haircut photos for the public page. They are saved as soon as you upload them.",
+        "Haircut photos for the home page, in the order you upload them. Vertical photos with the haircut in the center look best. They are saved as soon as you upload them.",
       workAlt: "Work by {name}",
       addPhoto: "Add a photo",
     },

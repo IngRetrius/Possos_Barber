@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.*.*", "10.*.*.*"],
   images: {
     remotePatterns: storagePattern,
+    // AVIF primero (pesa alrededor de un 20 % menos que WebP) y WebP para el navegador que no lo
+    // lea. Duplica las transformaciones por imagen, pero son pocas fotos y sus rutas no cambian
+    // (cada subida es un archivo nuevo con caché de un año), así que se transforman una vez.
+    formats: ["image/avif", "image/webp"],
     dangerouslyAllowLocalIP: isDev,
   },
   // Los paquetes del monorepo exponen TypeScript sin compilar (campo `exports` → src/*.ts).

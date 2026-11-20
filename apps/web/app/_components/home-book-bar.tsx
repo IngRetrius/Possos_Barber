@@ -11,8 +11,8 @@ interface HomeBookBarProps {
   /** Id de la sección de servicios: "Reservar" sube a ella. */
   targetId: string;
   /**
-   * Ids de lo que ya tiene su propio "Reservar" (la lista de servicios, "Próxima hora libre"):
-   * mientras alguno se ve, la barra se esconde. Los que no estén en la página se ignoran; la
+   * Ids de lo que ya tiene su propio "Reservar" (la lista de servicios): mientras alguno se ve,
+   * la barra se esconde. Los que no estén en la página se ignoran; la
    * lista siempre está.
    */
   hideWhileVisible: string[];
@@ -23,9 +23,8 @@ interface HomeBookBarProps {
 type BarState = "pending" | "visible" | "hidden";
 
 /**
- * Barra "Reservar" del inicio (docs/11). Mientras la lista de servicios o "Próxima hora libre"
- * están en pantalla se esconde, porque ya tienen sus horas y su botón y no deben verse dos
- * "Reservar". Al bajar al barbero o al mapa vuelve a aparecer.
+ * Barra "Reservar" del inicio (docs/11). Mientras la lista de servicios está en pantalla se
+ * esconde, porque ya tiene sus horas y su botón y no deben verse dos "Reservar". Al bajar al barbero o al mapa vuelve a aparecer.
  *
  * - Antes de hidratar (`pending`) se esconde solo si el navegador corre JavaScript
  *   (`scripting: enabled`): sin JavaScript queda fija y lleva a `href`, como siempre.

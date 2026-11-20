@@ -1,5 +1,4 @@
 import "server-only";
-import { cache } from "react";
 import type { Barber } from "@possos/barbers";
 import { listBarbersForService } from "@possos/barbers/server";
 import {
@@ -231,28 +230,7 @@ export async function loadServiceEntries(
  * o null si no se pudieron leer. Usa las mismas funciones que el paso de horario, así que respeta
  * la anticipación mínima, el horario y los bloqueos.
  */
-export function loadQuickSlots(
-  db: DbClient,
-  input: { serviceId: string; barberId: string; addonIds: string[] },
-): Promise<string[] | null> {
-  // `cache` compara los argumentos por identidad: van sueltos para que el bloque "Próxima hora
-  // libre" y la tarjeta del mismo servicio compartan la consulta en una petición.
-  return quickSlotsOnce(db, input.serviceId, input.barberId, [...input.addonIds].sort().join(","));
-}
-
-const quickSlotsOnce = cache(
-  async (
-    db: DbClient,
-    serviceId: string,
-    barberId: string,
-    addonKey: string,
-  ): Promise<string[] | null> => {
-    const input = { serviceId, barberId, addonIds: addonKey ? addonKey.split(",") : [] };
-    return fetchQuickSlots(db, input);
-  },
-);
-
-async function fetchQuickSlots(
+export async function loadQuickSlots(
   db: DbClient,
   input: { serviceId: string; barberId: string; addonIds: string[] },
 ): Promise<string[] | null> {

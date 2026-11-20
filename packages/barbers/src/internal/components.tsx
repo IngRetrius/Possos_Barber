@@ -28,15 +28,16 @@ export interface PortfolioImage {
   id: string;
   url: string;
   caption: string | null;
+  /** Para el texto alternativo cuando el trabajo no tiene descripción. */
+  barberName: string;
 }
 
 export interface BarberProfileProps {
   barber: Barber;
   photoUrl: string | null;
-  portfolio: PortfolioImage[];
   /**
-   * Si dice [PENDIENTE] lo que falta (presentación, foto, portafolio). La app lo apaga en
-   * producción para que el cliente no vea una ficha a medio hacer; sin foto quedan las iniciales.
+   * Si dice [PENDIENTE] lo que falta (presentación y foto). La app lo apaga en producción para
+   * que el cliente no vea una ficha a medio hacer; sin foto quedan las iniciales.
    */
   showPending?: boolean;
 }
@@ -49,19 +50,15 @@ export function initials(name: string): string {
 }
 
 /**
- * El barbero en la página pública: foto, nombre, presentación y portafolio. Lo que el dueño
- * todavía no entrega dice [PENDIENTE], o se omite con `showPending={false}`.
+ * El barbero en la página pública: foto, nombre y presentación. Lo que el dueño todavía no
+ * entrega dice [PENDIENTE], o se omite con `showPending={false}`. El portafolio va aparte, arriba
+ * del inicio (`PortfolioStrip`).
  */
-export function BarberProfile({
-  barber,
-  photoUrl,
-  portfolio,
-  showPending = true,
-}: BarberProfileProps) {
+export function BarberProfile({ barber, photoUrl, showPending = true }: BarberProfileProps) {
   const t = useTranslations("barbers.profile");
   const name = barber.display_name;
   return (
-    <article className="grid gap-4 rounded-card border border-border bg-surface p-4">
+    <article className="rounded-card border border-border bg-surface p-4">
       <div className="flex items-center gap-4">
         {photoUrl ? (
           <Image
@@ -90,24 +87,51 @@ export function BarberProfile({
           ) : null}
         </div>
       </div>
-      {portfolio.length > 0 ? (
-        <ul className="grid grid-cols-3 gap-2" aria-label={t("works", { name })}>
-          {portfolio.map((item) => (
-            <li key={item.id} className="relative aspect-square overflow-hidden rounded-card">
-              <Image
-                src={item.url}
-                alt={item.caption ?? t("workAlt", { name })}
-                fill
-                sizes="(min-width: 768px) 200px, 33vw"
-                className="object-cover"
-              />
-            </li>
-          ))}
-        </ul>
-      ) : showPending ? (
-        <p className="text-caption text-fg-muted">{t("portfolioPending")}</p>
-      ) : null}
     </article>
+  );
+}
+
+export interface PortfolioStripProps {
+  items: PortfolioImage[];
+  /** Id del título de la sección: nombra la lista para el lector de pantalla. */
+  labelledBy: string;
+}
+
+/**
+ * Trabajos del portafolio en una fila que se desliza de lado (docs/11, "Inicio público"). Cada
+ * foto va en 3:4, el formato vertical del celular y de la cuadrícula de Instagram, así que la
+ * cabeza no se corta como en un cuadrado. En 390 px cada foto ocupa el 44 % del ancho: se ven dos
+ * y asoma la tercera, que es la pista de que hay más. En escritorio caben tres sin deslizar.
+ *
+ * La fila es enfocable para moverla con las flechas del teclado (WCAG 2.1.1). Sin flechas ni
+ * puntos ni rotación automática: es contenido de apoyo, no lo único que lleva a reservar.
+ */
+export function PortfolioStrip({ items, labelledBy }: PortfolioStripProps) {
+  const t = useTranslations("barbers.profile");
+  return (
+    <ul
+      aria-labelledby={labelledBy}
+      // Enfocable para desplazarla con el teclado; las fotos no son interactivas.
+      tabIndex={0}
+      className="-mx-gutter flex snap-x snap-mandatory scroll-px-gutter gap-2 overflow-x-auto overscroll-x-contain px-gutter [scrollbar-width:none] md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden"
+    >
+      {items.map((item, index) => (
+        <li
+          key={item.id}
+          className="relative aspect-[3/4] w-[44%] shrink-0 snap-start overflow-hidden rounded-card bg-surface-2 md:w-52"
+        >
+          <Image
+            src={item.url}
+            alt={item.caption ?? t("workAlt", { name: item.barberName })}
+            fill
+            sizes="(min-width: 768px) 208px, 44vw"
+            // Las dos primeras se ven al abrir el inicio; las demás cargan al acercarse.
+            loading={index < 2 ? "eager" : "lazy"}
+            className="object-cover"
+          />
+        </li>
+      ))}
+    </ul>
   );
 }
 

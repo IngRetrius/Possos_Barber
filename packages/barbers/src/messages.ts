@@ -25,9 +25,7 @@ const es = {
     photoAlt: "Foto de {name}",
     bioPending: "Presentación [PENDIENTE]",
     photoPending: "Foto [PENDIENTE]",
-    works: "Trabajos de {name}",
     workAlt: "Trabajo de {name}",
-    portfolioPending: "Portafolio [PENDIENTE]",
     hoursPending: "Horario [PENDIENTE]",
   },
   form: {
@@ -116,9 +114,7 @@ const en: typeof es = {
     photoAlt: "Photo of {name}",
     bioPending: "Introduction [PENDING]",
     photoPending: "Photo [PENDING]",
-    works: "Work by {name}",
     workAlt: "Work by {name}",
-    portfolioPending: "Portfolio [PENDING]",
     hoursPending: "Opening hours [PENDING]",
   },
   form: {

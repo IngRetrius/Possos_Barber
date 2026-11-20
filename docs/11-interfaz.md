@@ -122,14 +122,13 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 │ [P] Possos Barber   Ingresar     │  el nombre es el título (h1); la navegación, en gris
 │                                  │
 │ [PENDIENTE: frase del dueño]     │  en producción se omite mientras falte
-│ ┌──────────────────────────────┐ │
-│ │ Próxima hora libre           │ │
-│ │ 2:00 p. m.                   │ │  title, cifras tabulares
-│ │ Hoy · vie 20 nov             │ │
-│ │ Corte · 60 min · $25.000     │ │
-│ │ [    Reservar esta hora    ] │ │  amarillo: lleva a "Confirmar"
-│ │   Otra hora o servicio ˅     │ │  baja a la lista
-│ └──────────────────────────────┘ │
+│                                  │
+│ Trabajos    Ver más en Instagram │
+│ ┌───────────┐ ┌───────────┐ ┌──  │  fotos 3:4 que se deslizan de lado;
+│ │           │ │           │ │    │  se ven dos y asoma la tercera
+│ │   foto    │ │   foto    │ │    │
+│ │           │ │           │ │    │
+│ └───────────┘ └───────────┘ └──  │
 │                                  │
 │ Servicios                        │
 │ ┌──────────────────────────────┐ │
@@ -159,7 +158,7 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 │ ├──────────────────────────────┤ │
 │ │ Global platinado  $170.000 ˅ │ │
 │ └──────────────────────────────┘ │
-│ El barbero · foto y portafolio   │
+│ El barbero · foto y presentación │
 │ Ubicación · mapa · horario       │
 │ Instagram · WhatsApp             │
 │ ──────────────────────────────── │
@@ -169,11 +168,17 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 └──────────────────────────────────┘
 ```
 
-- Si el cliente ya tiene una cita próxima, la primera tarjeta es esa cita ("Tu cita: jue 20 nov, 3:00 p. m.") en vez de la frase y de "Próxima hora libre".
-- **Próxima hora libre** (20/11/2026, pedido de Juan: el inicio se veía plano y sin color). Arriba, una tarjeta con la hora libre más cercana del primer servicio de la lista que tenga un solo barbero; el dueño decide cuál es con el orden de los servicios en el panel. La hora va en `title`, el día debajo y el servicio con su duración y su precio en gris. El botón amarillo "Reservar esta hora" lleva a "Confirmar" sin adicionales: reservar el servicio principal queda en dos toques y el acento aparece donde primero se mira. "Otra hora o servicio" baja a la lista, donde están los adicionales.
-  - La hora llega en streaming y comparte la consulta con la tarjeta del mismo servicio (`cache` de React). Mientras tanto, y sin JavaScript, el botón dice "Reservar" y lleva al horario de ese servicio. Sin horas en la ventana dice "Sin horas libres en los próximos días" y el botón, secundario, "Ver todas las horas".
-  - La barra "Reservar" también se esconde mientras esta tarjeta se ve, para que no haya dos amarillos.
-- **Lo que falta no se ve en producción** (20/11/2026). La frase, la presentación y la foto del barbero, el portafolio, el mapa y el WhatsApp que el dueño todavía no entrega dicen [PENDIENTE] en local, en las pruebas y en las vistas previas de Vercel, y se omiten en producción (`SHOW_PENDING` en `apps/web/lib/business.ts`), porque el cliente veía una página a medio hacer. Sin foto, el barbero muestra sus iniciales. Los precios sin confirmar siguen diciendo [PENDIENTE] también en producción: el cliente debe saber que el valor falta antes de reservar.
+- Si el cliente ya tiene una cita próxima, la primera tarjeta es esa cita ("Tu cita: jue 20 nov, 3:00 p. m.") en vez de la frase.
+- **Próxima hora libre** se probó el 20/11/2026 (una tarjeta arriba con la hora más cercana del primer servicio y el botón amarillo a "Confirmar") y se quitó el mismo día por pedido de Juan: no hacía falta. Las próximas horas siguen en la tarjeta abierta de cada servicio.
+- **Trabajos** (20/11/2026, con las primeras fotos de Juan). El portafolio sube de la ficha del barbero a una sección arriba de "Servicios": en una barbería el cliente elige por los cortes que ve, y es lo que le da imagen al inicio sin usar el amarillo.
+  - Una fila que se desliza de lado (`PortfolioStrip` de `@possos/barbers/ui`), con *scroll snap* y sin flechas, puntos ni rotación automática. Cada foto ocupa el 44 % del ancho: se ven dos y asoma la tercera, que es la pista de que hay más (NN/g, *Mobile Carousels*: el deslizamiento es familiar, pero lo que queda fuera de pantalla se descubre menos, así que aquí solo va contenido de apoyo). En escritorio caben tres sin deslizar. La fila es enfocable para moverla con el teclado.
+  - Fotos en 3:4: las del celular son verticales (9:16) y en cuadrado se cortaba la cabeza; 3:4 es también la cuadrícula de Instagram. El panel muestra el mismo recorte para que el dueño vea cómo queda cada foto.
+  - "Ver más en Instagram" a la derecha del título lleva a @possosbarber.
+  - Orden: el de subida (`sort_order`). Texto alternativo: la descripción del trabajo o "Trabajo de {barbero}".
+  - Las dos primeras cargan de inmediato y las demás al acercarse. Sin fotos, en producción la sección no aparece; en local dice "Portafolio [PENDIENTE]".
+  - **Formato.** Las fotos se suben desde el panel (Barberos, Portafolio). El navegador las reduce a 1600 px como máximo, las guarda en JPEG (al volver a codificarlas se borran los metadatos, como la ubicación) y van al bucket `portfolio` con caché de un año. `next/image` las entrega en AVIF, o en WebP al navegador que no lo lea, del ancho que pide cada pantalla: una foto de WhatsApp de 83 KB llega en unos 11 KB. No se convierten a WebP antes de subirlas porque el panel las volvería a pasar a JPEG y `next/image` ya entrega el formato moderno.
+  - **Las fotos de clientes nunca van al repo**, que es público: `fotos/` está en `.gitignore`. Son datos personales (Ley 1581): el dueño debe tener la autorización de cada cliente que aparece.
+- **Lo que falta no se ve en producción** (20/11/2026). La frase, la presentación y la foto del barbero, los trabajos, el mapa y el WhatsApp que el dueño todavía no entrega dicen [PENDIENTE] en local, en las pruebas y en las vistas previas de Vercel, y se omiten en producción (`SHOW_PENDING` en `apps/web/lib/business.ts`), porque el cliente veía una página a medio hacer. Sin foto, el barbero muestra sus iniciales. Los precios sin confirmar siguen diciendo [PENDIENTE] también en producción: el cliente debe saber que el valor falta antes de reservar.
 - La página se renderiza en el servidor para búsquedas locales ([05](05-alcance.md)).
 - Cada servicio es una fila que se despliega en el sitio (acordeón con `<details>`; abrir una cierra la otra) con la descripción completa. No es hoja inferior (principio 6) y se abre sin JavaScript. Pedido de Juan el 19/11/2026: la descripción cortada no se leía y desde el inicio no se podía reservar un servicio concreto.
 - **Próximas horas** (pedido de Juan el 19/11/2026, para reservar más rápido): al abrir un servicio con un solo barbero aparecen hasta 6 horas libres de sus dos primeros días con horas, agrupadas por día ("Hoy · jue 20 nov", "Mañana · vie 21 nov" o "sáb 22 nov"; la fecha evita confundir "Mañana" con la franja de la mañana). Cada hora va completa ("3:00 p. m.") en una cuadrícula de 3 columnas de 48 px y es un enlace a "Confirmar": desde el inicio se reserva en 3 toques (abrir el servicio, la hora y "Reservar"). El lector de pantalla oye la hora y el día ("3:00 p. m., hoy, jue 20 nov"). Debajo, "Ver todas las horas" (botón secundario) abre el paso de horario de ese servicio sin pasar por el del barbero. Sin horas en la ventana: "No hay horas libres en los próximos días."
