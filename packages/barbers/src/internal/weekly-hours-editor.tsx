@@ -1,10 +1,12 @@
 "use client";
 
 import { X } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useActionState, useState } from "react";
+import { parseLocale } from "@possos/config/constants";
 import { BottomBar, Button, cn } from "@possos/ui";
-import { WEEKDAY_NAMES } from "./hours";
-import { validateWeeklyRanges, WEEKLY_HOURS_MESSAGES, type WeeklyRange } from "./weekly-hours";
+import { WEEKDAY_NAMES_BY_LOCALE } from "./hours";
+import { validateWeeklyRanges, type WeeklyRange } from "./weekly-hours";
 
 export interface WeeklyHoursState {
   error?: string;
@@ -44,6 +46,8 @@ const timeInput =
  * antes de enviar; la base los revisa otra vez.
  */
 export function WeeklyHoursEditor({ action, barberId, initial }: WeeklyHoursEditorProps) {
+  const t = useTranslations("barbers.weekly");
+  const names = WEEKDAY_NAMES_BY_LOCALE[parseLocale(useLocale())];
   const [rows, setRows] = useState<Row[]>(() => initial.map(withKey));
   const [state, formAction, pending] = useActionState(action, {});
   const [touched, setTouched] = useState(false);
@@ -73,9 +77,9 @@ export function WeeklyHoursEditor({ action, barberId, initial }: WeeklyHoursEdit
   const summary = state.error ? (
     <span className="text-danger">{state.error}</span>
   ) : errors.size ? (
-    <span className="text-danger">Revisa los días marcados</span>
+    <span className="text-danger">{t("reviewDays")}</span>
   ) : state.saved && !touched ? (
-    "Guardaste el horario"
+    t("saved")
   ) : null;
 
   return (
@@ -96,7 +100,7 @@ export function WeeklyHoursEditor({ action, barberId, initial }: WeeklyHoursEdit
         />
       ))}
       <div className="grid gap-3 px-gutter pt-2 pb-8">
-        {WEEKDAY_NAMES.map((name, index) => {
+        {names.map((name, index) => {
           const weekday = index + 1;
           const today = rows
             .filter((r) => r.weekday === weekday)
@@ -118,7 +122,7 @@ export function WeeklyHoursEditor({ action, barberId, initial }: WeeklyHoursEdit
                   {title}
                 </p>
                 {today.length === 0 ? (
-                  <span className="text-caption text-fg-muted">Cerrado</span>
+                  <span className="text-caption text-fg-muted">{t("closed")}</span>
                 ) : null}
               </div>
               {today.map((r, i) => (
@@ -127,17 +131,17 @@ export function WeeklyHoursEditor({ action, barberId, initial }: WeeklyHoursEdit
                     type="time"
                     step={300}
                     value={r.start_time}
-                    aria-label={`${title}, rango ${i + 1}, desde`}
+                    aria-label={t("rangeFrom", { day: title, n: i + 1 })}
                     aria-invalid={Boolean(error) || undefined}
                     onChange={(e) => update(r.key, { start_time: e.target.value })}
                     className={timeInput}
                   />
-                  <span className="text-caption text-fg-muted">a</span>
+                  <span className="text-caption text-fg-muted">{t("to")}</span>
                   <input
                     type="time"
                     step={300}
                     value={r.end_time}
-                    aria-label={`${title}, rango ${i + 1}, hasta`}
+                    aria-label={t("rangeTo", { day: title, n: i + 1 })}
                     aria-invalid={Boolean(error) || undefined}
                     onChange={(e) => update(r.key, { end_time: e.target.value })}
                     className={timeInput}
@@ -146,7 +150,7 @@ export function WeeklyHoursEditor({ action, barberId, initial }: WeeklyHoursEdit
                     type="button"
                     variant="ghost"
                     size="icon"
-                    aria-label={`Quitar el rango ${i + 1} del ${name}`}
+                    aria-label={t("remove", { n: i + 1, day: name })}
                     onClick={() => {
                       setTouched(true);
                       setRows((list) => list.filter((x) => x.key !== r.key));
@@ -158,7 +162,7 @@ export function WeeklyHoursEditor({ action, barberId, initial }: WeeklyHoursEdit
               ))}
               {error ? (
                 <p id={`dia-${weekday}-error`} className="text-caption text-danger">
-                  {WEEKLY_HOURS_MESSAGES[error]}
+                  {t(`errors.${error}`)}
                 </p>
               ) : null}
               <div className="flex flex-wrap gap-2">
@@ -168,7 +172,8 @@ export function WeeklyHoursEditor({ action, barberId, initial }: WeeklyHoursEdit
                   className="px-4"
                   onClick={() => add(weekday)}
                 >
-                  Agregar rango<span className="sr-only"> al {name}</span>
+                  {t("add")}
+                  <span className="sr-only">{t("addTo", { day: name })}</span>
                 </Button>
                 {weekday > 1 ? (
                   <Button
@@ -177,7 +182,7 @@ export function WeeklyHoursEditor({ action, barberId, initial }: WeeklyHoursEdit
                     className="px-3"
                     onClick={() => copyPrevious(weekday)}
                   >
-                    Igual que el {WEEKDAY_NAMES[index - 1]}
+                    {t("sameAs", { day: names[index - 1]! })}
                   </Button>
                 ) : null}
               </div>
@@ -187,7 +192,7 @@ export function WeeklyHoursEditor({ action, barberId, initial }: WeeklyHoursEdit
       </div>
       <BottomBar summary={summary}>
         <Button type="submit" disabled={pending || errors.size > 0} aria-busy={pending}>
-          {pending ? "Guardando..." : "Guardar horario"}
+          {pending ? t("saving") : t("save")}
         </Button>
       </BottomBar>
     </form>

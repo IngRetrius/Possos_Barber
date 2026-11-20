@@ -2,6 +2,7 @@
  * Horario de la barbería para la página pública: los días con el mismo horario se juntan
  * ("Lunes a sábado"). No importa ./index para que dependency-cruiser no vea un ciclo.
  */
+import { DEFAULT_LOCALE, type Locale } from "@possos/config/constants";
 import { formatTime } from "@possos/ui";
 
 export interface OpeningRange {
@@ -20,26 +21,30 @@ export interface OpeningHoursGroup {
   closed: boolean;
 }
 
-export const WEEKDAY_NAMES = [
-  "lunes",
-  "martes",
-  "miércoles",
-  "jueves",
-  "viernes",
-  "sábado",
-  "domingo",
-] as const;
+/** Días de lunes a domingo en cada idioma (en español, en minúscula: van dentro de frases). */
+export const WEEKDAY_NAMES_BY_LOCALE: Record<Locale, readonly string[]> = {
+  es: ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"],
+  en: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+};
+
+export const WEEKDAY_NAMES = WEEKDAY_NAMES_BY_LOCALE.es;
+
+/** "a" entre dos horas o dos días, "y" antes del último de una lista y "Cerrado". */
+const WORDS: Record<Locale, { to: string; and: string; closed: string }> = {
+  es: { to: "a", and: "y", closed: "Cerrado" },
+  en: { to: "to", and: "and", closed: "Closed" },
+};
 
 /** Hora del día en Bogotá ("14:00:00") en el formato de la app ("2:00 p. m."). */
-export function formatTimeOfDay(time: string): string {
+export function formatTimeOfDay(time: string, locale: Locale = DEFAULT_LOCALE): string {
   const [h = "0", m = "0"] = time.split(":");
   // Un lunes cualquiera a esa hora en Bogotá (UTC-5 fijo, sin horario de verano).
-  return formatTime(`2026-01-05T${h.padStart(2, "0")}:${m.padStart(2, "0")}:00-05:00`);
+  return formatTime(`2026-01-05T${h.padStart(2, "0")}:${m.padStart(2, "0")}:00-05:00`, locale);
 }
 
-function joinList(items: string[]): string {
+function joinList(items: string[], locale: Locale): string {
   if (items.length <= 1) return items.join("");
-  return `${items.slice(0, -1).join(", ")} y ${items.at(-1)}`;
+  return `${items.slice(0, -1).join(", ")} ${WORDS[locale].and} ${items.at(-1)}`;
 }
 
 function capitalize(text: string): string {
@@ -47,7 +52,8 @@ function capitalize(text: string): string {
 }
 
 /** Nombre de un conjunto de días: corridos con "a" (3 o más), sueltos con comas. */
-function daysLabel(weekdays: number[]): string {
+function daysLabel(weekdays: number[], locale: Locale): string {
+  const names = WEEKDAY_NAMES_BY_LOCALE[locale];
   const runs: number[][] = [];
   for (const day of weekdays) {
     const last = runs.at(-1);
@@ -56,10 +62,10 @@ function daysLabel(weekdays: number[]): string {
   }
   const parts = runs.flatMap((run) =>
     run.length >= 3
-      ? [`${WEEKDAY_NAMES[run[0]! - 1]} a ${WEEKDAY_NAMES[run.at(-1)! - 1]}`]
-      : run.map((d) => WEEKDAY_NAMES[d - 1]!),
+      ? [`${names[run[0]! - 1]} ${WORDS[locale].to} ${names[run.at(-1)! - 1]}`]
+      : run.map((d) => names[d - 1]!),
   );
-  return capitalize(joinList(parts));
+  return capitalize(joinList(parts, locale));
 }
 
 /**
@@ -67,15 +73,22 @@ function daysLabel(weekdays: number[]): string {
  * quedan como "Cerrado". Sin rangos en toda la semana devuelve una lista vacía (horario
  * [PENDIENTE]).
  */
-export function groupOpeningHours(ranges: OpeningRange[]): OpeningHoursGroup[] {
+export function groupOpeningHours(
+  ranges: OpeningRange[],
+  locale: Locale = DEFAULT_LOCALE,
+): OpeningHoursGroup[] {
+  const to = WORDS[locale].to;
   if (ranges.length === 0) return [];
   const byDay = new Map<number, string>();
   for (let day = 1; day <= 7; day++) {
     const today = ranges
       .filter((r) => r.weekday === day)
       .sort((a, b) => a.start_time.localeCompare(b.start_time))
-      .map((r) => `${formatTimeOfDay(r.start_time)} a ${formatTimeOfDay(r.end_time)}`);
-    byDay.set(day, today.length ? joinList(today) : "");
+      .map(
+        (r) =>
+          `${formatTimeOfDay(r.start_time, locale)} ${to} ${formatTimeOfDay(r.end_time, locale)}`,
+      );
+    byDay.set(day, today.length ? joinList(today, locale) : "");
   }
 
   const groups: { hours: string; days: number[] }[] = [];
@@ -87,8 +100,8 @@ export function groupOpeningHours(ranges: OpeningRange[]): OpeningHoursGroup[] {
   }
 
   return groups.map((g) => ({
-    days: daysLabel(g.days),
-    hours: g.hours || "Cerrado",
+    days: daysLabel(g.days, locale),
+    hours: g.hours || WORDS[locale].closed,
     closed: !g.hours,
   }));
 }

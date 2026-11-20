@@ -23,7 +23,10 @@ export interface ValidBarberProfile {
 }
 
 export type BarberProfileField = "displayName" | "bio" | "whatsappUrl" | "slotIntervalMin";
-export type BarberProfileErrors = Partial<Record<BarberProfileField, string>>;
+/** Clave del error; el formulario la traduce (`barbers.form.errors`). */
+export type BarberProfileError =
+  "nameRequired" | "nameTooLong" | "bioTooLong" | "whatsappInvalid" | "intervalInvalid";
+export type BarberProfileErrors = Partial<Record<BarberProfileField, BarberProfileError>>;
 
 /**
  * Enlace de WhatsApp del barbero. Acepta `https://wa.me/57...` o el número de celular de 10
@@ -53,18 +56,17 @@ export function validateBarberProfile(
 ): { ok: true; data: ValidBarberProfile } | { ok: false; errors: BarberProfileErrors } {
   const errors: BarberProfileErrors = {};
   const name = input.displayName.trim();
-  if (!name) errors.displayName = "Escribe el nombre";
-  else if (name.length > MAX_BARBER_NAME)
-    errors.displayName = `Máximo ${MAX_BARBER_NAME} caracteres`;
+  if (!name) errors.displayName = "nameRequired";
+  else if (name.length > MAX_BARBER_NAME) errors.displayName = "nameTooLong";
   const bio = input.bio.trim();
-  if (bio.length > MAX_BIO) errors.bio = `Máximo ${MAX_BIO} caracteres`;
+  if (bio.length > MAX_BIO) errors.bio = "bioTooLong";
   const whatsapp = normalizeWhatsappUrl(input.whatsappUrl);
   if (whatsapp === undefined) {
-    errors.whatsappUrl = "Escribe el celular de 10 dígitos o un enlace https://wa.me/...";
+    errors.whatsappUrl = "whatsappInvalid";
   }
   const interval = Number(input.slotIntervalMin);
   if (!(SLOT_INTERVALS as readonly number[]).includes(interval)) {
-    errors.slotIntervalMin = "Elige un intervalo de la lista";
+    errors.slotIntervalMin = "intervalInvalid";
   }
   if (Object.keys(errors).length > 0) return { ok: false, errors };
   return {

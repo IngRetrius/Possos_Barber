@@ -48,3 +48,18 @@ describe("groupOpeningHours", () => {
     expect(groupOpeningHours([])).toEqual([]);
   });
 });
+
+describe("groupOpeningHours en inglés", () => {
+  it("usa los nombres y las palabras del inglés", () => {
+    const nbsp = " ";
+    const ranges = [1, 2, 3, 4, 5, 6].map((weekday) => ({
+      weekday,
+      start_time: "09:00:00",
+      end_time: "12:00:00",
+    }));
+    expect(groupOpeningHours(ranges, "en")).toEqual([
+      { days: "Monday to Saturday", hours: `9:00${nbsp}AM to 12:00${nbsp}PM`, closed: false },
+      { days: "Sunday", hours: "Closed", closed: true },
+    ]);
+  });
+});

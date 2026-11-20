@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useActionState, type ReactNode } from "react";
 import {
   BottomBar,
@@ -10,10 +11,17 @@ import {
   Textarea,
   submitKeepingValues,
 } from "@possos/ui";
-import { MAX_BARBER_NAME, MAX_BIO, SLOT_INTERVALS, type BarberProfileErrors } from "./profile";
+import {
+  MAX_BARBER_NAME,
+  MAX_BIO,
+  SLOT_INTERVALS,
+  type BarberProfileError,
+  type BarberProfileErrors,
+} from "./profile";
 
 export interface BarberFormState {
   error?: string;
+  /** Claves de las validaciones del perfil; `services` y `percent` ya vienen traducidos. */
   fieldErrors?: BarberProfileErrors & { services?: string; percent?: string };
   saved?: boolean;
 }
@@ -41,8 +49,11 @@ export interface BarberFormProps {
  * WhatsApp, intervalo de las horas, servicios que hace y si está activo.
  */
 export function BarberForm({ action, initial, services, children }: BarberFormProps) {
+  const t = useTranslations("barbers.form");
   const [state, formAction, pending] = useActionState(action, {});
   const errors = state.fieldErrors ?? {};
+  const error = (key: BarberProfileError | undefined) =>
+    key ? t(`errors.${key}`, { maxName: MAX_BARBER_NAME, maxBio: MAX_BIO }) : undefined;
   return (
     <form
       action={formAction}
@@ -53,7 +64,7 @@ export function BarberForm({ action, initial, services, children }: BarberFormPr
       <input type="hidden" name="id" value={initial.id} />
       <div className="grid gap-6 px-gutter pt-2 pb-8">
         {children}
-        <Field label="Nombre visible" error={errors.displayName}>
+        <Field label={t("name")} error={error(errors.displayName)}>
           <Input
             name="nombre"
             defaultValue={initial.display_name}
@@ -62,18 +73,10 @@ export function BarberForm({ action, initial, services, children }: BarberFormPr
             required
           />
         </Field>
-        <Field
-          label="Presentación"
-          hint="Una o dos frases para la página pública. Vacía, dice [PENDIENTE]."
-          error={errors.bio}
-        >
+        <Field label={t("bio")} hint={t("bioHint")} error={error(errors.bio)}>
           <Textarea name="bio" defaultValue={initial.bio ?? ""} maxLength={MAX_BIO} />
         </Field>
-        <Field
-          label="WhatsApp"
-          hint="El celular de 10 dígitos o un enlace https://wa.me/... Sale en la página pública."
-          error={errors.whatsappUrl}
-        >
+        <Field label={t("whatsapp")} hint={t("whatsappHint")} error={error(errors.whatsappUrl)}>
           <Input
             name="whatsapp"
             inputMode="url"
@@ -81,11 +84,7 @@ export function BarberForm({ action, initial, services, children }: BarberFormPr
             autoComplete="off"
           />
         </Field>
-        <Field
-          label="Intervalo de las horas"
-          hint="Cada cuánto empieza una hora libre desde el inicio de cada rango del horario."
-          error={errors.slotIntervalMin}
-        >
+        <Field label={t("interval")} hint={t("intervalHint")} error={error(errors.slotIntervalMin)}>
           <select
             name="intervalo"
             defaultValue={String(initial.slot_interval_min)}
@@ -99,9 +98,9 @@ export function BarberForm({ action, initial, services, children }: BarberFormPr
           </select>
         </Field>
         <fieldset className="grid gap-1">
-          <legend className="mb-1 text-label">Servicios que hace</legend>
+          <legend className="mb-1 text-label">{t("services")}</legend>
           {services.length === 0 ? (
-            <p className="text-caption text-fg-muted">Todavía no hay servicios activos.</p>
+            <p className="text-caption text-fg-muted">{t("noServices")}</p>
           ) : (
             services.map((s) => (
               <Checkbox key={s.id} name="servicio" value={s.id} defaultChecked={s.checked}>
@@ -111,13 +110,8 @@ export function BarberForm({ action, initial, services, children }: BarberFormPr
           )}
           {errors.services ? <p className="text-caption text-danger">{errors.services}</p> : null}
         </fieldset>
-        <Checkbox
-          name="activo"
-          value="si"
-          defaultChecked={initial.active}
-          hint="Inactivo: no aparece en la página pública ni en la reserva. Su agenda y sus cobros se conservan."
-        >
-          Activo
+        <Checkbox name="activo" value="si" defaultChecked={initial.active} hint={t("activeHint")}>
+          {t("active")}
         </Checkbox>
       </div>
       <BottomBar
@@ -125,12 +119,12 @@ export function BarberForm({ action, initial, services, children }: BarberFormPr
           state.error ? (
             <span className="text-danger">{state.error}</span>
           ) : state.saved ? (
-            "Guardaste los cambios"
+            t("saved")
           ) : null
         }
       >
         <Button type="submit" disabled={pending} aria-busy={pending}>
-          {pending ? "Guardando..." : "Guardar"}
+          {pending ? t("saving") : t("save")}
         </Button>
       </BottomBar>
     </form>

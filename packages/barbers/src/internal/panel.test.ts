@@ -53,7 +53,7 @@ describe("perfil del barbero", () => {
     });
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.errors.displayName).toBe("Escribe el nombre");
+      expect(result.errors.displayName).toBe("nameRequired");
       expect(result.errors.slotIntervalMin).toBeDefined();
     }
   });

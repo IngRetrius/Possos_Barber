@@ -16,6 +16,7 @@ export {
   formatTimeOfDay,
   groupOpeningHours,
   WEEKDAY_NAMES,
+  WEEKDAY_NAMES_BY_LOCALE,
   type OpeningHoursGroup,
   type OpeningRange,
 } from "./internal/hours";
@@ -34,6 +35,7 @@ export {
   normalizeWhatsappUrl,
   SLOT_INTERVALS,
   validateBarberProfile,
+  type BarberProfileError,
   type BarberProfileErrors,
   type BarberProfileField,
   type BarberProfileInput,
@@ -43,7 +45,6 @@ export {
   parseWeeklyRanges,
   toHourMinute,
   validateWeeklyRanges,
-  WEEKLY_HOURS_MESSAGES,
   type WeeklyHoursError,
   type WeeklyRange,
 } from "./internal/weekly-hours";

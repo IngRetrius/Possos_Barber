@@ -60,8 +60,3 @@ export function validateWeeklyRanges(ranges: WeeklyRange[]): Map<number, WeeklyH
   }
   return errors;
 }
-
-export const WEEKLY_HOURS_MESSAGES: Record<WeeklyHoursError, string> = {
-  INVALID_RANGE: "Cada rango debe terminar después de empezar",
-  HOURS_OVERLAP: "Dos rangos de este día se cruzan",
-};

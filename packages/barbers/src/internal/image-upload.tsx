@@ -1,6 +1,7 @@
 "use client";
 
 import { ImagePlus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useId, useRef, useState } from "react";
 import { createClient } from "@possos/supabase/client";
 import { cn, InlineError } from "@possos/ui";
@@ -38,6 +39,7 @@ async function toJpeg(file: File): Promise<Blob> {
 }
 
 export function ImageUpload({ barberId, bucket, onUploaded, label, className }: ImageUploadProps) {
+  const t = useTranslations("barbers.upload");
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<"idle" | "working">("idle");
@@ -51,7 +53,7 @@ export function ImageUpload({ barberId, bucket, onUploaded, label, className }: 
       try {
         blob = await toJpeg(file);
       } catch {
-        setError("No pudimos leer esa imagen. Usa una foto JPG o PNG.");
+        setError(t("unreadable"));
         return;
       }
       const path = newImagePath(barberId, crypto.randomUUID());
@@ -60,13 +62,13 @@ export function ImageUpload({ barberId, bucket, onUploaded, label, className }: 
         .from(bucket)
         .upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
       if (uploadError) {
-        setError("No pudimos subir la imagen. Revisa tu conexión e intenta de nuevo.");
+        setError(t("failed"));
         return;
       }
       const saved = await onUploaded(path);
       if (!saved.ok) {
         await supabase.storage.from(bucket).remove([path]);
-        setError(saved.error ?? "No pudimos guardar la imagen. Intenta de nuevo.");
+        setError(saved.error ?? t("notSaved"));
       }
     } finally {
       setStatus("idle");
@@ -86,7 +88,7 @@ export function ImageUpload({ barberId, bucket, onUploaded, label, className }: 
         )}
       >
         <ImagePlus aria-hidden="true" strokeWidth={1.5} className="size-5" />
-        {status === "working" ? "Subiendo..." : label}
+        {status === "working" ? t("working") : label}
         <input
           ref={input}
           id={id}

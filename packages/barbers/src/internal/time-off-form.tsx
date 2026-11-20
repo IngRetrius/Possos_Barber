@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useActionState, useState } from "react";
 import { Button, Checkbox, Field, InlineError, Input, submitKeepingValues } from "@possos/ui";
 
@@ -34,6 +35,7 @@ export interface TimeOffFormProps {
  * cae sobre citas, el bloqueo queda creado y se listan para moverlas o cancelarlas (docs/09).
  */
 export function TimeOffForm({ action, barberId, defaultDate }: TimeOffFormProps) {
+  const t = useTranslations("barbers.timeOff");
   const [state, formAction, pending] = useActionState(action, {});
   const [allDay, setAllDay] = useState(true);
   const [from, setFrom] = useState(defaultDate);
@@ -50,7 +52,7 @@ export function TimeOffForm({ action, barberId, defaultDate }: TimeOffFormProps)
       >
         <input type="hidden" name="barbero" value={barberId} />
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Desde" error={errors.from} className="min-w-0">
+          <Field label={t("from")} error={errors.from} className="min-w-0">
             <Input
               type="date"
               name="desde"
@@ -63,7 +65,7 @@ export function TimeOffForm({ action, barberId, defaultDate }: TimeOffFormProps)
               }}
             />
           </Field>
-          <Field label="Hasta" error={errors.to} className="min-w-0">
+          <Field label={t("to")} error={errors.to} className="min-w-0">
             <Input
               type="date"
               name="hasta"
@@ -81,11 +83,11 @@ export function TimeOffForm({ action, barberId, defaultDate }: TimeOffFormProps)
           checked={allDay}
           onChange={(e) => setAllDay(e.target.checked)}
         >
-          Todo el día
+          {t("allDay")}
         </Checkbox>
         {allDay ? null : (
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Hora de inicio" error={errors.time} className="min-w-0">
+            <Field label={t("start")} error={errors.time} className="min-w-0">
               <Input
                 type="time"
                 name="inicio"
@@ -95,7 +97,7 @@ export function TimeOffForm({ action, barberId, defaultDate }: TimeOffFormProps)
                 className="w-0 min-w-full px-3"
               />
             </Field>
-            <Field label="Hora de fin" className="min-w-0">
+            <Field label={t("end")} className="min-w-0">
               <Input
                 type="time"
                 name="fin"
@@ -107,25 +109,19 @@ export function TimeOffForm({ action, barberId, defaultDate }: TimeOffFormProps)
             </Field>
           </div>
         )}
-        <Field label="Motivo" hint="Opcional. Solo lo ve el personal.">
-          <Input name="motivo" maxLength={80} placeholder="Almuerzo, vacaciones..." />
+        <Field label={t("reason")} hint={t("reasonHint")}>
+          <Input name="motivo" maxLength={80} placeholder={t("reasonPlaceholder")} />
         </Field>
         {state.error ? <InlineError>{state.error}</InlineError> : null}
         <Button type="submit" variant="secondary" disabled={pending} aria-busy={pending}>
-          {pending ? "Bloqueando..." : "Bloquear"}
+          {pending ? t("blocking") : t("block")}
         </Button>
       </form>
       {state.created ? (
         <div role="status" className="grid gap-3 rounded-card border border-border bg-surface p-4">
           {state.conflicts && state.conflicts.length > 0 ? (
             <>
-              <p className="text-body">
-                Bloqueaste ese horario, pero{" "}
-                {state.conflicts.length === 1
-                  ? "hay 1 cita debajo"
-                  : `hay ${state.conflicts.length} citas debajo`}
-                . Muévelas o cancélalas:
-              </p>
+              <p className="text-body">{t("conflicts", { count: state.conflicts.length })}</p>
               <ul className="grid gap-2">
                 {state.conflicts.map((c) => (
                   <li key={c.id}>
@@ -140,7 +136,7 @@ export function TimeOffForm({ action, barberId, defaultDate }: TimeOffFormProps)
               </ul>
             </>
           ) : (
-            <p className="text-body">Bloqueaste ese horario. No había citas.</p>
+            <p className="text-body">{t("noConflicts")}</p>
           )}
         </div>
       ) : null}
