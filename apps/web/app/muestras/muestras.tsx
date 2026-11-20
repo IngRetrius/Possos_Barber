@@ -18,6 +18,7 @@ import {
   InlineError,
   Input,
   List,
+  ListDisclosureRow,
   ListRow,
   Logo,
   PhoneInput,
@@ -321,6 +322,44 @@ export function Muestras() {
             href="/muestras"
           />
           <ListRow title="Total del día" detail="6 servicios" value={formatPrice(210000)} />
+        </List>
+      </Section>
+
+      <Section id="desplegables" title="Filas que se despliegan">
+        <List>
+          <ListDisclosureRow
+            group="muestra-servicios"
+            title="Corte"
+            detail={formatDuration(60)}
+            value={formatPrice(25000)}
+          >
+            <p className="text-body text-fg-muted">
+              Servicio de corte que incluye asesoría personalizada
+            </p>
+            <Button variant="secondary" className="w-full" onClick={() => toast("Reservar")}>
+              Reservar este servicio
+            </Button>
+          </ListDisclosureRow>
+          <ListDisclosureRow
+            group="muestra-servicios"
+            title="Corte con barba"
+            detail={formatDuration(120)}
+            value={formatPrice(40000)}
+          >
+            <Button variant="secondary" className="w-full" onClick={() => toast("Reservar")}>
+              Reservar este servicio
+            </Button>
+          </ListDisclosureRow>
+          <ListDisclosureRow
+            group="muestra-servicios"
+            title="Global platinado"
+            detail={formatDuration(300)}
+            value={formatPrice(170000)}
+          >
+            <Button variant="secondary" className="w-full" onClick={() => toast("Reservar")}>
+              Reservar este servicio
+            </Button>
+          </ListDisclosureRow>
         </List>
       </Section>
 

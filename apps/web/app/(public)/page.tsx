@@ -16,6 +16,7 @@ import {
   MY_APPOINTMENTS_ROUTES,
   parsePeriod,
   parseSelection,
+  selectionHref,
 } from "@possos/booking";
 import { getNextAppointment } from "@possos/booking/server";
 import { ServiceList } from "@possos/catalog/ui";
@@ -197,7 +198,12 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             Servicios
           </h2>
           {flow.services.length ? (
-            <ServiceList services={flow.services} />
+            <ServiceList
+              services={flow.services}
+              bookHrefFor={(service) =>
+                selectionHref(BOOKING_ROUTES.barber, { serviceId: service.id })
+              }
+            />
           ) : (
             <p className="text-body text-fg-muted">{`Servicios ${PENDING}`}</p>
           )}

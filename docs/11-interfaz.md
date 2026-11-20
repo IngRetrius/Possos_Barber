@@ -121,8 +121,13 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 │                                  │
 │ Servicios                        │
 │ ┌──────────────────────────────┐ │
-│ │ Corte normal          60 min │ │
-│ │                [PENDIENTE] $ │ │
+│ │ Corte              $25.000 ˄ │ │  abierta
+│ │ 60 min                       │ │
+│ │ Servicio de corte que…       │ │
+│ │ [ Reservar este servicio ]   │ │
+│ ├──────────────────────────────┤ │
+│ │ Corte con barba    $40.000 ˅ │ │
+│ │ 120 min                      │ │
 │ └──────────────────────────────┘ │
 │ El barbero · foto y portafolio   │
 │ Ubicación · mapa · horario       │
@@ -134,6 +139,7 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 
 - Si el cliente ya tiene una cita próxima, la primera tarjeta es esa cita ("Tu cita: jue 20 nov, 3:00 p. m.") en vez de la frase.
 - La página se renderiza en el servidor para búsquedas locales ([05](05-alcance.md)).
+- Cada servicio es una fila que se despliega en el sitio (acordeón con `<details>`; abrir una cierra la otra): muestra la descripción completa y "Reservar este servicio" (botón secundario, porque el amarillo ya está en la barra fija), que abre el flujo con ese servicio elegido. No es hoja inferior (principio 6) y funciona sin JavaScript. Pedido de Juan el 19/11/2026: la descripción cortada no se leía y desde el inicio no se podía reservar un servicio concreto.
 
 ### Paso: Servicio
 
@@ -389,7 +395,7 @@ Los textos de la tabla de arriba (paso de horario, hora tomada, política, aprob
 
 | Lugar | Texto |
 |---|---|
-| Inicio | Nombre, "Barbería en Girardot" y la frase del dueño (**[PENDIENTE]**). Secciones "Servicios", "El barbero", "Ubicación", "Horario" y "Contacto". Con una cita próxima: "Tu próxima cita" con fecha, hora, servicio y estado |
+| Inicio | Nombre, "Barbería en Girardot" y la frase del dueño (**[PENDIENTE]**). Secciones "Servicios" (cada fila se despliega con la descripción y "Reservar este servicio"), "El barbero", "Ubicación", "Horario" y "Contacto". Con una cita próxima: "Tu próxima cita" con fecha, hora, servicio y estado |
 | Paso "Servicio" | "¿Qué servicio quieres?". Sin servicios: "Todavía no hay servicios para reservar" |
 | Paso "Barbero" | "¿Con quién?". Primera fila "Cualquiera disponible", con "El que esté libre a la hora que elijas" |
 | Horario sin hora elegida | La barra inferior dice "Elige una hora" y "Continuar" está apagado |

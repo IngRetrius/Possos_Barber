@@ -3,8 +3,9 @@ import { defineConfig, devices } from "@playwright/test";
 /**
  * Pruebas de punta a punta a 390 px (regla 9). Corren contra `next dev` porque la página de
  * muestras solo existe en desarrollo. Localmente reutiliza un `pnpm dev` que ya esté corriendo.
+ * `E2E_PORT` cambia el puerto, para probar una rama en otro worktree sin chocar con el 3000.
  */
-const PORT = 3000;
+const PORT = Number(process.env.E2E_PORT ?? 3000);
 
 export default defineConfig({
   testDir: "./e2e",

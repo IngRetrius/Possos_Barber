@@ -57,7 +57,13 @@ export {
   type CheckboxProps,
   type FieldProps,
 } from "./internal/components/fields";
-export { List, ListRow, type ListRowProps } from "./internal/components/list";
+export {
+  List,
+  ListDisclosureRow,
+  ListRow,
+  type ListDisclosureRowProps,
+  type ListRowProps,
+} from "./internal/components/list";
 export { Logo, type LogoProps } from "./internal/components/logo";
 export { Sheet, SheetClose, SheetTrigger, type SheetProps } from "./internal/components/sheet";
 export { SlotGrid, SlotGridSkeleton, type SlotGridProps } from "./internal/components/slot-grid";

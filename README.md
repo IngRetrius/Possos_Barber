@@ -43,7 +43,7 @@ pnpm dev                   # http://localhost:3000
 | Comando | Qué hace |
 |---|---|
 | `pnpm turbo run build lint typecheck test` | Build, lint, tipos y Vitest de todos los paquetes |
-| `pnpm --filter web test:e2e` | Playwright a 390 px. Necesita Supabase local con la semilla (`pnpm db:start`). Usa el `pnpm dev` que esté corriendo o levanta uno. La primera vez: `pnpm --filter web exec playwright install chromium` |
+| `pnpm --filter web test:e2e` | Playwright a 390 px. Necesita Supabase local con la semilla (`pnpm db:start`). Usa el `pnpm dev` que esté corriendo o levanta uno. Con `E2E_PORT=3100` usa otro puerto (para una rama en otro worktree). La primera vez: `pnpm --filter web exec playwright install chromium` |
 | `pnpm depcruise` | Revisa las reglas de modularidad de [docs/08](docs/08-estructura-monorepo.md#reglas-de-modularidad) |
 | `pnpm format` / `pnpm format:check` | Prettier |
 | `pnpm db:test` | Pruebas pgTAP de `supabase/tests/` |

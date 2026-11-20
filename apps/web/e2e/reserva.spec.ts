@@ -140,6 +140,28 @@ test("la página pública se lee sin JavaScript", async ({ browser }) => {
   await context.close();
 });
 
+test("un servicio del inicio se despliega y reserva directo, también sin JavaScript", async ({
+  browser,
+}) => {
+  for (const javaScriptEnabled of [true, false]) {
+    const context = await browser.newContext({
+      javaScriptEnabled,
+      viewport: { width: 390, height: 844 },
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    const services = page.locator('section[aria-labelledby="servicios"]');
+    const book = services.getByRole("link", { name: "Reservar este servicio" });
+    await expect(book).toBeHidden();
+    await services.locator("summary", { hasText: "Corte normal" }).click();
+    await expect(book).toBeVisible();
+    if (javaScriptEnabled) await expectAccessible(page);
+    await book.click();
+    await expect(page).toHaveURL(new RegExp(`^[^?]+${TIME_PATH}\\?.*servicio=${SEED.serviceId}`));
+    await context.close();
+  }
+});
+
 test("cliente con sesión reserva en 4 toques desde el inicio", async ({ page }) => {
   await signIn(page, SEED.customer, "/");
   await expect(page).toHaveURL("/");
