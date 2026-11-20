@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { formatDuration, List, ListDisclosureRow, ListRow } from "@possos/ui";
+import { formatDuration, List, ListDisclosureRow, ListRow, useFormat } from "@possos/ui";
 import type { Service } from "../index";
 import { servicePriceLabel } from "./price";
 
@@ -18,6 +18,7 @@ export interface ServiceListProps {
 
 /** Servicios con duración y precio. El precio sin confirmar dice [PENDIENTE]. */
 export function ServiceList({ services, hrefFor, bookingFor, className }: ServiceListProps) {
+  const { locale } = useFormat();
   if (bookingFor) {
     return (
       <List className={className}>
@@ -27,7 +28,7 @@ export function ServiceList({ services, hrefFor, bookingFor, className }: Servic
             group="servicios"
             title={service.name}
             detail={formatDuration(service.duration_min)}
-            value={servicePriceLabel(service.price_cop)}
+            value={servicePriceLabel(service.price_cop, locale)}
           >
             {service.description ? (
               <p className="text-body text-fg-muted">{service.description}</p>
@@ -50,7 +51,7 @@ export function ServiceList({ services, hrefFor, bookingFor, className }: Servic
               ? `${formatDuration(service.duration_min)} · ${service.description}`
               : formatDuration(service.duration_min)
           }
-          value={servicePriceLabel(service.price_cop)}
+          value={servicePriceLabel(service.price_cop, locale)}
           href={hrefFor?.(service)}
         />
       ))}

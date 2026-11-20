@@ -29,6 +29,6 @@ describe("validateService", () => {
       durationMin: "33",
       priceCop: "",
     });
-    expect(result.ok).toBe(false);
+    expect(result).toEqual({ ok: false, errors: { durationMin: "durationInvalid" } });
   });
 });

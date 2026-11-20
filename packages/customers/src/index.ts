@@ -38,6 +38,7 @@ export {
   MAX_NAME_LENGTH,
   needsConsent,
   validateProfile,
+  type ProfileError,
   type ProfileErrors,
   type ProfileField,
   type ProfileInput,

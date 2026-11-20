@@ -1,3 +1,6 @@
+import { DEFAULT_LOCALE, type Locale } from "@possos/config/constants";
+import { messages } from "../messages";
+
 /** Errores del perfil del cliente. Los de Postgres llegan como SQLSTATE (restricciones, RLS). */
 export const CUSTOMERS_ERROR_CODES = [
   "NOT_AUTHENTICATED",
@@ -24,14 +27,10 @@ export function customersErrorCode(
   return "UNKNOWN";
 }
 
-const MESSAGES: Record<CustomersErrorCode, string> = {
-  NOT_AUTHENTICATED: "Ingresa para continuar",
-  FORBIDDEN: "No tienes permiso para hacer esto",
-  INVALID_CUSTOMER: "Revisa el nombre y el celular (+57 y 10 dígitos)",
-  CONSENT_REQUIRED: "Sin esta autorización no podemos crear tu cuenta",
-  UNKNOWN: "No pudimos completar la acción. Intenta de nuevo",
-};
-
-export function customersErrorMessage(code: CustomersErrorCode): string {
-  return MESSAGES[code];
+/** Texto para mostrar al usuario, en su idioma. */
+export function customersErrorMessage(
+  code: CustomersErrorCode,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
+  return messages[locale].errors[code];
 }

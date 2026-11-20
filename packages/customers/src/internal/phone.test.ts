@@ -50,6 +50,7 @@ describe("parseColombianMobile", () => {
     expect(phoneErrorMessage("NOT_MOBILE")).toBe(
       "Escribe un número de celular: en Colombia empiezan por 3",
     );
+    expect(phoneErrorMessage("EMPTY", "en")).toBe("Enter your mobile number");
   });
 });
 

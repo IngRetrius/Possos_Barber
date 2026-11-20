@@ -1,7 +1,8 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
-import { Button, cn, formatPrice, InlineError } from "@possos/ui";
+import { Button, cn, InlineError, useFormat } from "@possos/ui";
 import { formatPercent, splitAmount } from "./split";
 
 export interface ChargeFormProps {
@@ -43,6 +44,8 @@ export function ChargeForm({
   onSubmit,
   onCancel,
 }: ChargeFormProps) {
+  const t = useTranslations("commissions.chargeForm");
+  const f = useFormat();
   const id = useId();
   const [value, setValue] = useState(defaultAmount === null ? "" : String(defaultAmount));
   const [missing, setMissing] = useState(false);
@@ -64,7 +67,7 @@ export function ChargeForm({
     >
       <div className="grid gap-2">
         <label htmlFor={id} className="text-label">
-          Valor cobrado
+          {t("amount")}
         </label>
         <div
           className={cn(
@@ -81,7 +84,7 @@ export function ChargeForm({
             name="valor"
             inputMode="numeric"
             autoComplete="off"
-            value={value === "" ? "" : formatPrice(Number(value)).replace(/^\$\s?/, "")}
+            value={value === "" ? "" : f.price(Number(value)).replace(/^\$\s?/, "")}
             onChange={(e) => {
               setValue(digits(e.target.value));
               setMissing(false);
@@ -91,11 +94,9 @@ export function ChargeForm({
             className="min-w-0 flex-1 bg-transparent px-2 text-body text-fg tabular-nums outline-none"
           />
         </div>
-        {missing ? <p className="text-caption text-danger">Escribe el valor cobrado</p> : null}
+        {missing ? <p className="text-caption text-danger">{t("amountRequired")}</p> : null}
         {defaultAmount === null ? (
-          <p className="text-caption text-fg-muted">
-            El servicio no tiene precio definido: escribe lo que se cobró.
-          </p>
+          <p className="text-caption text-fg-muted">{t("noPrice")}</p>
         ) : null}
       </div>
       <dl
@@ -106,21 +107,19 @@ export function ChargeForm({
         <div className="flex justify-between gap-3">
           <dt className="text-fg-muted">
             {barberLabel}
-            {barberPct !== null ? ` (${formatPercent(barberPct)})` : ""}
+            {barberPct !== null ? ` (${formatPercent(barberPct, f.locale)})` : ""}
           </dt>
-          <dd>{split ? formatPrice(split.barber) : "-"}</dd>
+          <dd>{split ? f.price(split.barber) : "-"}</dd>
         </div>
         <div className="flex justify-between gap-3">
           <dt className="text-fg-muted">
-            Para la barbería
-            {barberPct !== null ? ` (${formatPercent(100 - barberPct)})` : ""}
+            {t("business")}
+            {barberPct !== null ? ` (${formatPercent(100 - barberPct, f.locale)})` : ""}
           </dt>
-          <dd>{split ? formatPrice(split.business) : "-"}</dd>
+          <dd>{split ? f.price(split.business) : "-"}</dd>
         </div>
       </dl>
-      {barberPct === null ? (
-        <InlineError>Falta definir el porcentaje de este barbero</InlineError>
-      ) : null}
+      {barberPct === null ? <InlineError>{t("noRate")}</InlineError> : null}
       {error ? <InlineError>{error}</InlineError> : null}
       <div className="grid gap-2">
         <Button type="submit" disabled={pending || barberPct === null} aria-busy={pending}>
@@ -128,7 +127,7 @@ export function ChargeForm({
         </Button>
         {onCancel ? (
           <Button type="button" variant="ghost" onClick={onCancel}>
-            Volver
+            {t("back")}
           </Button>
         ) : null}
       </div>

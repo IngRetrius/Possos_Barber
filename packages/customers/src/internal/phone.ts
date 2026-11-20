@@ -1,3 +1,6 @@
+import { DEFAULT_LOCALE, type Locale } from "@possos/config/constants";
+import { messages } from "../messages";
+
 /**
  * Celular colombiano en E.164: +57 y 10 dígitos que empiezan por 3 (los fijos empiezan por 60,
  * y a esos no les llega WhatsApp). La base solo exige +57 y 10 dígitos (customers.phone);
@@ -29,15 +32,17 @@ export function parseColombianMobile(value: string): ParsedPhone {
   return { ok: true, e164: `+57${national}`, national };
 }
 
-const PHONE_MESSAGES: Record<PhoneError, string> = {
-  EMPTY: "Escribe tu celular",
-  LENGTH: "El celular debe tener 10 dígitos, sin el +57",
-  NOT_MOBILE: "Escribe un número de celular: en Colombia empiezan por 3",
-};
-
-export function phoneErrorMessage(error: PhoneError): string {
-  return PHONE_MESSAGES[error];
+/** Texto del error del celular, en el idioma de la persona. */
+export function phoneErrorMessage(error: PhoneError, locale: Locale = DEFAULT_LOCALE): string {
+  return messages[locale].phone[error];
 }
+
+/** Clave del error del celular en los formularios (`phoneEmpty`, `phoneLength`...). */
+export const PHONE_ERROR_KEY = {
+  EMPTY: "phoneEmpty",
+  LENGTH: "phoneLength",
+  NOT_MOBILE: "phoneNotMobile",
+} as const satisfies Record<PhoneError, string>;
 
 /** "+573001234567" → "300 123 4567". Lo que no sea un celular colombiano queda igual. */
 export function formatPhone(e164: string | null | undefined): string {

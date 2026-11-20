@@ -278,6 +278,9 @@ importers:
 
   packages/auth:
     dependencies:
+      '@possos/config':
+        specifier: workspace:*
+        version: link:../config
       '@possos/supabase':
         specifier: workspace:*
         version: link:../supabase
@@ -291,9 +294,6 @@ importers:
         specifier: 0.0.1
         version: 0.0.1
     devDependencies:
-      '@possos/config':
-        specifier: workspace:*
-        version: link:../config
       '@types/react':
         specifier: 19.3.0
         version: 19.3.0
@@ -321,6 +321,9 @@ importers:
 
   packages/barbers:
     dependencies:
+      '@possos/config':
+        specifier: workspace:*
+        version: link:../config
       '@possos/supabase':
         specifier: workspace:*
         version: link:../supabase
@@ -337,9 +340,6 @@ importers:
         specifier: 0.0.1
         version: 0.0.1
     devDependencies:
-      '@possos/config':
-        specifier: workspace:*
-        version: link:../config
       '@types/node':
         specifier: 26.6.6
         version: 26.6.6
@@ -373,6 +373,9 @@ importers:
       '@possos/barbers':
         specifier: workspace:*
         version: link:../barbers
+      '@possos/config':
+        specifier: workspace:*
+        version: link:../config
       '@possos/customers':
         specifier: workspace:*
         version: link:../customers
@@ -392,9 +395,6 @@ importers:
         specifier: 0.0.1
         version: 0.0.1
     devDependencies:
-      '@possos/config':
-        specifier: workspace:*
-        version: link:../config
       '@types/node':
         specifier: 26.6.6
         version: 26.6.6
@@ -425,6 +425,9 @@ importers:
 
   packages/catalog:
     dependencies:
+      '@possos/config':
+        specifier: workspace:*
+        version: link:../config
       '@possos/supabase':
         specifier: workspace:*
         version: link:../supabase
@@ -438,9 +441,6 @@ importers:
         specifier: 0.0.1
         version: 0.0.1
     devDependencies:
-      '@possos/config':
-        specifier: workspace:*
-        version: link:../config
       '@types/react':
         specifier: 19.3.0
         version: 19.3.0
@@ -468,6 +468,9 @@ importers:
 
   packages/commissions:
     dependencies:
+      '@possos/config':
+        specifier: workspace:*
+        version: link:../config
       '@possos/supabase':
         specifier: workspace:*
         version: link:../supabase
@@ -481,9 +484,6 @@ importers:
         specifier: 0.0.1
         version: 0.0.1
     devDependencies:
-      '@possos/config':
-        specifier: workspace:*
-        version: link:../config
       '@types/react':
         specifier: 19.3.0
         version: 19.3.0
@@ -536,6 +536,9 @@ importers:
 
   packages/customers:
     dependencies:
+      '@possos/config':
+        specifier: workspace:*
+        version: link:../config
       '@possos/supabase':
         specifier: workspace:*
         version: link:../supabase
@@ -549,9 +552,6 @@ importers:
         specifier: 0.0.1
         version: 0.0.1
     devDependencies:
-      '@possos/config':
-        specifier: workspace:*
-        version: link:../config
       '@types/react':
         specifier: 19.3.0
         version: 19.3.0

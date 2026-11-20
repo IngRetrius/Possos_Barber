@@ -27,7 +27,7 @@ describe("validateProfile", () => {
   it("sin la autorización de datos no pasa", () => {
     expect(validateProfile({ ...base, dataConsent: false }, { requireConsent: true })).toEqual({
       ok: false,
-      errors: { dataConsent: "Sin esta autorización no podemos crear tu cuenta" },
+      errors: { dataConsent: "consentRequired" },
     });
   });
 
@@ -51,9 +51,9 @@ describe("validateProfile", () => {
     expect(result).toEqual({
       ok: false,
       errors: {
-        fullName: "Escribe tu nombre",
-        phone: "Escribe un número de celular: en Colombia empiezan por 3",
-        dataConsent: "Sin esta autorización no podemos crear tu cuenta",
+        fullName: "nameRequired",
+        phone: "phoneNotMobile",
+        dataConsent: "consentRequired",
       },
     });
   });

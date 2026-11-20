@@ -12,9 +12,9 @@ describe("validateStaffCustomer", () => {
     expect(result).toEqual({
       ok: false,
       errors: {
-        fullName: "Escribe el nombre del cliente",
-        phone: "El celular debe tener 10 dígitos, sin el +57",
-        dataConsent: "Sin la autorización del cliente no podemos guardar sus datos",
+        fullName: "nameRequired",
+        phone: "phoneLength",
+        dataConsent: "consentRequired",
       },
     });
   });

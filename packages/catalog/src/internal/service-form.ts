@@ -22,7 +22,10 @@ export interface ValidService {
 }
 
 export type ServiceField = "name" | "description" | "durationMin" | "priceCop";
-export type ServiceErrors = Partial<Record<ServiceField, string>>;
+/** Clave del error; el formulario la traduce (`catalog.serviceForm.errors`). */
+export type ServiceError =
+  "nameRequired" | "nameTooLong" | "descriptionTooLong" | "durationInvalid" | "priceInvalid";
+export type ServiceErrors = Partial<Record<ServiceField, ServiceError>>;
 
 /** "$ 30.000" → 30000. Vacío → null. Lo que no es un número entero → NaN. */
 export function parsePesos(value: string): number | null {
@@ -37,19 +40,17 @@ export function validateService(
 ): { ok: true; data: ValidService } | { ok: false; errors: ServiceErrors } {
   const errors: ServiceErrors = {};
   const name = input.name.trim().replace(/\s+/g, " ");
-  if (!name) errors.name = "Escribe el nombre del servicio";
-  else if (name.length > MAX_SERVICE_NAME) errors.name = `Máximo ${MAX_SERVICE_NAME} caracteres`;
+  if (!name) errors.name = "nameRequired";
+  else if (name.length > MAX_SERVICE_NAME) errors.name = "nameTooLong";
   const description = input.description.trim();
-  if (description.length > MAX_SERVICE_DESCRIPTION) {
-    errors.description = `Máximo ${MAX_SERVICE_DESCRIPTION} caracteres`;
-  }
+  if (description.length > MAX_SERVICE_DESCRIPTION) errors.description = "descriptionTooLong";
   const duration = Number(input.durationMin);
   if (!Number.isInteger(duration) || duration <= 0 || duration % 5 !== 0 || duration > 480) {
-    errors.durationMin = "Escribe los minutos en múltiplos de 5 (por ejemplo, 60)";
+    errors.durationMin = "durationInvalid";
   }
   const price = parsePesos(input.priceCop);
   if (price !== null && (!Number.isSafeInteger(price) || price < 0)) {
-    errors.priceCop = "Escribe el precio en pesos, sin centavos (por ejemplo, 30.000)";
+    errors.priceCop = "priceInvalid";
   }
   if (Object.keys(errors).length) return { ok: false, errors };
   return {

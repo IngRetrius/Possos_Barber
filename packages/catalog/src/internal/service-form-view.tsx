@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useActionState } from "react";
 import {
   BottomBar,
@@ -10,7 +11,12 @@ import {
   Textarea,
   submitKeepingValues,
 } from "@possos/ui";
-import { MAX_SERVICE_DESCRIPTION, MAX_SERVICE_NAME, type ServiceErrors } from "./service-form";
+import {
+  MAX_SERVICE_DESCRIPTION,
+  MAX_SERVICE_NAME,
+  type ServiceError,
+  type ServiceErrors,
+} from "./service-form";
 
 export interface ServiceFormState {
   error?: string;
@@ -38,8 +44,13 @@ export interface ServiceFormProps {
  * [PENDIENTE] (regla 8 de CLAUDE.md). Desactivar lo quita de la reserva sin borrar el historial.
  */
 export function ServiceForm({ action, initial, submitLabel }: ServiceFormProps) {
+  const t = useTranslations("catalog.serviceForm");
   const [state, formAction, pending] = useActionState(action, {});
-  const errors = state.fieldErrors ?? {};
+  const fieldErrors = state.fieldErrors ?? {};
+  const error = (key: ServiceError | undefined) =>
+    key
+      ? t(`errors.${key}`, { maxName: MAX_SERVICE_NAME, maxDescription: MAX_SERVICE_DESCRIPTION })
+      : undefined;
   return (
     <form
       action={formAction}
@@ -49,7 +60,7 @@ export function ServiceForm({ action, initial, submitLabel }: ServiceFormProps) 
     >
       {initial ? <input type="hidden" name="id" value={initial.id} /> : null}
       <div className="grid gap-5 px-gutter pt-2 pb-8">
-        <Field label="Nombre" error={errors.name}>
+        <Field label={t("name")} error={error(fieldErrors.name)}>
           <Input
             name="nombre"
             defaultValue={initial?.name}
@@ -58,7 +69,11 @@ export function ServiceForm({ action, initial, submitLabel }: ServiceFormProps) 
             required
           />
         </Field>
-        <Field label="Duración en minutos" hint="En múltiplos de 5." error={errors.durationMin}>
+        <Field
+          label={t("duration")}
+          hint={t("durationHint")}
+          error={error(fieldErrors.durationMin)}
+        >
           <Input
             name="duracion"
             inputMode="numeric"
@@ -67,11 +82,7 @@ export function ServiceForm({ action, initial, submitLabel }: ServiceFormProps) 
             className="tabular-nums"
           />
         </Field>
-        <Field
-          label="Precio en pesos"
-          hint="Déjalo vacío si todavía no está definido: los clientes verán [PENDIENTE]."
-          error={errors.priceCop}
-        >
+        <Field label={t("price")} hint={t("priceHint")} error={error(fieldErrors.priceCop)}>
           <Input
             name="precio"
             inputMode="numeric"
@@ -80,7 +91,11 @@ export function ServiceForm({ action, initial, submitLabel }: ServiceFormProps) 
             className="tabular-nums"
           />
         </Field>
-        <Field label="Descripción" hint="Opcional." error={errors.description}>
+        <Field
+          label={t("description")}
+          hint={t("descriptionHint")}
+          error={error(fieldErrors.description)}
+        >
           <Textarea
             name="descripcion"
             defaultValue={initial?.description ?? ""}
@@ -88,19 +103,14 @@ export function ServiceForm({ action, initial, submitLabel }: ServiceFormProps) 
           />
         </Field>
         {initial ? (
-          <Checkbox
-            name="activo"
-            value="si"
-            defaultChecked={initial.active}
-            hint="Si lo desactivas, los clientes ya no lo pueden reservar. Las citas que existen no cambian."
-          >
-            Activo
+          <Checkbox name="activo" value="si" defaultChecked={initial.active} hint={t("activeHint")}>
+            {t("active")}
           </Checkbox>
         ) : null}
       </div>
       <BottomBar summary={state.error ? <span className="text-danger">{state.error}</span> : null}>
         <Button type="submit" disabled={pending} aria-busy={pending}>
-          {pending ? "Guardando..." : submitLabel}
+          {pending ? t("saving") : submitLabel}
         </Button>
       </BottomBar>
     </form>

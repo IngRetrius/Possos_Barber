@@ -21,5 +21,8 @@ describe("customersErrorCode", () => {
     expect(customersErrorMessage("INVALID_CUSTOMER")).toBe(
       "Revisa el nombre y el celular (+57 y 10 dígitos)",
     );
+    expect(customersErrorMessage("INVALID_CUSTOMER", "en")).toBe(
+      "Check the name and the mobile number (+57 and 10 digits)",
+    );
   });
 });

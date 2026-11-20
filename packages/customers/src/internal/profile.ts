@@ -1,4 +1,4 @@
-import { parseColombianMobile, phoneErrorMessage } from "./phone";
+import { parseColombianMobile, PHONE_ERROR_KEY } from "./phone";
 
 /**
  * Versión de la política de tratamiento de datos que acepta quien completa su perfil
@@ -27,7 +27,15 @@ export interface ValidProfile {
   whatsappOptIn: boolean;
 }
 
-export type ProfileErrors = Partial<Record<ProfileField, string>>;
+/** Clave del error; el formulario la traduce (`customers.profile.errors`). */
+export type ProfileError =
+  | "nameRequired"
+  | "nameTooLong"
+  | "phoneEmpty"
+  | "phoneLength"
+  | "phoneNotMobile"
+  | "consentRequired";
+export type ProfileErrors = Partial<Record<ProfileField, ProfileError>>;
 
 /**
  * Revisa el formulario del perfil. La misma revisión en el navegador (antes de enviar) y en el
@@ -40,14 +48,14 @@ export function validateProfile(
   const errors: ProfileErrors = {};
 
   const fullName = input.fullName.trim().replace(/\s+/g, " ");
-  if (!fullName) errors.fullName = "Escribe tu nombre";
-  else if (fullName.length > MAX_NAME_LENGTH) errors.fullName = "Escribe un nombre más corto";
+  if (!fullName) errors.fullName = "nameRequired";
+  else if (fullName.length > MAX_NAME_LENGTH) errors.fullName = "nameTooLong";
 
   const phone = parseColombianMobile(input.phone);
-  if (!phone.ok) errors.phone = phoneErrorMessage(phone.error);
+  if (!phone.ok) errors.phone = PHONE_ERROR_KEY[phone.error];
 
   if (options.requireConsent && !input.dataConsent) {
-    errors.dataConsent = "Sin esta autorización no podemos crear tu cuenta";
+    errors.dataConsent = "consentRequired";
   }
 
   if (Object.keys(errors).length || !phone.ok) return { ok: false, errors };

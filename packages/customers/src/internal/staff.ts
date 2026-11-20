@@ -3,8 +3,8 @@
  * autorización de datos que dio de palabra (Ley 1581). No importa ./index para que
  * dependency-cruiser no vea un ciclo.
  */
-import { parseColombianMobile, type PhoneError } from "./phone";
-import { MAX_NAME_LENGTH } from "./profile";
+import { parseColombianMobile, PHONE_ERROR_KEY } from "./phone";
+import { MAX_NAME_LENGTH, type ProfileError } from "./profile";
 
 export interface StaffCustomerInput {
   fullName: string;
@@ -21,25 +21,20 @@ export interface ValidStaffCustomer {
 }
 
 export type StaffCustomerField = "fullName" | "phone" | "dataConsent";
-export type StaffCustomerErrors = Partial<Record<StaffCustomerField, string>>;
-
-const PHONE_MESSAGES: Record<PhoneError, string> = {
-  EMPTY: "Escribe el celular del cliente",
-  LENGTH: "El celular debe tener 10 dígitos, sin el +57",
-  NOT_MOBILE: "Escribe un número de celular: en Colombia empiezan por 3",
-};
+/** Clave del error; el selector la traduce (`customers.picker.errors`). */
+export type StaffCustomerErrors = Partial<Record<StaffCustomerField, ProfileError>>;
 
 export function validateStaffCustomer(
   input: StaffCustomerInput,
 ): { ok: true; data: ValidStaffCustomer } | { ok: false; errors: StaffCustomerErrors } {
   const errors: StaffCustomerErrors = {};
   const fullName = input.fullName.trim().replace(/\s+/g, " ");
-  if (!fullName) errors.fullName = "Escribe el nombre del cliente";
-  else if (fullName.length > MAX_NAME_LENGTH) errors.fullName = "Escribe un nombre más corto";
+  if (!fullName) errors.fullName = "nameRequired";
+  else if (fullName.length > MAX_NAME_LENGTH) errors.fullName = "nameTooLong";
   const phone = parseColombianMobile(input.phone);
-  if (!phone.ok) errors.phone = PHONE_MESSAGES[phone.error];
+  if (!phone.ok) errors.phone = PHONE_ERROR_KEY[phone.error];
   if (!input.dataConsent) {
-    errors.dataConsent = "Sin la autorización del cliente no podemos guardar sus datos";
+    errors.dataConsent = "consentRequired";
   }
   if (Object.keys(errors).length || !phone.ok) return { ok: false, errors };
   return {

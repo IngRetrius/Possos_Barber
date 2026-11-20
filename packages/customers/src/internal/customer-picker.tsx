@@ -1,9 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
 import { Button, Checkbox, cn, Field, Input, PhoneInput } from "@possos/ui";
 import { formatPhone, normalizePhoneDigits } from "./phone";
 import { MAX_NAME_LENGTH } from "./profile";
+import type { ProfileError } from "./profile";
 import type { StaffCustomerErrors } from "./staff";
 
 export interface PickerCustomer {
@@ -17,7 +19,7 @@ export interface CustomerPickerProps {
   search: (query: string) => Promise<PickerCustomer[]>;
   /** Los más recientes, para mostrar antes de escribir. */
   initialResults: PickerCustomer[];
-  /** Errores del cliente nuevo que devolvió la acción. */
+  /** Errores del cliente nuevo que devolvió la acción (claves) y el de elegir cliente (texto). */
   errors?: StaffCustomerErrors & { customer?: string };
   /** Cliente ya elegido (por ejemplo, desde su ficha). */
   initialCustomer?: PickerCustomer | null;
@@ -40,6 +42,8 @@ export function CustomerPicker({
   initialCustomer = null,
   policyHref,
 }: CustomerPickerProps) {
+  const t = useTranslations("customers.picker");
+  const error = (key: ProfileError | undefined) => (key ? t(`errors.${key}`) : undefined);
   const groupId = useId();
   const [mode, setMode] = useState<"buscar" | "nuevo">(
     errors?.fullName || errors?.phone || errors?.dataConsent ? "nuevo" : "buscar",
@@ -74,9 +78,9 @@ export function CustomerPicker({
 
   return (
     <fieldset className="grid gap-4">
-      <legend className="mb-2 text-heading">Cliente</legend>
+      <legend className="mb-2 text-heading">{t("legend")}</legend>
       <input type="hidden" name="modo" value={mode} />
-      <div className="grid grid-cols-2 gap-2" role="group" aria-label="Cómo elegir el cliente">
+      <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("modeLabel")}>
         <Button
           type="button"
           variant={mode === "buscar" ? "secondary" : "ghost"}
@@ -84,7 +88,7 @@ export function CustomerPicker({
           className={cn(mode === "buscar" && "border-fg")}
           onClick={() => setMode("buscar")}
         >
-          Buscar
+          {t("search")}
         </Button>
         <Button
           type="button"
@@ -93,13 +97,13 @@ export function CustomerPicker({
           className={cn(mode === "nuevo" && "border-fg")}
           onClick={() => setMode("nuevo")}
         >
-          Cliente nuevo
+          {t("newCustomer")}
         </Button>
       </div>
 
       {mode === "buscar" ? (
         <div key="buscar" className="grid gap-3">
-          <Field label="Buscar por nombre o celular" error={errors?.customer}>
+          <Field label={t("searchLabel")} error={errors?.customer}>
             <Input
               type="search"
               value={query}
@@ -113,17 +117,17 @@ export function CustomerPicker({
           </Field>
           <div aria-live="polite" className="text-caption text-fg-muted">
             {searching
-              ? "Buscando..."
+              ? t("searching")
               : options.length === 0
                 ? query
-                  ? "No encontramos clientes con ese nombre o celular. Créalo como cliente nuevo."
-                  : "Todavía no tienes clientes. Crea uno nuevo."
+                  ? t("noResults")
+                  : t("noCustomers")
                 : null}
           </div>
           {options.length > 0 ? (
             <div
               role="radiogroup"
-              aria-label="Clientes"
+              aria-label={t("results")}
               className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface"
             >
               {options.map((c) => {
@@ -159,14 +163,10 @@ export function CustomerPicker({
         </div>
       ) : (
         <div key="nuevo" className="grid gap-4">
-          <Field label="Nombre" error={errors?.fullName}>
+          <Field label={t("name")} error={error(errors?.fullName)}>
             <Input name="nuevo_nombre" autoComplete="off" maxLength={MAX_NAME_LENGTH} required />
           </Field>
-          <Field
-            label="Celular"
-            hint="Para los recordatorios por WhatsApp. Ningún otro cliente lo ve."
-            error={errors?.phone}
-          >
+          <Field label={t("phone")} hint={t("phoneHint")} error={error(errors?.phone)}>
             <PhoneInput
               name="nuevo_celular"
               value={phone}
@@ -174,16 +174,17 @@ export function CustomerPicker({
               required
             />
           </Field>
-          <Checkbox name="nuevo_autoriza" value="si" error={errors?.dataConsent}>
-            El cliente autorizó de palabra el tratamiento de sus datos para agendar sus citas, según
-            la{" "}
-            <a href={policyHref} target="_blank" className="underline underline-offset-4">
-              política de tratamiento de datos
-            </a>
-            .
+          <Checkbox name="nuevo_autoriza" value="si" error={error(errors?.dataConsent)}>
+            {t.rich("consent", {
+              policy: (chunks) => (
+                <a href={policyHref} target="_blank" className="underline underline-offset-4">
+                  {chunks}
+                </a>
+              ),
+            })}
           </Checkbox>
           <Checkbox name="nuevo_whatsapp" value="si">
-            Quiere recibir por WhatsApp la confirmación y los recordatorios de sus citas.
+            {t("whatsapp")}
           </Checkbox>
         </div>
       )}

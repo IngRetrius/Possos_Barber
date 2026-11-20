@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useActionState, useId, useState, type FormEvent, type ReactNode } from "react";
 import { BottomBar, Button, Checkbox, Field, InlineError, Input, PhoneInput } from "@possos/ui";
 import type { ProfileFormState } from "../index";
-import { normalizePhoneDigits, parseColombianMobile, phoneErrorMessage } from "./phone";
-import { MAX_NAME_LENGTH, validateProfile, type ProfileErrors, type ProfileField } from "./profile";
+import { normalizePhoneDigits, parseColombianMobile, PHONE_ERROR_KEY } from "./phone";
+import {
+  MAX_NAME_LENGTH,
+  validateProfile,
+  type ProfileError,
+  type ProfileErrors,
+  type ProfileField,
+} from "./profile";
 
 export type ProfileAction = (
   state: ProfileFormState,
@@ -48,6 +55,7 @@ export function ProfileForm({
   submitLabel,
   children,
 }: ProfileFormProps) {
+  const t = useTranslations("customers.profile");
   const formId = useId();
   const [state, formAction, isPending] = useActionState(action, {});
   const [fullName, setFullName] = useState(initial.fullName);
@@ -59,6 +67,7 @@ export function ProfileForm({
   const [editedAfter, setEditedAfter] = useState<ProfileFormState | null>(null);
 
   const errors: ProfileErrors = { ...state.fieldErrors, ...clientErrors };
+  const error = (key: ProfileError | undefined) => (key ? t(`errors.${key}`) : undefined);
   const clearError = (field: ProfileField) => {
     setClientErrors(({ [field]: _removed, ...rest }) => rest);
     setEditedAfter(state);
@@ -85,7 +94,7 @@ export function ProfileForm({
         {heading}
         <form id={formId} action={formAction} onSubmit={onSubmit} noValidate className="grid gap-5">
           {next ? <input type="hidden" name="next" value={next} /> : null}
-          <Field label="Nombre" error={errors.fullName}>
+          <Field label={t("name")} error={error(errors.fullName)}>
             <Input
               name="fullName"
               autoComplete="name"
@@ -99,11 +108,7 @@ export function ProfileForm({
               required
             />
           </Field>
-          <Field
-            label="Celular"
-            hint="Para avisarte de tus citas. Nadie más lo ve."
-            error={errors.phone}
-          >
+          <Field label={t("phone")} hint={t("phoneHint")} error={error(errors.phone)}>
             <PhoneInput
               name="phone"
               // Más de 10 para que quepa un número pegado con +57 y espacios; se limpia al escribir.
@@ -117,7 +122,7 @@ export function ProfileForm({
                 if (!phone) return;
                 const parsed = parseColombianMobile(phone);
                 if (!parsed.ok) {
-                  setClientErrors((prev) => ({ ...prev, phone: phoneErrorMessage(parsed.error) }));
+                  setClientErrors((prev) => ({ ...prev, phone: PHONE_ERROR_KEY[parsed.error] }));
                 }
               }}
               required
@@ -132,15 +137,14 @@ export function ProfileForm({
                   setDataConsent(e.target.checked);
                   clearError("dataConsent");
                 }}
-                error={errors.dataConsent}
+                error={error(errors.dataConsent)}
                 hint={
                   <Link href={policyHref} target="_blank" className={linkClass}>
-                    Leer la política de tratamiento de datos
+                    {t("readPolicy")}
                   </Link>
                 }
               >
-                Autorizo a Possos Barber a tratar mis datos personales para agendar mis citas, según
-                su política de tratamiento de datos.
+                {t("consent")}
               </Checkbox>
             ) : null}
             <Checkbox
@@ -150,23 +154,23 @@ export function ProfileForm({
                 setWhatsappOptIn(e.target.checked);
                 setEditedAfter(state);
               }}
-              hint="Opcional. Sin esta autorización no te llegan los recordatorios."
+              hint={t("whatsappHint")}
             >
-              Quiero recibir por WhatsApp la confirmación y los recordatorios de mis citas.
+              {t("whatsapp")}
             </Checkbox>
           </div>
         </form>
         {state.error ? <InlineError>{state.error}</InlineError> : null}
         {state.saved && editedAfter !== state ? (
           <p role="status" className="text-body text-fg-muted">
-            Guardamos tus cambios.
+            {t("saved")}
           </p>
         ) : null}
         {children}
       </div>
       <BottomBar>
         <Button type="submit" form={formId} disabled={isPending}>
-          {isPending ? "Guardando..." : submitLabel}
+          {isPending ? t("saving") : submitLabel}
         </Button>
       </BottomBar>
     </div>

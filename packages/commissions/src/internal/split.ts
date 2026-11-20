@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE, type Locale } from "@possos/config/constants";
 /*
  * Reparto de un cobro y periodos de la liquidación (docs/11). No importa ./index para que
  * dependency-cruiser no vea un ciclo.
@@ -16,20 +17,16 @@ export function splitAmount(
   return { barber, business: amountCop - barber };
 }
 
-/** "50 %", "45,5 %". */
-export function formatPercent(pct: number): string {
-  return `${String(Math.round(pct * 100) / 100).replace(".", ",")} %`;
+/** "50 %", "45,5 %" en español; "50%", "45.5%" en inglés. */
+export function formatPercent(pct: number, locale: Locale = DEFAULT_LOCALE): string {
+  const value = String(Math.round(pct * 100) / 100);
+  return locale === "en" ? `${value}%` : `${value.replace(".", ",")} %`;
 }
 
 export type SettlementPeriod = "hoy" | "semana" | "quincena" | "mes" | "rango";
 
-export const SETTLEMENT_PERIODS: { value: SettlementPeriod; label: string }[] = [
-  { value: "hoy", label: "Hoy" },
-  { value: "semana", label: "Esta semana" },
-  { value: "quincena", label: "Esta quincena" },
-  { value: "mes", label: "Este mes" },
-  { value: "rango", label: "Rango" },
-];
+/** Periodos de la liquidación, en orden. El nombre está en `commissions.periods`. */
+export const SETTLEMENT_PERIODS: SettlementPeriod[] = ["hoy", "semana", "quincena", "mes", "rango"];
 
 function shift(day: string, days: number): string {
   const date = new Date(`${day}T12:00:00Z`);

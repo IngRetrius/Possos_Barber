@@ -9,4 +9,9 @@ describe("servicePriceLabel", () => {
   it("con precio lo formatea en pesos", () => {
     expect(servicePriceLabel(30000)).toMatch(/30\.000/);
   });
+
+  it("en inglés dice [PENDING] y usa coma de miles", () => {
+    expect(servicePriceLabel(null, "en")).toBe("[PENDING]");
+    expect(servicePriceLabel(30000, "en")).toBe("$30,000");
+  });
 });

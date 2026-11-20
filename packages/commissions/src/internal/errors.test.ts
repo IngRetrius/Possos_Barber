@@ -11,6 +11,7 @@ describe("commissionsErrorMessage", () => {
   it("nunca habla de facturas", () => {
     for (const code of [...COMMISSIONS_ERROR_CODES, "UNKNOWN"] as const) {
       expect(commissionsErrorMessage(code).toLowerCase()).not.toContain("factura");
+      expect(commissionsErrorMessage(code, "en").toLowerCase()).not.toContain("invoice");
     }
   });
 });
