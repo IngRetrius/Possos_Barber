@@ -83,6 +83,7 @@ export {
 } from "./internal/quick-slots";
 export { APPOINTMENT_STATUS_DISPLAY, TO_CLOSE_DISPLAY } from "./internal/status";
 export {
+  atTime,
   canChange,
   canReschedule,
   isUpcoming,

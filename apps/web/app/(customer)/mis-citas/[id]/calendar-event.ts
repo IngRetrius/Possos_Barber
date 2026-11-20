@@ -1,6 +1,7 @@
 import { getViewer } from "@possos/auth/server";
 import { type IcsEvent, MY_APPOINTMENTS_ROUTES } from "@possos/booking";
 import { getMyAppointment } from "@possos/booking/server";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@possos/supabase/server";
 import { BUSINESS, siteUrl } from "../../../../lib/business";
 
@@ -26,17 +27,18 @@ export async function loadCalendarEvent(
   if (appt.replacedBy) return { replacedBy: appt.replacedBy };
 
   const detail = new URL(MY_APPOINTMENTS_ROUTES.detail(id), siteUrl()).toString();
+  const t = await getTranslations("web.customer.calendar");
   return {
     event: {
       id,
       start: appt.start,
       end: appt.end,
-      title: `${appt.serviceName} en ${BUSINESS.name}`,
+      title: t("title", { service: appt.serviceName, business: BUSINESS.name }),
       description: [
-        `Con ${appt.barberName}.`,
+        t("with", { barber: appt.barberName }),
         BUSINESS.addressReference ? `${BUSINESS.addressReference}.` : null,
-        "Puedes cancelar o cambiar tu cita hasta 2 horas antes.",
-        `Tu cita: ${detail}`,
+        t("policy"),
+        t("link", { url: detail }),
       ]
         .filter(Boolean)
         .join(" "),

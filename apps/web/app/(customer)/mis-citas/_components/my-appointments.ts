@@ -1,4 +1,5 @@
 import "server-only";
+import type { Locale } from "@possos/config/constants";
 import { notFound, redirect } from "next/navigation";
 import type { MyAppointment } from "@possos/booking";
 import { getMyAppointment } from "@possos/booking/server";
@@ -13,13 +14,16 @@ import { requireCustomer, STAFF_HOME } from "../../../../lib/session";
 
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Lo que la tarjeta de la cita toma de la barbería (no de la base). */
-export function cardContext(appointment: MyAppointment) {
+/**
+ * Lo que la tarjeta de la cita toma de la barbería (no de la base), en el idioma de la persona.
+ * `instagramLabel` es "Escríbele por Instagram" en su idioma.
+ */
+export function cardContext(appointment: MyAppointment, locale: Locale, instagramLabel: string) {
   return {
-    priceLabel: servicePriceLabel(appointment.priceCop),
-    location: addressLabel(),
+    priceLabel: servicePriceLabel(appointment.priceCop, locale),
+    location: addressLabel(locale),
     // Si el barbero no tiene WhatsApp, el Instagram de la barbería: nunca un botón roto.
-    fallbackContact: { label: "Escríbele por Instagram", href: BUSINESS.instagram.url },
+    fallbackContact: { label: instagramLabel, href: BUSINESS.instagram.url },
   };
 }
 

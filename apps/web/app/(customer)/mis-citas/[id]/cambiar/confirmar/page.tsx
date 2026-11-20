@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import {
   canReschedule,
   MY_APPOINTMENTS_ROUTES,
@@ -9,13 +10,15 @@ import {
 import { getAvailableStarts, requiresApproval } from "@possos/booking/server";
 import { AppointmentSummary, RescheduleForm } from "@possos/booking/ui";
 import { createClient } from "@possos/supabase/server";
-import { formatDate, formatTime, StepHeader, toDateKey } from "@possos/ui";
+import { StepHeader, toDateKey } from "@possos/ui";
+import { currentFormatters } from "../../../../../../lib/i18n";
+import { LocaleSwitch } from "../../../../../_components/locale-switch";
 import { loadMyAppointment, cardContext } from "../../../_components/my-appointments";
 import { rescheduleMyAppointmentAction } from "../../../actions";
 
-export const metadata: Metadata = { title: "Confirma el cambio · Possos Barber" };
-
-const APPROVAL = "Tu reserva queda pendiente de que el barbero la apruebe";
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("web.customer.meta"))("rescheduleConfirm") };
+}
 
 /**
  * "Cambiar hora", paso 2: la hora de antes, el resumen con la nueva y "Cambiar la hora". Si la
@@ -51,21 +54,30 @@ export default async function RescheduleConfirmPage({
   const end = new Date(Date.parse(startAt) + duration).toISOString();
   const pending =
     appointment.status === "pending_approval" || (approval.ok && approval.data === true);
-  const { priceLabel, location } = cardContext(appointment);
+  const t = await getTranslations("web.customer");
+  const f = await currentFormatters();
+  const { priceLabel, location } = cardContext(
+    appointment,
+    f.locale,
+    t("myAppointments.instagram"),
+  );
 
   return (
     <>
       <StepHeader
         step={2}
         total={2}
-        name="Confirmar"
+        name={t("reschedule.confirmStep")}
         backHref={selectionHref(timeHref, { date, startAt })}
+        actions={<LocaleSwitch />}
       />
       <main className="grid flex-1 content-start gap-6 px-gutter pt-2 pb-8">
         <div className="grid gap-2">
-          <h1 className="text-title">Revisa el cambio</h1>
+          <h1 className="text-title">{t("reschedule.confirmTitle")}</h1>
           <p className="text-body text-fg-muted">
-            Antes: {formatDate(appointment.start)}, {formatTime(appointment.start)}
+            {t("reschedule.before", {
+              when: `${f.date(appointment.start)}, ${f.time(appointment.start)}`,
+            })}
           </p>
         </div>
         <AppointmentSummary
@@ -76,15 +88,13 @@ export default async function RescheduleConfirmPage({
           priceLabel={priceLabel}
           location={location}
         />
-        <p className="text-body text-fg-muted">
-          Tu cita de antes se cancela y la hora queda libre para otros clientes.
-        </p>
+        <p className="text-body text-fg-muted">{t("reschedule.oldCancelled")}</p>
         {pending ? (
           <p
             role="note"
             className="rounded-card border border-warning px-4 py-3 text-body text-warning"
           >
-            {APPROVAL}
+            {t("approval")}
           </p>
         ) : null}
       </main>
@@ -93,7 +103,7 @@ export default async function RescheduleConfirmPage({
         appointmentId={id}
         date={date}
         startAt={startAt}
-        summary={`${formatDate(startAt)} · ${formatTime(startAt)}`}
+        summary={`${f.date(startAt)} · ${f.time(startAt)}`}
       />
     </>
   );

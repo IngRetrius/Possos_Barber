@@ -13,6 +13,8 @@ import {
 } from "@possos/customers";
 import { getMyProfile, saveMyProfile } from "@possos/customers/server";
 import { createClient } from "@possos/supabase/server";
+import { getTranslations } from "next-intl/server";
+import { currentLocale } from "../../lib/i18n";
 import { CUSTOMER_HOME } from "../../lib/session";
 
 /*
@@ -20,12 +22,13 @@ import { CUSTOMER_HOME } from "../../lib/session";
  */
 
 async function save(form: FormData): Promise<ProfileFormState & { done?: boolean }> {
+  const locale = await currentLocale();
   const db = await createClient();
   const viewer = await getViewer(db);
-  if (!viewer) return { error: customersErrorMessage("NOT_AUTHENTICATED") };
+  if (!viewer) return { error: customersErrorMessage("NOT_AUTHENTICATED", locale) };
 
   const current = await getMyProfile(db, viewer.userId);
-  if (!current.ok) return { error: customersErrorMessage(current.error) };
+  if (!current.ok) return { error: customersErrorMessage(current.error, locale) };
   const requireConsent = needsConsent(current.data);
 
   const validated = validateProfile(
@@ -45,7 +48,7 @@ async function save(form: FormData): Promise<ProfileFormState & { done?: boolean
     profile: validated.data,
     acceptedPolicy: requireConsent,
   });
-  if (!saved.ok) return { error: customersErrorMessage(saved.error) };
+  if (!saved.ok) return { error: customersErrorMessage(saved.error, locale) };
   return { done: true };
 }
 
@@ -75,21 +78,22 @@ export async function updateProfileAction(
  * nadie que llegue.
  */
 export async function deleteAccountAction(_prev: AuthFormState): Promise<AuthFormState> {
+  const locale = await currentLocale();
   const db = await createClient();
   const viewer = await getViewer(db);
-  if (!viewer) return { error: authErrorMessage("NOT_AUTHENTICATED") };
+  if (!viewer) return { error: authErrorMessage("NOT_AUTHENTICATED", locale) };
 
   const profile = await getMyProfile(db, viewer.userId);
-  if (!profile.ok) return { error: authErrorMessage("UNKNOWN") };
+  if (!profile.ok) return { error: authErrorMessage("UNKNOWN", locale) };
   if (profile.data) {
     const upcoming = await getNextAppointment(db, profile.data.id);
-    if (!upcoming.ok) return { error: authErrorMessage("UNKNOWN") };
+    if (!upcoming.ok) return { error: authErrorMessage("UNKNOWN", locale) };
     if (upcoming.data) {
-      return { error: "Tienes una cita próxima. Cancélala antes de borrar tu cuenta." };
+      return { error: (await getTranslations("web.customer.profile"))("hasUpcoming") };
     }
   }
 
   const deleted = await deleteMyAccount(db);
-  if (!deleted.ok) return { error: authErrorMessage(deleted.error) };
+  if (!deleted.ok) return { error: authErrorMessage(deleted.error, locale) };
   redirect(`${AUTH_ROUTES.signIn}?aviso=cuenta-borrada`);
 }

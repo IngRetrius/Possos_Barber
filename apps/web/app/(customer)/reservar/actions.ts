@@ -13,6 +13,7 @@ import {
 import { book } from "@possos/booking/server";
 import type { BookFormState } from "@possos/booking/ui";
 import { createClient } from "@possos/supabase/server";
+import { currentLocale } from "../../../lib/i18n";
 import { COMPLETE_PROFILE } from "../../../lib/session";
 
 /**
@@ -25,6 +26,7 @@ import { COMPLETE_PROFILE } from "../../../lib/session";
  *   resumen que ya no se puede reservar).
  */
 export async function bookAction(_prev: BookFormState, form: FormData): Promise<BookFormState> {
+  const locale = await currentLocale();
   const fields = new URLSearchParams();
   for (const key of ["servicio", "barbero", "fecha", "hora"]) {
     const value = form.get(key);
@@ -32,7 +34,7 @@ export async function bookAction(_prev: BookFormState, form: FormData): Promise<
   }
   const selection = parseSelection(fields);
   if (!selection.serviceId || !selection.barberId || !selection.startAt) {
-    return { error: bookingErrorMessage("INVALID_INPUT") };
+    return { error: bookingErrorMessage("INVALID_INPUT", locale) };
   }
   const confirmHref = selectionHref(BOOKING_ROUTES.confirm, selection);
 
@@ -54,7 +56,7 @@ export async function bookAction(_prev: BookFormState, form: FormData): Promise<
     }
     if (result.error === "NOT_AUTHENTICATED") redirect(withNext(AUTH_ROUTES.signIn, confirmHref));
     if (result.error === "NO_CUSTOMER_PROFILE") redirect(withNext(COMPLETE_PROFILE, confirmHref));
-    return { error: bookingErrorMessage(result.error) };
+    return { error: bookingErrorMessage(result.error, locale) };
   }
   redirect(`${BOOKING_ROUTES.done}?cita=${result.data.id}`, RedirectType.replace);
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   BOOKING_ROUTES,
   MY_APPOINTMENTS_ROUTES,
@@ -10,8 +11,9 @@ import {
 import { listMyAppointments } from "@possos/booking/server";
 import { MyAppointmentCard, MyAppointmentHistory } from "@possos/booking/ui";
 import { createClient } from "@possos/supabase/server";
-import { Button, EmptyState, formatDate, formatTime, List, ListRow, StatusBadge } from "@possos/ui";
+import { Button, EmptyState, List, ListRow, StatusBadge } from "@possos/ui";
 import { loadBookingFlow, timeStepHref } from "../../../lib/booking-flow";
+import { currentFormatters } from "../../../lib/i18n";
 import {
   MY_APPOINTMENTS_PATH,
   param,
@@ -25,7 +27,9 @@ import { SiteHeader } from "../../_components/site-header";
 import { cancelMyAppointmentAction } from "./actions";
 import { cardContext } from "./_components/my-appointments";
 
-export const metadata: Metadata = { title: "Mis citas · Possos Barber" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("web.customer.meta"))("myAppointments") };
+}
 
 /** Citas pasadas que se muestran sin pedir "Ver todas". */
 const HISTORY_SIZE = 10;
@@ -49,6 +53,8 @@ export default async function MyAppointmentsPage({ searchParams }: PageProps<"/m
   ]);
   if (!result.ok) throw new Error(`No se pudieron leer las citas: ${result.error}`);
 
+  const t = await getTranslations("web.customer.myAppointments");
+  const f = await currentFormatters();
   const now = new Date();
   const nowIso = now.toISOString();
   const { upcoming, past } = splitMyAppointments(result.data, now);
@@ -61,18 +67,18 @@ export default async function MyAppointmentsPage({ searchParams }: PageProps<"/m
     <>
       <SiteHeader>
         <Button asChild variant="ghost">
-          <Link href={PROFILE_PATH}>Tu perfil</Link>
+          <Link href={PROFILE_PATH}>{t("profile")}</Link>
         </Button>
       </SiteHeader>
       <main className="grid flex-1 content-start gap-8 px-gutter pt-2 pb-10 md:mx-auto md:w-full md:max-w-2xl">
-        <h1 className="text-title">Mis citas</h1>
+        <h1 className="text-title">{t("title")}</h1>
 
         {!next && past.length === 0 ? (
           <EmptyState
-            title="Todavía no tienes citas"
+            title={t("empty")}
             action={
               <Button asChild>
-                <Link href={bookHref}>Reservar</Link>
+                <Link href={bookHref}>{t("book")}</Link>
               </Button>
             }
           />
@@ -81,20 +87,20 @@ export default async function MyAppointmentsPage({ searchParams }: PageProps<"/m
         {next ? (
           <section aria-labelledby="proxima" className="grid gap-3">
             <h2 id="proxima" className="text-heading">
-              Próxima cita
+              {t("next")}
             </h2>
             <MyAppointmentCard
               appointment={next}
               now={nowIso}
               cancelAction={cancelMyAppointmentAction}
-              {...cardContext(next)}
+              {...cardContext(next, f.locale, t("instagram"))}
             />
           </section>
         ) : past.length > 0 ? (
           <section className="grid gap-3">
-            <p className="text-body text-fg-muted">No tienes citas próximas.</p>
+            <p className="text-body text-fg-muted">{t("noUpcoming")}</p>
             <Button asChild>
-              <Link href={bookHref}>Reservar</Link>
+              <Link href={bookHref}>{t("book")}</Link>
             </Button>
           </section>
         ) : null}
@@ -102,16 +108,16 @@ export default async function MyAppointmentsPage({ searchParams }: PageProps<"/m
         {later.length > 0 ? (
           <section aria-labelledby="tambien" className="grid gap-3">
             <h2 id="tambien" className="text-heading">
-              También tienes
+              {t("alsoHave")}
             </h2>
             <List>
               {later.map((appointment) => {
-                const status = myStatusDisplay(appointment, now);
+                const status = myStatusDisplay(appointment, now, f.locale);
                 return (
                   <ListRow
                     key={appointment.id}
                     href={MY_APPOINTMENTS_ROUTES.detail(appointment.id)}
-                    title={`${formatDate(appointment.start)}, ${formatTime(appointment.start)}`}
+                    title={`${f.date(appointment.start)}, ${f.time(appointment.start)}`}
                     detail={appointment.serviceName}
                     value={<StatusBadge tone={status.tone}>{status.label}</StatusBadge>}
                   />
@@ -124,20 +130,20 @@ export default async function MyAppointmentsPage({ searchParams }: PageProps<"/m
         {past.length > 0 ? (
           <section aria-labelledby="pasadas" className="grid gap-3">
             <h2 id="pasadas" className="text-heading">
-              Citas pasadas
+              {t("past")}
             </h2>
             <MyAppointmentHistory appointments={shownPast} now={nowIso} />
             {shownPast.length < past.length ? (
               <Button asChild variant="ghost">
                 <Link href={`${MY_APPOINTMENTS_PATH}?historial=todas`} scroll={false}>
-                  Ver todas las citas pasadas
+                  {t("allPast")}
                 </Link>
               </Button>
             ) : null}
           </section>
         ) : null}
 
-        <InstallHint lead="Instala la app para abrir tus citas con un toque, aun sin señal." />
+        <InstallHint lead={t("install")} />
       </main>
       <KeepOffline
         urls={[MY_APPOINTMENTS_PATH, ...upcoming.map((a) => MY_APPOINTMENTS_ROUTES.detail(a.id))]}

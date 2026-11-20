@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { AUTH_ROUTES, safeNext, withNext } from "@possos/auth";
 import { getViewer, isGoogleEnabled } from "@possos/auth/server";
 import { SignUpForm } from "@possos/auth/ui";
@@ -7,7 +8,9 @@ import { createClient } from "@possos/supabase/server";
 import { destinationAfterSignIn, param } from "../../../lib/session";
 import { googleAction, signUpAction } from "../actions";
 
-export const metadata: Metadata = { title: "Crea tu cuenta · Possos Barber" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("web.auth.meta"))("signUp") };
+}
 
 export default async function SignUpPage({ searchParams }: PageProps<"/registrarse">) {
   const next = safeNext(param((await searchParams).next));

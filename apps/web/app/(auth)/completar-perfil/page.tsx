@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { safeNext, withNext } from "@possos/auth";
 import { requireViewer } from "@possos/auth/server";
 import { needsConsent, parseColombianMobile } from "@possos/customers";
@@ -9,7 +10,9 @@ import { createClient } from "@possos/supabase/server";
 import { CUSTOMER_HOME, COMPLETE_PROFILE, param } from "../../../lib/session";
 import { completeProfileAction } from "../../(customer)/actions";
 
-export const metadata: Metadata = { title: "Completa tu perfil · Possos Barber" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("web.auth.meta"))("completeProfile") };
+}
 
 /**
  * Primer ingreso: nombre, celular y las dos autorizaciones. También aparece si cambió la
@@ -28,6 +31,7 @@ export default async function CompleteProfilePage({
   const current = profile.data;
   const phone = current?.phone ? parseColombianMobile(current.phone) : null;
   const updatedPolicy = current !== null;
+  const t = await getTranslations("web.auth.completeProfile");
 
   return (
     <main className="flex flex-1 flex-col">
@@ -35,13 +39,9 @@ export default async function CompleteProfilePage({
         action={completeProfileAction}
         heading={
           <div className="grid gap-2">
-            <h1 className="text-title">
-              {updatedPolicy ? "Actualizamos la política de datos" : "Completa tu perfil"}
-            </h1>
+            <h1 className="text-title">{updatedPolicy ? t("updatedTitle") : t("title")}</h1>
             <p className="text-body text-fg-muted">
-              {updatedPolicy
-                ? "Revisa tus datos y autoriza de nuevo su tratamiento para seguir usando tu cuenta."
-                : "Con tu nombre y tu celular te reconocemos en la barbería y te avisamos de tus citas."}
+              {updatedPolicy ? t("updatedIntro") : t("intro")}
             </p>
           </div>
         }
@@ -53,7 +53,7 @@ export default async function CompleteProfilePage({
         }}
         policyHref="/politica-de-datos"
         next={next}
-        submitLabel="Guardar y continuar"
+        submitLabel={t("submit")}
       />
     </main>
   );

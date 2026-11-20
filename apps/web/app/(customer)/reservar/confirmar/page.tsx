@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { AUTH_ROUTES, withNext } from "@possos/auth";
 import { getViewer, isGoogleEnabled } from "@possos/auth/server";
 import { GoogleSignIn } from "@possos/auth/ui";
@@ -17,7 +18,7 @@ import { servicePriceLabel } from "@possos/catalog";
 import { needsConsent } from "@possos/customers";
 import { getMyProfile } from "@possos/customers/server";
 import { createClient } from "@possos/supabase/server";
-import { Button, formatDate, formatTime, StepHeader, toDateKey } from "@possos/ui";
+import { Button, StepHeader, toDateKey } from "@possos/ui";
 import { addressLabel } from "../../../../lib/business";
 import {
   barberName,
@@ -26,14 +27,15 @@ import {
   previousStepHref,
   resolvedSelection,
 } from "../../../../lib/booking-flow";
+import { currentFormatters } from "../../../../lib/i18n";
 import { COMPLETE_PROFILE, STAFF_HOME } from "../../../../lib/session";
 import { googleAction } from "../../../(auth)/actions";
 import { bookAction } from "../actions";
+import { LocaleSwitch } from "../../../_components/locale-switch";
 
-export const metadata: Metadata = { title: "Confirma tu cita · Possos Barber" };
-
-const POLICY = "Puedes cancelar o cambiar tu cita hasta 2 horas antes.";
-const APPROVAL = "Tu reserva queda pendiente de que el barbero la apruebe";
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("web.customer.meta"))("confirm") };
+}
 
 /**
  * Paso "Confirmar": resumen, política de 2 h y, según quién mira:
@@ -74,6 +76,8 @@ export default async function ConfirmStepPage({ searchParams }: PageProps<"/rese
 
   const end = new Date(Date.parse(startAt) + service.duration_min * 60_000).toISOString();
   const viewer = await getViewer(db);
+  const t = await getTranslations("web.customer");
+  const f = await currentFormatters();
 
   let account: React.ReactNode = null;
   let bottom: React.ReactNode = null;
@@ -82,27 +86,21 @@ export default async function ConfirmStepPage({ searchParams }: PageProps<"/rese
     account = (
       <section aria-labelledby="cuenta" className="grid gap-3">
         <h2 id="cuenta" className="text-heading">
-          Para reservar, ingresa
+          {t("confirm.signInTitle")}
         </h2>
-        <p className="text-body text-fg-muted">
-          Con tu cuenta te avisamos de tu cita y puedes cambiarla o cancelarla. Vuelves aquí con la
-          misma hora.
-        </p>
+        <p className="text-body text-fg-muted">{t("confirm.signInBody")}</p>
         {google ? <GoogleSignIn action={googleAction} next={here} /> : null}
         <Button asChild variant="secondary">
-          <Link href={withNext(AUTH_ROUTES.signIn, here)}>Usar mi correo</Link>
+          <Link href={withNext(AUTH_ROUTES.signIn, here)}>{t("confirm.useEmail")}</Link>
         </Button>
       </section>
     );
   } else if (viewer.isStaff) {
     account = (
       <section className="grid gap-3 rounded-card border border-border bg-surface p-4">
-        <p className="text-body text-fg-muted">
-          Estás con una cuenta del personal. Las citas de los clientes se crean desde el panel; para
-          reservar como cliente, usa otra cuenta.
-        </p>
+        <p className="text-body text-fg-muted">{t("confirm.staff")}</p>
         <Button asChild variant="secondary">
-          <Link href={STAFF_HOME}>Ir al panel</Link>
+          <Link href={STAFF_HOME}>{t("confirm.goToPanel")}</Link>
         </Button>
       </section>
     );
@@ -111,9 +109,11 @@ export default async function ConfirmStepPage({ searchParams }: PageProps<"/rese
     if (!profile.ok || !profile.data || needsConsent(profile.data)) {
       account = (
         <section className="grid gap-3">
-          <p className="text-body text-fg-muted">Completa tu perfil para reservar.</p>
+          <p className="text-body text-fg-muted">{t("confirm.completeProfile")}</p>
           <Button asChild>
-            <Link href={withNext(COMPLETE_PROFILE, here)}>Completar mi perfil</Link>
+            <Link href={withNext(COMPLETE_PROFILE, here)}>
+              {t("confirm.completeProfileButton")}
+            </Link>
           </Button>
         </section>
       );
@@ -125,7 +125,7 @@ export default async function ConfirmStepPage({ searchParams }: PageProps<"/rese
             role="note"
             className="rounded-card border border-warning px-4 py-3 text-body text-warning"
           >
-            {APPROVAL}
+            {t("approval")}
           </p>
         );
       }
@@ -136,7 +136,7 @@ export default async function ConfirmStepPage({ searchParams }: PageProps<"/rese
           barberId={barberId}
           date={date}
           startAt={startAt}
-          summary={`${formatDate(startAt)} · ${formatTime(startAt)}`}
+          summary={`${f.date(startAt)} · ${f.time(startAt)}`}
         />
       );
     }
@@ -146,20 +146,21 @@ export default async function ConfirmStepPage({ searchParams }: PageProps<"/rese
   return (
     <>
       <StepHeader
+        actions={<LocaleSwitch />}
         {...position}
         backHref={previousStepHref(flow, "confirm", { ...selection, date })}
       />
       <main className="grid flex-1 content-start gap-6 px-gutter pt-2 pb-8">
-        <h1 className="text-title">Revisa tu cita</h1>
+        <h1 className="text-title">{t("confirm.title")}</h1>
         <AppointmentSummary
           serviceName={service.name}
           start={startAt}
           end={end}
           barberName={barberName(flow, barberId)}
-          priceLabel={servicePriceLabel(service.price_cop)}
-          location={addressLabel()}
+          priceLabel={servicePriceLabel(service.price_cop, f.locale)}
+          location={addressLabel(f.locale)}
         />
-        <p className="text-body text-fg-muted">{POLICY}</p>
+        <p className="text-body text-fg-muted">{t("policy")}</p>
         {account}
       </main>
       {bottom}

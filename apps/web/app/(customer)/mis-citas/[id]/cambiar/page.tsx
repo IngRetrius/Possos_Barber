@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import {
   canReschedule,
   MY_APPOINTMENTS_ROUTES,
@@ -9,18 +10,15 @@ import {
 import { getAvailableDays, getAvailableStarts } from "@possos/booking/server";
 import { TimePicker } from "@possos/booking/ui";
 import { createClient } from "@possos/supabase/server";
-import {
-  formatDate,
-  formatDateLong,
-  formatDuration,
-  formatTime,
-  StepHeader,
-  toDateKey,
-} from "@possos/ui";
+import { formatDuration, StepHeader, toDateKey } from "@possos/ui";
+import { currentFormatters } from "../../../../../lib/i18n";
 import { param } from "../../../../../lib/session";
+import { LocaleSwitch } from "../../../../_components/locale-switch";
 import { loadMyAppointment } from "../../_components/my-appointments";
 
-export const metadata: Metadata = { title: "Cambia la hora · Possos Barber" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("web.customer.meta"))("reschedule") };
+}
 
 /**
  * "Cambiar hora", paso 1: el paso de horario de la reserva (F4) con el servicio y el barbero de
@@ -36,6 +34,8 @@ export default async function RescheduleTimePage({
   const appointment = await loadMyAppointment(db, id, MY_APPOINTMENTS_ROUTES.reschedule);
   if (!canReschedule(appointment, new Date())) redirect(MY_APPOINTMENTS_ROUTES.detail(id));
 
+  const t = await getTranslations("web.customer");
+  const f = await currentFormatters();
   const selection = parseSelection(query);
   const serviceId = appointment.serviceId;
   const barberId = appointment.barberId;
@@ -49,7 +49,7 @@ export default async function RescheduleTimePage({
   if (!date) {
     const initial = pickInitialDay(dayList, today);
     date = initial.date;
-    if (initial.skippedToday) notice = `Hoy no hay horas. Te mostramos el ${formatDateLong(date)}`;
+    if (initial.skippedToday) notice = t("skippedToday", { date: f.dateLong(date) });
   }
 
   const starts = await getAvailableStarts(db, { serviceId, day: date, barberId });
@@ -62,18 +62,25 @@ export default async function RescheduleTimePage({
       <StepHeader
         step={1}
         total={2}
-        name="Nueva hora"
+        name={t("reschedule.step")}
         backHref={MY_APPOINTMENTS_ROUTES.list}
-        backLabel="Mis citas"
+        backLabel={t("reschedule.back")}
+        actions={<LocaleSwitch />}
       />
       <main className="flex flex-1 flex-col gap-6 pt-2">
         <div className="grid gap-2 px-gutter">
           <p className="text-body text-fg-muted">
-            {appointment.serviceName} · {formatDuration(durationMin)} · Con {appointment.barberName}
+            {t("reschedule.with", {
+              service: appointment.serviceName,
+              duration: formatDuration(durationMin),
+              barber: appointment.barberName,
+            })}
           </p>
-          <h1 className="text-title">Elige la nueva hora</h1>
+          <h1 className="text-title">{t("reschedule.title")}</h1>
           <p className="text-body text-fg-muted">
-            Tu cita ahora: {formatDate(appointment.start)}, {formatTime(appointment.start)}
+            {t("reschedule.current", {
+              when: `${f.date(appointment.start)}, ${f.time(appointment.start)}`,
+            })}
           </p>
         </div>
         <TimePicker

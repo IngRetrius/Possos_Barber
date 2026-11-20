@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import {
   ANY_BARBER,
   BOOKING_ROUTES,
@@ -12,16 +13,20 @@ import {
 import { getAvailableDays, getAvailableStarts } from "@possos/booking/server";
 import { TimePicker } from "@possos/booking/ui";
 import { createClient } from "@possos/supabase/server";
-import { formatDateLong, formatDuration, StepHeader, toDateKey } from "@possos/ui";
+import { formatDuration, StepHeader, toDateKey } from "@possos/ui";
 import {
   barberName,
   loadBookingFlow,
   missingStepHref,
   previousStepHref,
 } from "../../../../lib/booking-flow";
+import { currentFormatters } from "../../../../lib/i18n";
 import { param } from "../../../../lib/session";
+import { LocaleSwitch } from "../../../_components/locale-switch";
 
-export const metadata: Metadata = { title: "Elige tu hora · Possos Barber" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("web.customer.meta"))("time") };
+}
 
 /**
  * Paso "Horario": hoy elegido por omisión (o el primer día con horas) y las horas libres de
@@ -29,6 +34,8 @@ export const metadata: Metadata = { title: "Elige tu hora · Possos Barber" };
  */
 export default async function TimeStepPage({ searchParams }: PageProps<"/reservar/horario">) {
   const params = await searchParams;
+  const t = await getTranslations("web.customer");
+  const f = await currentFormatters();
   const selection = parseSelection(params);
   const db = await createClient();
   const flow = await loadBookingFlow(db, selection);
@@ -49,7 +56,7 @@ export default async function TimeStepPage({ searchParams }: PageProps<"/reserva
   if (!date) {
     const initial = pickInitialDay(dayList, today);
     date = initial.date;
-    if (initial.skippedToday) notice = `Hoy no hay horas. Te mostramos el ${formatDateLong(date)}`;
+    if (initial.skippedToday) notice = t("skippedToday", { date: f.dateLong(date) });
   }
 
   const starts = await getAvailableStarts(db, {
@@ -62,31 +69,35 @@ export default async function TimeStepPage({ searchParams }: PageProps<"/reserva
   const name = barberName(flow, barberId);
   return (
     <>
-      <StepHeader {...position} backHref={previousStepHref(flow, "time", selection)} />
+      <StepHeader
+        actions={<LocaleSwitch />}
+        {...position}
+        backHref={previousStepHref(flow, "time", selection)}
+      />
       <main className="flex flex-1 flex-col gap-6 pt-2">
         <div className="grid gap-2 px-gutter">
           <div className="flex items-center justify-between gap-4">
             <p className="text-body text-fg-muted">
               {service.name} · {formatDuration(service.duration_min)}
-              {flow.barbers.length > 1 ? ` · ${name ?? "Cualquiera disponible"}` : null}
+              {flow.barbers.length > 1 ? ` · ${name ?? t("anyBarber")}` : null}
             </p>
             {flow.services.length > 1 ? (
               <Link
                 href={BOOKING_ROUTES.service}
                 className="inline-flex min-h-12 items-center text-label text-fg underline underline-offset-4"
               >
-                Cambiar
+                {t("change")}
               </Link>
             ) : flow.barbers.length > 1 ? (
               <Link
                 href={selectionHref(BOOKING_ROUTES.barber, { serviceId: service.id })}
                 className="inline-flex min-h-12 items-center text-label text-fg underline underline-offset-4"
               >
-                Cambiar
+                {t("change")}
               </Link>
             ) : null}
           </div>
-          <h1 className="text-title">Elige tu hora</h1>
+          <h1 className="text-title">{t("time.title")}</h1>
         </div>
         <TimePicker
           serviceId={service.id}

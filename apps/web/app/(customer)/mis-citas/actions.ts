@@ -12,6 +12,7 @@ import {
 import { cancel, reschedule } from "@possos/booking/server";
 import type { CancelResult, RescheduleFormState } from "@possos/booking/ui";
 import { createClient } from "@possos/supabase/server";
+import { currentLocale } from "../../../lib/i18n";
 
 /*
  * Acciones de "Mis citas". Cada una verifica la sesión por su cuenta; quién puede cancelar o
@@ -23,12 +24,14 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 /** "Sí, cancelar" en la hoja. No redirige: la hoja se cierra y la página se refresca. */
 export async function cancelMyAppointmentAction(appointmentId: string): Promise<CancelResult> {
-  if (!UUID.test(appointmentId)) return { ok: false, error: bookingErrorMessage("NOT_FOUND") };
+  const locale = await currentLocale();
+  if (!UUID.test(appointmentId))
+    return { ok: false, error: bookingErrorMessage("NOT_FOUND", locale) };
   const db = await createClient();
   const viewer = await getViewer(db);
-  if (!viewer) return { ok: false, error: bookingErrorMessage("NOT_AUTHENTICATED") };
+  if (!viewer) return { ok: false, error: bookingErrorMessage("NOT_AUTHENTICATED", locale) };
   const result = await cancel(db, { appointmentId });
-  return result.ok ? { ok: true } : { ok: false, error: bookingErrorMessage(result.error) };
+  return result.ok ? { ok: true } : { ok: false, error: bookingErrorMessage(result.error, locale) };
 }
 
 /**
@@ -43,11 +46,12 @@ export async function rescheduleMyAppointmentAction(
   _prev: RescheduleFormState,
   form: FormData,
 ): Promise<RescheduleFormState> {
+  const locale = await currentLocale();
   const id = String(form.get("cita") ?? "");
   const date = String(form.get("fecha") ?? "");
   const startAt = normalizeInstant(String(form.get("hora") ?? ""));
   if (!UUID.test(id) || !DAY.test(date) || !startAt) {
-    return { error: bookingErrorMessage("INVALID_INPUT") };
+    return { error: bookingErrorMessage("INVALID_INPUT", locale) };
   }
   const confirmHref = selectionHref(MY_APPOINTMENTS_ROUTES.rescheduleConfirm(id), {
     date,
@@ -67,7 +71,7 @@ export async function rescheduleMyAppointmentAction(
       );
     }
     if (result.error === "NOT_AUTHENTICATED") redirect(withNext(AUTH_ROUTES.signIn, confirmHref));
-    return { error: bookingErrorMessage(result.error) };
+    return { error: bookingErrorMessage(result.error, locale) };
   }
   redirect(`${MY_APPOINTMENTS_ROUTES.detail(result.data.id)}?aviso=cambiada`, RedirectType.replace);
 }
