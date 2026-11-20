@@ -241,7 +241,7 @@ test("la barra Reservar se esconde mientras se ven los servicios", async ({ page
   await expect(page.getByRole("heading", { name: "Servicios" })).toBeFocused();
 });
 
-test("la portada lleva el logo, el nombre y Reservar, y el tijeretazo sale una vez por sesión", async ({
+test("la portada lleva el logo, el nombre y Reservar, y el tijeretazo se repite hasta que la persona usa la página", async ({
   browser,
 }) => {
   // Cuenta las animaciones del mango del logo (LogoIntro usa Element.animate).
@@ -262,19 +262,24 @@ test("la portada lleva el logo, el nombre y Reservar, y el tijeretazo sale una v
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   await page.addInitScript(countSnips);
+  // Reloj simulado: los 8 s entre tijeretazos pasan con runFor, sin esperarlos.
+  await page.clock.install();
   await page.goto("/");
   const hero = page.locator("#portada");
   await expect(hero.getByRole("heading", { name: "Possos Barber", level: 1 })).toBeVisible();
   // El logo es decorativo: el nombre ya está escrito al lado.
   await expect(hero.locator('[data-slot="logo"]')).toHaveAttribute("aria-hidden", "true");
   await hydrated(page);
-  await expect.poll(() => snips(page)).toBe(1);
+  await page.clock.runFor(1_000);
+  expect(await snips(page)).toBe(1);
+  await page.clock.runFor(8_000);
+  expect(await snips(page)).toBe(2);
   await expectAccessible(page);
 
-  // Al volver en la misma sesión, el logo queda quieto.
-  await page.reload();
-  await hydrated(page);
-  expect(await snips(page)).toBe(0);
+  // Al primer toque se queda quieto (WCAG 2.2.2: se puede detener).
+  await hero.getByRole("heading", { level: 1 }).tap();
+  await page.clock.runFor(20_000);
+  expect(await snips(page)).toBe(2);
 
   // "Reservar" de la portada sube a la lista, como el de la barra.
   await hero.getByRole("link", { name: "Reservar" }).tap();
@@ -289,8 +294,10 @@ test("la portada lleva el logo, el nombre y Reservar, y el tijeretazo sale una v
   });
   const calmPage = await calm.newPage();
   await calmPage.addInitScript(countSnips);
+  await calmPage.clock.install();
   await calmPage.goto("/");
   await hydrated(calmPage);
+  await calmPage.clock.runFor(20_000);
   expect(await snips(calmPage)).toBe(0);
   await calm.close();
 });
