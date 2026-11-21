@@ -110,7 +110,7 @@ describe("separación entre capas", () => {
 /*
  * Matices del amarillo (docs/11, "Color", 20/11/2026). El neón es un amarillo verdoso: oscurecido
  * con el mismo tono se ve oliva, que fue la primera prueba. El tono oscuro gira hacia lo cálido,
- * pero sin llegar al ámbar de --warning, que significa "Sin confirmar".
+ * pero sin llegar al ámbar de --warning, que significa "Pendiente de aprobación".
  */
 describe("matices del amarillo", () => {
   const hue = (token: ColorToken) => oklch(colors[token])!.h!;

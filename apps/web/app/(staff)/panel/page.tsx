@@ -3,12 +3,7 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { addDays, type AgendaAppointment } from "@possos/booking";
-import {
-  getAgendaAppointment,
-  listCompleted,
-  listPendingApproval,
-  listToClose,
-} from "@possos/booking/server";
+import { getAgendaAppointment, listCompleted, listPendingApproval } from "@possos/booking/server";
 import { listChargesForAppointments, listCommissionRates } from "@possos/commissions/server";
 import { reminderSummary, type ReminderSummary } from "@possos/notifications";
 import { listMessageJobs } from "@possos/notifications/server";
@@ -27,8 +22,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * "Hoy" (docs/11): la agenda del día como lista por hora, con "Por cerrar" y "Pendientes de
- * aprobar" cuando tienen algo. `?dia=YYYY-MM-DD` muestra otro día; `?cita=<id>` abre su hoja.
+ * "Hoy" (docs/11): la agenda del día como lista por hora, con "Cobros por registrar" y
+ * "Pendientes de aprobar" cuando tienen algo. `?dia=YYYY-MM-DD` muestra otro día; `?cita=<id>` abre su hoja.
  */
 export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
   const params = await searchParams;
@@ -60,15 +55,15 @@ export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
   }
 
   const barber = ctx.barber;
-  const [dayAgenda, toClose, pending] = await Promise.all([
+  const [dayAgenda, pending] = await Promise.all([
     loadDayAgenda(ctx.db, barber, day),
-    isToday ? listToClose(ctx.db, { barberId: barber.id }) : null,
     isToday ? listPendingApproval(ctx.db, { barberId: barber.id }) : null,
   ]);
   const { items, appointments } = dayAgenda;
 
   // Cobros: los de las citas atendidas del día y las de los últimos 30 días que quedaron sin
-  // cobro ("Falta registrar el cobro" en "Por cerrar").
+  // cobro ("Cobros por registrar"). La cita que termina se cierra y se cobra sola; sin cobro
+  // quedan las que no tienen precio ([PENDIENTE]) o las que se cerraron con más de 3 días.
   const since = isoDaysAgo(30);
   const [completed, rates] = await Promise.all([
     isToday ? listCompleted(ctx.db, { barberId: barber.id, since }) : null,
@@ -96,7 +91,6 @@ export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
   const shownIds = [
     ...new Set([
       ...appointments.map((a) => a.id),
-      ...(toClose?.ok ? toClose.data.map((a) => a.id) : []),
       ...(pending?.ok ? pending.data.map((a) => a.id) : []),
       ...(extra ? [extra.id] : []),
     ]),
@@ -111,13 +105,10 @@ export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
   }
 
   const count = appointments.length;
-  const unconfirmed = appointments.filter((a) => a.status === "booked").length;
-  const closing = (toClose?.ok ? toClose.data.length : 0) + uncharged.length;
   const approving = pending?.ok ? pending.data.length : 0;
   const summary = [
     t("count", { count }),
-    unconfirmed ? t("unconfirmed", { count: unconfirmed }) : null,
-    closing ? t("toClose", { count: closing }) : null,
+    uncharged.length ? t("uncharged", { count: uncharged.length }) : null,
     approving ? t("toApprove", { count: approving }) : null,
   ]
     .filter(Boolean)
@@ -180,11 +171,9 @@ export default async function TodayPage({ searchParams }: PageProps<"/panel">) {
       <AgendaView
         key={`${barber.id}-${day}`}
         barberId={barber.id}
-        day={day}
         items={items}
         now={new Date().toISOString()}
         isToday={isToday}
-        toClose={toClose?.ok ? toClose.data : []}
         pending={pending?.ok ? pending.data : []}
         extra={extra}
         initialSelectedId={selectedId}

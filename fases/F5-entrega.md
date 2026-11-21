@@ -67,7 +67,7 @@ const url = new URL(MY_APPOINTMENTS_ROUTES.detail(appointmentId), siteUrl());
 
 ### Estados que ve el cliente
 
-- Una cita que ya pasó y el barbero todavía no marca sigue `booked` o `confirmed` en la base. Para el cliente dice "Pasada" (`myStatusDisplay`); "Sin confirmar" o "Por cerrar" no le dicen nada.
+- Una cita que ya pasó sigue `booked` o `confirmed` en la base hasta que pg_cron la cierra como atendida (menos de un minuto, desde el 20/11/2026). Mientras tanto, para el cliente dice "Pasada" (`myStatusDisplay`). Una reserva vigente dice "Reservada" (antes, "Sin confirmar").
 - Las canceladas por el personal o por la limpieza de pruebas salen en el historial como "Cancelada", igual que las del cliente.
 
 ### .ics

@@ -41,18 +41,18 @@ Lo resuelve la función `book_appointment` al reservar, no la interfaz:
 ```
                   ┌──────────── cancelled (by customer | by staff)
                   │
-pending_approval ─┼─▶ booked ──▶ confirmed ──▶ completed
-   (cliente con   │      │            │
-   2+ faltas)     │      └────────────┴──▶ no_show
+pending_approval ─┼─▶ booked ──▶ confirmed ──▶ completed (sola, al terminar)
+   (cliente con   │      │            │              │
+   2+ faltas)     │      └────────────┴──────────────┴──▶ no_show ("No vino")
                   └─▶ rejected
 ```
 
 | Estado | Significado | Ocupa el horario |
 |---|---|---|
 | `pending_approval` | La reservó un cliente que necesita aprobación; espera al barbero | Sí |
-| `booked` | Reservada y vigente | Sí |
+| `booked` | Reservada y vigente. La interfaz dice "Reservada" (desde el 20/11/2026; antes, "Sin confirmar") | Sí |
 | `confirmed` | El cliente tocó "Confirmo" en el recordatorio (o el barbero la confirmó a mano) | Sí |
-| `completed` | El cliente vino | Sí (es historia) |
+| `completed` | El cliente vino. La cita que termina sin marca pasa sola a este estado | Sí (es historia) |
 | `no_show` | No vino; suma 1 al contador de inasistencias del cliente | Sí (es historia) |
 | `cancelled` | Cancelada, con `cancelled_by` (customer o staff) y el motivo | **No** |
 | `rejected` | El barbero no aprobó la reserva | **No** |
@@ -76,7 +76,7 @@ Solo los estados que ocupan el horario entran en la restricción de exclusión. 
 
 ## Inasistencias
 
-1. Pasada la hora de una cita, el barbero la marca como **Vino** o **No vino** desde la agenda. Si no marca nada, la cita queda pendiente en una lista "por cerrar"; no se marca sola como inasistencia.
+1. **Por omisión, el cliente vino** (20/11/2026, pedido de Juan; antes el barbero marcaba "Vino" o "No vino" y lo que no marcaba quedaba "por cerrar"). Cuando una cita `booked` o `confirmed` termina, `pg_cron` la pasa a `completed` en menos de un minuto y `commissions` registra su cobro con el precio de la reserva (ver [09](09-modelo-datos.md#commissions)). El barbero solo marca **No vino**: desde la hora de inicio, mientras la cita sigue abierta o después de que se cerró. Sobre una cita ya cerrada, el barbero puede hacerlo el mismo día de la cita y el administrador, siempre; su cobro se anula con el motivo "No vino". No hay "Vino" en la interfaz.
 2. Cada `no_show` suma 1 a `customer_booking_status.no_show_count` (tabla del módulo `booking`).
 3. Al llegar a 2 (`booking_settings.no_show_threshold`), `customer_booking_status.requires_approval` pasa a `true`. Desde ese momento sus reservas en línea entran como `pending_approval` y el barbero las aprueba o rechaza. El cliente ve el aviso "Tu reserva queda pendiente de que el barbero la apruebe".
 4. El administrador puede reiniciar el contador o quitar la marca a mano.

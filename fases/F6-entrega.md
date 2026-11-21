@@ -10,11 +10,11 @@ Estado del panel del barbero y del administrador al cerrar [F6](F6-panel-barbero
 | Citas | `cita/nueva/`, `cita/[id]/mover/` y la hoja de la cita dentro de Hoy (`_components/agenda-view.tsx`) | `?cita=<id>` abre la hoja desde otra pantalla (la usan los bloqueos) |
 | Agenda | `horario/`, `bloqueos/` | Horario semanal de una vez; bloqueos con las citas que quedan debajo; festivos sugeridos |
 | Administración | `servicios/`, `servicios/nuevo`, `servicios/[id]`, `barberos/`, `barberos/nuevo`, `barberos/[id]`, `porcentajes/`, `configuracion/`, `roles/` | Solo el administrador (`loadAdminPanel`); un barbero recibe 404 |
-| Cobros | La hoja de la cita en Hoy (`agenda-view.tsx`) y `liquidacion/` (`charges-list.tsx`) | "Vino" abre la hoja de cobro; corrección y anulación desde la cita o desde la liquidación |
+| Cobros | La hoja de la cita en Hoy (`agenda-view.tsx`) y `liquidacion/` (`charges-list.tsx`) | Desde el 20/11/2026 el cobro se registra solo al cerrarse la cita; la hoja de cobro queda para "Registrar cobro" (citas sin precio) y "Corregir valor"; anulación desde la cita o desde la liquidación |
 | Clientes | `clientes/` y `clientes/[id]` | Lista con búsqueda; ficha con historial, notas e inasistencias |
 | Acciones | `_actions/agenda.ts` (citas y cobros), `_actions/schedule.ts`, `_actions/admin.ts`, `_actions/customers.ts`, `_actions/settings.ts` | Cada una repite la guarda |
 | Composición | `apps/web/lib/panel.ts` (`loadPanel`, `loadAdminPanel`, `canActOnBarber`), `lib/panel-dates.ts`, `panel/_lib/free-starts.ts` (`loadAgendaDays`) | Qué barbero se ve y la agenda de uno o varios días con tres consultas |
-| `@possos/booking` | `.`: `buildDayAgenda`, `dayOccupancy`, `isToClose`, `bogotaInstant`, `dayBounds`, `addDays`, `isoWeekday`, `weekStart`. `validateBookingSettings`. `/server`: `listAgenda`, `listToClose`, `listPendingApproval`, `listCompleted`, `listAgendaByIds`, `listCustomerAppointments`, `getAgendaAppointment`, `listBookingStatus`, `getBookingSettings`, `updateBookingSettings`. `/ui`: `AgendaList`, `AppointmentDetail`, `useLiveAgenda` | La agenda del día es una función pura con pruebas |
+| `@possos/booking` | `.`: `buildDayAgenda`, `dayOccupancy`, `bogotaInstant`, `dayBounds`, `addDays`, `isoWeekday`, `weekStart`. `validateBookingSettings`. `/server`: `listAgenda`, `listPendingApproval`, `listCompleted`, `listAgendaByIds`, `listCustomerAppointments`, `getAgendaAppointment`, `listBookingStatus`, `getBookingSettings`, `updateBookingSettings`. `/ui`: `AgendaList`, `AppointmentDetail`, `useLiveAgenda` | La agenda del día es una función pura con pruebas |
 | `@possos/barbers` | `.`: `colombianHolidays`, `holidaysBetween`, `validateWeeklyRanges`, `validateBarberProfile`, `normalizeWhatsappUrl`, `isOwnImagePath`. `/server`: `listBarbers`, `getBarber`, `createBarber`, `updateBarber`, `setWorkingHours`, `listBarberServiceIds`, `setBarberServices`, `addServiceToBarbers`, `addPortfolioItem`, `deletePortfolioItem`, `setBarberPhoto`. `/ui`: `WeeklyHoursEditor`, `TimeOffForm`, `BarberForm`, `ImageUpload` | |
 | `@possos/customers` | `.`: `validateStaffCustomer`, `searchTerm`, `whatsappChatUrl`. `/server`: `searchCustomers`, `getCustomer`, `staffCreateCustomer`, `listNotes`, `addNote`, `deleteNote`. `/ui`: `CustomerPicker` | |
 | `@possos/commissions` | `.`: `splitAmount`, `formatPercent`, `periodRange`, `SETTLEMENT_PERIODS`. `/server`: `listCharges`, `listChargesForAppointments`, `listCommissionRates`. `/ui` (nueva): `ChargeForm` | |
@@ -46,7 +46,7 @@ Estado del panel del barbero y del administrador al cerrar [F6](F6-panel-barbero
 
 - **`buildDayAgenda` es pura** y usa UTC-5 fijo (Colombia no tiene horario de verano). Las horas libres siguen el intervalo del barbero desde el inicio de cada rango, como las del cliente, y duran un intervalo; una cita corrida (9:30) tapa las horas que se cruzan con ella.
 - **Una cita es del día en que empieza.** Un bloqueo de varios días se recorta al día y, si cubre todo el día, sale una sola fila "Todo el día".
-- **"Por cerrar" y "Pendientes de aprobar" solo salen en "Hoy" del día actual**, y "Por cerrar" mira los últimos 30 días. Las citas de otros días se pueden abrir igual desde su día.
+- **"Cobros por registrar" (antes "Por cerrar") y "Pendientes de aprobar" solo salen en "Hoy" del día actual**, y "Cobros por registrar" mira los últimos 30 días. Las citas de otros días se pueden abrir igual desde su día.
 - **La hora "ahora" la da el servidor** y un intervalo la avanza cada minuto. El render no lee el reloj: las reglas de React (`react-hooks/purity`) lo rechazan.
 - **El estado del recordatorio** de la hoja queda vacío hasta F7.
 
@@ -78,7 +78,7 @@ Estado del panel del barbero y del administrador al cerrar [F6](F6-panel-barbero
 
 ### Cobros y liquidación
 
-- **"Vino" llama a dos funciones**: `mark_attendance` y después `record_charge`. Si la segunda falla (por ejemplo, el barbero no tiene porcentaje), la cita queda `completed` sin cobro y aparece en "Por cerrar" como "Falta registrar el cobro", con "Registrar cobro". Se buscan en los últimos 30 días: `listCompleted` de booking y `listChargesForAppointments` de commissions, juntos en la página (booking no conoce los cobros).
+- **Cambió el 20/11/2026: ya no hay "Vino" ni "Por cerrar"** (se quitaron `isToClose`, `listToClose` y `attendAction`). La cita que termina se cierra sola como `completed` (pg_cron) y `commissions` la cobra en la misma transacción; el barbero solo marca "No vino", también sobre una cita cerrada. Ver docs/04, "Inasistencias". Las atendidas sin cobro (sin precio, sin porcentaje o de hace más de 3 días) aparecen en "Cobros por registrar" con "Registrar cobro". Se buscan en los últimos 30 días: `listCompleted` de booking y `listChargesForAppointments` de commissions, juntos en la página (booking no conoce los cobros).
 - **El valor se prellena con el precio de la cita.** Mientras el servicio no tenga precio ([PENDIENTE]), el campo sale vacío y el barbero escribe lo que cobró.
 - **El reparto en vivo de la hoja usa `splitAmount`**, la misma cuenta que las columnas generadas de `charges` (redondeo al peso, y la barbería se queda con el resto). Lo que se guarda lo calcula la base.
 - **"Para ti" o "Para el barbero"**: "Para ti" solo cuando quien mira es el barbero de la cita.

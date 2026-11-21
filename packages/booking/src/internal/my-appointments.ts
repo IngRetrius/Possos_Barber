@@ -74,8 +74,8 @@ export function splitMyAppointments(
 }
 
 /**
- * Estado para el cliente. Una cita que ya pasó y el barbero no ha marcado sigue "reservada" en
- * la base; "Sin confirmar" o "Por cerrar" no le dicen nada al cliente, así que dice "Pasada".
+ * Estado para el cliente. Una cita que ya terminó sigue "reservada" en la base hasta que se
+ * cierra sola (cada minuto, como atendida): mientras tanto dice "Pasada".
  */
 export function myStatusDisplay(
   appointment: MyAppointment,

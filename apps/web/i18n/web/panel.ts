@@ -19,8 +19,6 @@ const es = {
     serviceRequired: "Elige el servicio",
     timeRequired: "Elige la fecha y la hora",
     customerRequired: "Elige un cliente o crea uno nuevo",
-    chargeMissing:
-      "La cita quedó como atendida, pero falta registrar el cobro. Intenta de nuevo desde Por cerrar",
     chargeSaved: "Guardaste el cobro",
     chargeCorrected: "Corregiste el cobro",
     chargeVoided: "Anulaste el cobro",
@@ -85,8 +83,6 @@ const en: typeof es = {
     serviceRequired: "Choose the service",
     timeRequired: "Choose the date and time",
     customerRequired: "Choose a customer or create a new one",
-    chargeMissing:
-      "The appointment was marked as attended, but the charge is missing. Try again from To close",
     chargeSaved: "You saved the charge",
     chargeCorrected: "You corrected the charge",
     chargeVoided: "You voided the charge",

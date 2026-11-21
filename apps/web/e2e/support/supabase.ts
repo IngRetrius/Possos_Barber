@@ -227,9 +227,11 @@ export function pesos(amount: number): string {
 }
 
 /**
- * Una cita pasada, sin marcar, de un cliente sin cuenta nuevo (`E2E Cobro ...`), creada por el
- * administrador: sirve para "Vino" con su cobro. Busca hacia atrás un día con horario y una hora
- * libre (las citas atendidas de corridas anteriores ocupan las suyas).
+ * Una cita pasada de un cliente sin cuenta nuevo (`E2E Cobro ...`), creada por el administrador.
+ * Nace reservada y pg_cron la cierra como atendida en menos de un minuto (`waitUntilClosed`).
+ * El servicio de la semilla no tiene precio, así que no se cobra sola: queda en "Cobros por
+ * registrar". Busca hacia atrás un día con horario y una hora libre (las citas de corridas
+ * anteriores ocupan las suyas).
  */
 export async function pastWalkInAppointment(name: string): Promise<{ id: string }> {
   const token = await signInApi(SEED.admin);
@@ -260,6 +262,27 @@ export async function pastWalkInAppointment(name: string): Promise<{ id: string 
     }
   }
   throw new Error("No hay horas pasadas libres en los últimos 20 días");
+}
+
+/** Espera a que pg_cron cierre la cita como atendida (corre cada minuto). */
+export async function waitUntilClosed(id: string): Promise<void> {
+  const deadline = Date.now() + 90_000;
+  while (Date.now() < deadline) {
+    if ((await appointmentStatus(SEED.admin, id)) === "completed") return;
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+  }
+  throw new Error(`pg_cron no cerró la cita ${id} en 90 segundos`);
+}
+
+/** El cobro de una cita, visto por el administrador, o null si no tiene. */
+export async function appointmentCharge(
+  id: string,
+): Promise<{ amount_cop: number; voided_at: string | null; void_reason: string | null } | null> {
+  const token = await signInApi(SEED.admin);
+  const rows = await rest<
+    { amount_cop: number; voided_at: string | null; void_reason: string | null }[]
+  >(`charges?select=amount_cop,voided_at,void_reason&appointment_id=eq.${id}`, { token });
+  return rows[0] ?? null;
 }
 
 /** Límite para cancelar o cambiar (`booking_settings.cancel_window_min`), como administrador. */

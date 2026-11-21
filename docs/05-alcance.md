@@ -16,10 +16,10 @@ La meta es que el barbero deje Beunik. Entra solo lo necesario para que reciba r
 - "Mis citas": próximas y pasadas, cancelar o reprogramar hasta 2 h antes, volver a reservar y agregar al calendario.
 
 **Barbero**
-- Agenda de día y de semana en el celular, con colores por estado y la marca "sin confirmar".
+- Agenda de día y de semana en el celular, con colores por estado ("Reservada", y "Confirmada" si el cliente tocó "Confirmo").
 - Crear citas manuales para clientes con o sin cuenta.
 - Aprobar o rechazar reservas pendientes.
-- Marcar "Vino" o "No vino". "Vino" registra el cobro del servicio, con el precio prellenado y editable.
+- La cita que termina cuenta como atendida y registra sola el cobro del servicio con el precio de la reserva, que el barbero corrige ese día. El barbero solo marca "No vino" (20/11/2026; antes marcaba "Vino" o "No vino").
 - Liquidación del periodo: servicios cobrados, total, su parte y la de la barbería según el porcentaje. Reemplaza las "facturas" de Beunik (decisión del 19/11/2026; ver [09](09-modelo-datos.md#commissions)).
 - Horario semanal y bloqueos.
 - Sus clientes: historial de citas y notas privadas.

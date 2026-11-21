@@ -13,7 +13,7 @@ type StatusDisplay = { label: string; tone: StatusTone };
 
 const TONE: Record<AppointmentStatus, StatusTone> = {
   confirmed: "success",
-  booked: "warning",
+  booked: "neutral",
   pending_approval: "warning",
   no_show: "danger",
   completed: "neutral",
@@ -38,9 +38,3 @@ export const APPOINTMENT_STATUS_DISPLAY: Record<
       ]),
     ) as Record<AppointmentStatus, StatusDisplay>,
 );
-
-/** "Por cerrar": cita pasada que el barbero todavía no marca (no es un estado de la base). */
-export const TO_CLOSE_DISPLAY: Record<Locale, StatusDisplay> = byLocale((locale) => ({
-  label: messages[locale].status.toClose,
-  tone: "warning",
-}));

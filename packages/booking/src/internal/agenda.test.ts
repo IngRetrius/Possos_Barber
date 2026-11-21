@@ -5,7 +5,6 @@ import {
   buildDayAgenda,
   dayOccupancy,
   isoWeekday,
-  isToClose,
   weekStart,
   type AgendaAppointment,
 } from "./agenda";
@@ -117,7 +116,7 @@ describe("buildDayAgenda", () => {
   });
 });
 
-describe("dayOccupancy e isToClose", () => {
+describe("dayOccupancy", () => {
   it("cuenta citas y horas libres", () => {
     const items = buildDayAgenda({
       day: DAY,
@@ -128,12 +127,5 @@ describe("dayOccupancy e isToClose", () => {
     });
     expect(dayOccupancy(items)).toEqual({ appointments: 1, free: 3, ratio: 0.25 });
     expect(dayOccupancy([]).ratio).toBe(0);
-  });
-
-  it("marca por cerrar solo las citas que ya empezaron sin marcar", () => {
-    const now = new Date(bogotaInstant(DAY, "10:30"));
-    expect(isToClose(appointment("10:00", "11:00"), now)).toBe(true);
-    expect(isToClose(appointment("11:00", "12:00"), now)).toBe(false);
-    expect(isToClose(appointment("09:00", "10:00", { status: "completed" }), now)).toBe(false);
   });
 });

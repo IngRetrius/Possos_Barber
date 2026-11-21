@@ -4,14 +4,12 @@ import type { ReactNode } from "react";
 import { whatsappChatUrl } from "@possos/customers";
 import { Button, StatusBadge, useFormat } from "@possos/ui";
 import type { AgendaAppointment } from "./agenda";
-import { APPOINTMENT_STATUS_DISPLAY, TO_CLOSE_DISPLAY } from "./status";
+import { APPOINTMENT_STATUS_DISPLAY } from "./status";
 
 export interface AppointmentDetailProps {
   appointment: AgendaAppointment;
   /** "$ 30.000" o "[PENDIENTE]". */
   priceLabel: string;
-  /** Ya empezó y sigue sin marcar. */
-  toClose: boolean;
   /** Lo que va debajo (cobro, notas del barbero). */
   children?: ReactNode;
 }
@@ -23,14 +21,11 @@ export interface AppointmentDetailProps {
 export function AppointmentDetail({
   appointment: a,
   priceLabel,
-  toClose,
   children,
 }: AppointmentDetailProps) {
   const t = useTranslations("booking.detail");
   const f = useFormat();
-  const display = toClose
-    ? TO_CLOSE_DISPLAY[f.locale]
-    : APPOINTMENT_STATUS_DISPLAY[f.locale][a.status];
+  const display = APPOINTMENT_STATUS_DISPLAY[f.locale][a.status];
   const chat = whatsappChatUrl(a.customerPhone);
   return (
     <div className="grid gap-4">

@@ -152,11 +152,3 @@ export function dayOccupancy(items: AgendaItem[]): {
   const total = appointments + free;
   return { appointments, free, ratio: total === 0 ? 0 : appointments / total };
 }
-
-/** Citas que ya empezaron y siguen sin marcar: "Por cerrar". */
-export function isToClose(appointment: AgendaAppointment, now: Date): boolean {
-  return (
-    (appointment.status === "booked" || appointment.status === "confirmed") &&
-    ms(appointment.start) <= now.getTime()
-  );
-}

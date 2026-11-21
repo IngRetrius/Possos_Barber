@@ -62,7 +62,7 @@ Reserva creada ─▶ [utilidad] cita_confirmada         (inmediato)
                    Botones de respuesta rápida: [Confirmo] [Necesito cambiarla]
                    ├─ Confirmo           → cita confirmed; respuesta de servicio: "Listo, te esperamos"
                    ├─ Necesito cambiarla → respuesta de servicio con el enlace para reprogramar o cancelar
-                   └─ Sin respuesta      → la cita sigue booked y la agenda la marca "sin confirmar"
+                   └─ Sin respuesta      → la cita sigue booked ("Reservada"); al terminar cuenta como atendida
 
 2 h antes ──────▶ [utilidad] recordatorio_2h   (solo si la cita sigue activa)
                    "Tu cita en Possos Barber es a las 3:00 p. m. Dirección: ..."

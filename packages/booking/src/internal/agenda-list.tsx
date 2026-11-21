@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { cn, StatusBadge, useFormat } from "@possos/ui";
 import type { AgendaItem } from "./agenda";
-import { APPOINTMENT_STATUS_DISPLAY, TO_CLOSE_DISPLAY } from "./status";
+import { APPOINTMENT_STATUS_DISPLAY } from "./status";
 
 export interface AgendaListProps {
   items: AgendaItem[];
@@ -54,13 +54,7 @@ export function AgendaList({
         const key = `${item.kind}-${item.start}`;
         if (item.kind === "appointment") {
           const a = item.appointment;
-          const toClose =
-            nowMs !== null &&
-            (a.status === "booked" || a.status === "confirmed") &&
-            new Date(a.start).getTime() <= nowMs;
-          const display = toClose
-            ? TO_CLOSE_DISPLAY[f.locale]
-            : APPOINTMENT_STATUS_DISPLAY[f.locale][a.status];
+          const display = APPOINTMENT_STATUS_DISPLAY[f.locale][a.status];
           return [
             before,
             <li key={key}>

@@ -417,7 +417,7 @@ test("cliente con sesión reserva en 3 toques desde el inicio", async ({ page })
   // La cita próxima aparece primero en el inicio.
   await page.goto("/");
   await expect(page.getByText("Tu próxima cita")).toBeVisible();
-  await expect(page.getByText("Sin confirmar")).toBeVisible();
+  await expect(page.getByText("Reservada", { exact: true })).toBeVisible();
 });
 
 test("la hora que toma otro desaparece sin recargar y no se ven datos de otros", async ({

@@ -28,7 +28,7 @@ Investigado el 18/11/2026. Las fuentes están en [fuentes.md](fuentes.md).
 | # | Idea | Sale de | Fase |
 |---|---|---|---|
 | 1 | Recordatorio por WhatsApp con botones **Confirmo** y **Necesito cambiarla**, que cambian el estado de la cita | AgendaPro (WhatsApp para cancelar, cambiar o confirmar) y Beunik (el cliente confirma) | MVP |
-| 2 | La agenda del barbero marca las citas **sin confirmar** para que las llame | Beunik (confirmaciones) | MVP |
+| 2 | La agenda del barbero marca las citas **sin confirmar** para que las llame | Beunik (confirmaciones) | MVP. Cambió el 20/11/2026: la reserva dice "Reservada" y solo la que tocó "Confirmo" se marca "Confirmada" ([04](04-agendamiento.md#estados-de-la-cita)) |
 | 3 | Política de cancelación visible **antes** de confirmar la reserva | theCut | MVP |
 | 4 | Después de N inasistencias, la reserva en línea **pasa a requerir aprobación** | Fresha (bloqueo de reincidentes) y Booksy (aprobación por cliente) | MVP |
 | 5 | **Volver a reservar** en un toque, con el mismo servicio y barbero | Booksy | MVP |

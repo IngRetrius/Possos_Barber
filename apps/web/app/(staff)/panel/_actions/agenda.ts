@@ -63,7 +63,10 @@ export async function decideAction(appointmentId: string, approve: boolean): Pro
   };
 }
 
-/** "No vino": suma una inasistencia al cliente. */
+/**
+ * "No vino": suma una inasistencia al cliente. Vale también sobre una cita que ya se cerró sola;
+ * su cobro se anula en la base (commissions escucha booking_events).
+ */
 export async function noShowAction(appointmentId: string): Promise<ActionResult> {
   const { db } = await loadPanel();
   const result = await markAttendance(db, { appointmentId, attended: false });
@@ -195,30 +198,11 @@ export async function notesAction(
 }
 
 // ---------------------------------------------------------------------------------------------
-// Cobros (parte B). "Vino" marca la asistencia y después registra el cobro; si el cobro falla,
-// la cita queda completada y aparece en "Por cerrar" como "Falta registrar el cobro".
+// Cobros (parte B). La cita que termina se cierra y se cobra sola con el precio de la reserva.
+// A mano quedan registrar el cobro de las que no tienen precio, corregir el valor y anular.
 // ---------------------------------------------------------------------------------------------
 
-/** "Vino" con su cobro. */
-export async function attendAction(
-  appointmentId: string,
-  amountCop: number,
-): Promise<ActionResult> {
-  const { db } = await loadPanel();
-  const attended = await markAttendance(db, { appointmentId, attended: true });
-  if (!attended.ok)
-    return { ok: false, error: bookingErrorMessage(attended.error, await currentLocale()) };
-  const charged = await recordCharge(db, { appointmentId, amountCop });
-  if (!charged.ok) {
-    return {
-      ok: false,
-      error: `${(await actionText())("chargeMissing")}: ${commissionsErrorMessage(charged.error, await currentLocale())}`,
-    };
-  }
-  return { ok: true, message: (await actionText())("chargeSaved") };
-}
-
-/** Registrar el cobro de una cita que ya está atendida. */
+/** Registrar el cobro de una cita atendida que quedó sin cobro ("Cobros por registrar"). */
 export async function recordChargeAction(
   appointmentId: string,
   amountCop: number,

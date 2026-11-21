@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import {
+  appointmentCharge,
   appointmentStatus,
   availableStarts,
   bookFreeSlot,
@@ -11,8 +12,11 @@ import {
   E2E_PREFIX,
   pastWalkInAppointment,
   pesos,
+  rpc,
   SEED,
+  signInApi,
   todaySettlement,
+  waitUntilClosed,
 } from "./support/supabase";
 import { settleAnimations } from "./support/animations";
 
@@ -378,16 +382,19 @@ test("un barbero sin rol de administrador ve solo lo suyo", async ({ page }) => 
   await expect(page.getByText("Todavía no tienes clientes.")).toBeVisible();
 });
 
-test("vino con su cobro, corrección del valor, anulación y liquidación de hoy", async ({
+test("cita que se cierra sola sin precio, su cobro a mano, corrección, anulación y liquidación", async ({
   page,
 }) => {
+  test.setTimeout(180_000);
   const name = `${E2E_PREFIX} Cobro ${Date.now()}`;
-  await pastWalkInAppointment(name);
+  const { id } = await pastWalkInAppointment(name);
+  await waitUntilClosed(id);
   await signIn(page, SEED.admin);
 
   const card = page.locator("li", { hasText: name });
-  await expect(page.getByRole("heading", { name: /^Por cerrar/ })).toBeVisible();
-  await card.getByRole("button", { name: "Vino", exact: true }).click();
+  await expect(page.getByRole("heading", { name: /^Cobros por registrar/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Vino", exact: true })).toHaveCount(0);
+  await card.getByRole("button", { name: "Registrar cobro" }).click();
   await expect(sheet(page).getByRole("heading", { name: "Cobro" })).toBeVisible();
   const started = Date.now();
   // El servicio de la semilla no tiene precio ([PENDIENTE]): el valor se escribe.
@@ -431,6 +438,37 @@ test("vino con su cobro, corrección del valor, anulación y liquidación de hoy
   await expect(page.getByText("Anulaste el cobro")).toBeVisible();
   await expect(row).toContainText("Anulado: Prueba del panel");
   await expectTotals();
+});
+
+test('"No vino" sobre una cita que se cerró sola anula su cobro', async ({ page }) => {
+  test.setTimeout(180_000);
+  const name = `${E2E_PREFIX} Cobro ${Date.now()}`;
+  const { id } = await pastWalkInAppointment(name);
+  await waitUntilClosed(id);
+  // Como si se hubiera cobrado sola (el servicio de la semilla no tiene precio).
+  await rpc(
+    "record_charge",
+    { p_appointment_id: id, p_amount_cop: 30000 },
+    await signInApi(SEED.admin),
+  );
+
+  // La cita es de otro día: el administrador la abre desde la URL y la puede marcar.
+  await signIn(page, SEED.admin, `/panel?cita=${id}`);
+  await expect(sheet(page).getByText("Completada", { exact: true })).toBeVisible();
+  await sheet(page).getByRole("button", { name: "No vino" }).click();
+  await expect(
+    sheet(page).getByText(`¿Marcar que ${name} no vino?`, { exact: false }),
+  ).toBeVisible();
+  await expect(
+    sheet(page).getByText(`También se anula el cobro de ${pesos(30000)}.`),
+  ).toBeVisible();
+  await expectAccessible(page);
+  await sheet(page).getByRole("button", { name: "Sí, no vino" }).click();
+  await expect(page.getByText("Marcaste que no vino")).toBeVisible();
+
+  expect(await appointmentStatus(SEED.admin, id)).toBe("no_show");
+  expect(await appointmentCharge(id)).toMatchObject({ amount_cop: 30000, void_reason: "No vino" });
+  expect((await appointmentCharge(id))?.voided_at).not.toBeNull();
 });
 
 test("ficha del cliente: inasistencias, historial y notas privadas", async ({ page }) => {

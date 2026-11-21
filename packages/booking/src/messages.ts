@@ -27,13 +27,12 @@ const es = {
   },
   status: {
     confirmed: "Confirmada",
-    booked: "Sin confirmar",
+    booked: "Reservada",
     pending_approval: "Pendiente de aprobación",
     no_show: "No vino",
     completed: "Completada",
     cancelled: "Cancelada",
     rejected: "Rechazada",
-    toClose: "Por cerrar",
     past: "Pasada",
   },
   settings: {
@@ -132,13 +131,12 @@ const en: typeof es = {
   },
   status: {
     confirmed: "Confirmed",
-    booked: "Not confirmed",
+    booked: "Booked",
     pending_approval: "Pending approval",
     no_show: "Didn't come",
     completed: "Completed",
     cancelled: "Cancelled",
     rejected: "Rejected",
-    toClose: "To close",
     past: "Past",
   },
   settings: {

@@ -147,7 +147,9 @@ Reemplaza las "facturas" de Beunik, que según el dueño (19/11/2026) solo repar
 | `commission_rates` | `barber_id` (PK), `barber_pct` (`numeric(5,2)`, de 0 a 100), `updated_at`, `updated_by`. Valor inicial: **50** (dueño, 19/11/2026: hoy usa 50 % para todos los servicios) |
 | `charges` | `id`, `appointment_id` (único, → appointments), `barber_id`, `service_id`, `amount_cop` (entero ≥ 0, lo que se cobró), `barber_pct` (copia del porcentaje vigente al cobrar), `barber_amount_cop` (generada: `round(amount_cop * barber_pct / 100)`), `business_amount_cop` (generada: `amount_cop - barber_amount_cop`), `charged_at`, `created_by`, `voided_at`, `void_reason` |
 
-- Un cobro por cita `completed`. El monto llega prellenado con `appointments.price_cop` y se puede cambiar, porque lo cobrado puede diferir de lo reservado.
+- Un cobro por cita `completed`. Desde el 20/11/2026 se registra solo: la cita que termina sin marca se cierra como `completed` (`private.booking_close_past`, con `pg_cron` cada minuto) y, en la misma transacción, un trigger de `commissions` sobre `booking_events` (como el de `notifications`) la cobra con `appointments.price_cop`, el porcentaje vigente y la hora de fin de la cita como `charged_at`. El barbero corrige el valor ese día con `update_charge`, porque lo cobrado puede diferir de lo reservado.
+- Si la cita pasa a `no_show` ("No vino"), el mismo trigger anula su cobro con el motivo "No vino". Un error de `commissions` no hace fallar el cierre ni "No vino": queda un aviso en el registro de Postgres.
+- No se cobra solo sin precio (**[PENDIENTE]**), sin porcentaje ni si la cita terminó hace más de 3 días (por ejemplo, las que se cerraron al aplicar la migración). Esas aparecen en "Cobros por registrar" del panel y se cobran a mano con `record_charge`.
 - El porcentaje se copia en cada cobro: cambiarlo no altera liquidaciones pasadas.
 - Solo servicios; los productos no entran (los productos son de la fase 3).
 - `booking` no conoce este módulo. `commissions` lee la cita con `private.booking_appointment(id)`, la API de lectura de `booking` para SQL, y no escribe en sus tablas.
@@ -192,7 +194,7 @@ Las funciones internas van en el esquema `private`, que PostgREST no expone; cad
 | `reschedule_appointment(id, new_start_at, new_barber_id?)` | cliente (dentro de la ventana), barbero y admin | Crea la nueva y cancela la anterior en una sola transacción. La nueva lleva los mismos adicionales |
 | `confirm_appointment(id, via)` | cliente, barbero, admin y el servicio de notificaciones | `via`: `customer`, `staff` o `whatsapp`. Confirmar dos veces no es error |
 | `decide_pending(id, approve)` | barbero y admin | |
-| `mark_attendance(id, attended)` | barbero y admin | Solo después de la hora de inicio. Actualiza `customer_booking_status` |
+| `mark_attendance(id, attended)` | barbero y admin | Solo después de la hora de inicio. Actualiza `customer_booking_status`. Desde el 20/11/2026, "No vino" (`attended = false`) vale también sobre una cita `completed`: el barbero, el mismo día de la cita (hora de Bogotá); el administrador, siempre. Si no, `INVALID_STATUS` |
 | `reset_no_shows(customer_id)` | admin | |
 | `list_conflicting_appointments(barber_id, starts_at, ends_at)` | barbero (su agenda) y admin | Citas que ocupan ese periodo, con el nombre del cliente |
 | `set_working_hours(barber_id, ranges)` | barbero (el suyo) y admin | F6. Módulo `barbers`. Reemplaza el horario semanal completo en una transacción |
@@ -295,4 +297,6 @@ Están en `supabase/tests/database/` (`02_booking`, `03_rls`, `04_commissions` y
 7. Cancelar a menos de 2 h devuelve `TOO_LATE_TO_CANCEL` para el cliente y funciona para el personal.
 8. Con 2 `no_show`, la siguiente reserva del cliente entra como `pending_approval`.
 9. `record_charge` falla si la cita no está `completed` o ya tiene cobro; cambiar el porcentaje no altera cobros anteriores.
+
+Desde el 20/11/2026, `13_asistencia` prueba la asistencia por omisión: el cierre solo toma las citas `booked` o `confirmed` que terminaron, el cobro automático (precio, porcentaje, hora de fin, sin precio no se cobra, nada de más de 3 días), "No vino" sobre una cita cerrada (el barbero el mismo día, el administrador siempre) y la anulación del cobro.
 10. Un barbero no puede leer cobros de otro barbero ni cambiar su propio porcentaje.

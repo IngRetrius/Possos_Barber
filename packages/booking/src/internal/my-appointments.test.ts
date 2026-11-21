@@ -108,9 +108,10 @@ describe("myStatusDisplay", () => {
   });
 
   it("las demás usan la tabla de estados", () => {
-    expect(myStatusDisplay(appt({ start: "2026-11-22T15:00:00.000Z" }), NOW).label).toBe(
-      "Sin confirmar",
-    );
+    expect(myStatusDisplay(appt({ start: "2026-11-22T15:00:00.000Z" }), NOW)).toEqual({
+      label: "Reservada",
+      tone: "neutral",
+    });
     expect(
       myStatusDisplay(appt({ start: "2026-11-01T15:00:00.000Z", status: "rejected" }), NOW).label,
     ).toBe("Rechazada");
@@ -128,7 +129,7 @@ describe("atTime", () => {
 describe("en inglés", () => {
   it("dice la hora con at y los estados en inglés", () => {
     expect(atTime("2026-11-20T18:00:00.000Z", "en").replaceAll(" ", " ")).toBe("at 1:00 PM");
-    expect(APPOINTMENT_STATUS_DISPLAY.en.booked.label).toBe("Not confirmed");
-    expect(APPOINTMENT_STATUS_DISPLAY.es.booked.label).toBe("Sin confirmar");
+    expect(APPOINTMENT_STATUS_DISPLAY.en.booked.label).toBe("Booked");
+    expect(APPOINTMENT_STATUS_DISPLAY.es.booked.label).toBe("Reservada");
   });
 });

@@ -181,7 +181,11 @@ export async function decidePending(
   return error ? fail(error) : { ok: true, data };
 }
 
-/** Vino o no vino. Cada inasistencia suma al contador del cliente. */
+/**
+ * Vino o no vino. La cita que termina sin marca se cierra sola como atendida; "No vino" vale
+ * desde la hora de inicio y también sobre una cita ya cerrada (el barbero, el mismo día; el
+ * administrador, siempre). Cada inasistencia suma al contador del cliente.
+ */
 export async function markAttendance(
   db: DbClient,
   input: { appointmentId: string; attended: boolean },
@@ -394,29 +398,6 @@ export async function listAgenda(
     .eq("barber_id", input.barberId)
     .in("status", OCCUPYING_STATUSES)
     .overlaps("period", `[${input.from},${input.to})`)
-    .order("period");
-  return error ? fail(error) : { ok: true, data: toAgenda(data) };
-}
-
-/**
- * "Por cerrar": citas que ya empezaron y siguen reservadas o confirmadas, de los últimos
- * `days` días.
- */
-export async function listToClose(
-  db: DbClient,
-  input: { barberId: string; now?: Date; days?: number },
-): R<AgendaAppointment[]> {
-  const now = input.now ?? new Date();
-  const since = new Date(now.getTime() - (input.days ?? 30) * 86_400_000).toISOString();
-  const at = now.toISOString();
-  const { data, error } = await db
-    .from("appointments")
-    .select(AGENDA_SELECT)
-    .eq("barber_id", input.barberId)
-    .in("status", ["booked", "confirmed"])
-    // Empezó a más tardar ahora y terminó después de `since`.
-    .not("period", "sr", `[${at},${at}]`)
-    .not("period", "sl", `[${since},${since}]`)
     .order("period");
   return error ? fail(error) : { ok: true, data: toAgenda(data) };
 }

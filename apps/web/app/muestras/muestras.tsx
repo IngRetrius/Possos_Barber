@@ -69,9 +69,8 @@ const SWATCH: Record<ColorToken, string> = {
 /** Estados de docs/04 con su tono y texto. En F4 y F6 esta tabla vive en @possos/booking. */
 const STATUSES: { status: string; tone: StatusTone; label: string }[] = [
   { status: "confirmed", tone: "success", label: "Confirmada" },
-  { status: "booked", tone: "warning", label: "Sin confirmar" },
+  { status: "booked", tone: "neutral", label: "Reservada" },
   { status: "pending_approval", tone: "warning", label: "Pendiente de aprobación" },
-  { status: "booked, ya pasó", tone: "warning", label: "Por cerrar" },
   { status: "no_show", tone: "danger", label: "No vino" },
   { status: "completed", tone: "neutral", label: "Completada" },
   { status: "cancelled", tone: "neutral", label: "Cancelada" },

@@ -11,7 +11,6 @@ import { ChargeForm } from "@possos/commissions/ui";
 import { reminderFailed, type ReminderSummary } from "@possos/notifications";
 import { Button, InlineError, Sheet, toast, toDateKey, useFormat } from "@possos/ui";
 import {
-  attendAction,
   cancelAction,
   decideAction,
   noShowAction,
@@ -27,13 +26,11 @@ import { ReminderStatus } from "./reminder-status";
 
 export interface AgendaViewProps {
   barberId: string;
-  day: string;
   items: AgendaItem[];
   /** Instante del servidor al armar la página (ISO). */
   now: string;
-  /** El día mostrado es hoy: línea de "ahora", "Por cerrar" y "Pendientes de aprobar". */
+  /** El día mostrado es hoy: línea de "ahora", "Cobros por registrar" y "Pendientes de aprobar". */
   isToday: boolean;
-  toClose: AgendaAppointment[];
   pending: AgendaAppointment[];
   /** Cita fuera de la lista que se abre desde la URL (`?cita=`). */
   extra: AgendaAppointment | null;
@@ -42,13 +39,16 @@ export interface AgendaViewProps {
   notice: string | null;
   /** Cobros de las citas completadas que se muestran. */
   charges: Charge[];
-  /** Citas atendidas sin cobro: "Falta registrar el cobro". */
+  /** Citas atendidas que no se cobraron solas (sin precio, por ejemplo): "Cobros por registrar". */
   uncharged: AgendaAppointment[];
   /** Porcentaje vigente de cada barbero que la sesión ve. */
   rates: Record<string, number>;
   viewerBarberId: string | null;
   isAdmin: boolean;
-  /** Hoy en Bogotá (`YYYY-MM-DD`): el barbero corrige solo los cobros de hoy. */
+  /**
+   * Hoy en Bogotá (`YYYY-MM-DD`): el barbero corrige solo los cobros de hoy y marca "No vino"
+   * en una cita cerrada solo si es de hoy.
+   */
   today: string;
   /** El WhatsApp de cada cita que se muestra (F7); sin entrada, la cita no tiene mensajes. */
   reminders: Record<string, ReminderSummary>;
@@ -57,9 +57,9 @@ export interface AgendaViewProps {
 /** Avisos que llegan en la URL (`?aviso=`) y su texto en `web.agenda.notices`. */
 const NOTICES = { "cita-creada": "created", "cita-movida": "moved" } as const;
 
-type Mode = "detail" | "cancel" | "attend" | "record" | "correct" | "void";
+type Mode = "detail" | "cancel" | "noShow" | "record" | "correct" | "void";
 
-const CHARGE_MODES: Mode[] = ["attend", "record", "correct"];
+const CHARGE_MODES: Mode[] = ["record", "correct"];
 
 /**
  * Hora actual: la del servidor, y cada minuto la del reloj. Sin leer el reloj al renderizar (el
@@ -76,11 +76,9 @@ function useNow(serverNow: string): string {
 
 export function AgendaView({
   barberId,
-  day,
   items,
   now: serverNow,
   isToday,
-  toClose,
   pending,
   extra,
   initialSelectedId,
@@ -104,10 +102,10 @@ export function AgendaView({
     const map = new Map<string, AgendaAppointment>();
     for (const item of items)
       if (item.kind === "appointment") map.set(item.appointment.id, item.appointment);
-    for (const a of [...toClose, ...pending, ...uncharged]) map.set(a.id, a);
+    for (const a of [...pending, ...uncharged]) map.set(a.id, a);
     if (extra) map.set(extra.id, extra);
     return map;
-  }, [items, toClose, pending, uncharged, extra]);
+  }, [items, pending, uncharged, extra]);
   const chargeOf = useMemo(() => new Map(charges.map((c) => [c.appointment_id, c])), [charges]);
   // Marca en la agenda las citas cuyo último WhatsApp falló (riesgo 4 de docs/10).
   const warnings = useMemo(
@@ -173,37 +171,24 @@ export function AgendaView({
   };
 
   const started = (a: AgendaAppointment) => new Date(a.start).getTime() <= nowMs;
-  const isToClose = (a: AgendaAppointment) =>
-    (a.status === "booked" || a.status === "confirmed") && started(a);
+  // La cita que termina sin marca se cierra sola como atendida: "No vino" es la única marca.
+  // Vale desde la hora de inicio; sobre una cita ya cerrada, el barbero solo la de hoy y el
+  // administrador cualquiera (mark_attendance en la base).
+  const canMarkNoShow = (a: AgendaAppointment) =>
+    started(a) &&
+    (a.status === "booked" ||
+      a.status === "confirmed" ||
+      (a.status === "completed" && (isAdmin || toDateKey(a.start) === today)));
+  // El valor del cobro que "No vino" anularía ("$30.000"), o null si la cita no tiene cobro.
+  const voidedByNoShow = (a: AgendaAppointment) => {
+    const charge = chargeOf.get(a.id);
+    return charge && !charge.voided_at ? f.price(charge.amount_cop) : null;
+  };
 
   return (
     <>
-      {isToday && toClose.length + uncharged.length > 0 ? (
-        <Section title={t("toClose", { count: toClose.length + uncharged.length })}>
-          {toClose.map((a) => (
-            <Card
-              key={a.id}
-              appointment={a}
-              onOpen={() => open(a.id)}
-              showDate={a.start.slice(0, 10) !== day}
-            >
-              <Button
-                variant="secondary"
-                disabled={pendingAction}
-                onClick={() => open(a.id, "attend")}
-              >
-                {t("came")}
-              </Button>
-              <Button
-                variant="secondary"
-                className="text-danger"
-                disabled={pendingAction}
-                onClick={() => run(() => noShowAction(a.id), false)}
-              >
-                {t("noShow")}
-              </Button>
-            </Card>
-          ))}
+      {isToday && uncharged.length > 0 ? (
+        <Section title={t("uncharged", { count: uncharged.length })}>
           {uncharged.map((a) => (
             <Card
               key={a.id}
@@ -285,7 +270,16 @@ export function AgendaView({
         }
       >
         {selected ? (
-          CHARGE_MODES.includes(mode) ? (
+          mode === "noShow" ? (
+            <NoShowConfirm
+              name={selected.customerName}
+              voidsAmount={voidedByNoShow(selected)}
+              pending={pendingAction}
+              error={error}
+              onBack={() => toMode("detail")}
+              onConfirm={() => run(() => noShowAction(selected.id))}
+            />
+          ) : CHARGE_MODES.includes(mode) ? (
             <ChargeForm
               key={`${selected.id}-${mode}`}
               defaultAmount={
@@ -306,8 +300,7 @@ export function AgendaView({
               onCancel={() => toMode("detail")}
               onSubmit={(amount) => {
                 const charge = chargeOf.get(selected.id);
-                if (mode === "attend") run(() => attendAction(selected.id, amount));
-                else if (mode === "record") run(() => recordChargeAction(selected.id, amount));
+                if (mode === "record") run(() => recordChargeAction(selected.id, amount));
                 else if (charge) run(() => updateChargeAction(charge.id, amount));
               }}
             />
@@ -329,7 +322,7 @@ export function AgendaView({
               question={t("cancelQuestion")}
               confirmLabel={t("cancelConfirm")}
               pendingLabel={t("cancelling")}
-              backLabel={t("cancelBack")}
+              backLabel={t("back")}
               pending={pendingAction}
               error={error}
               onBack={() => toMode("detail")}
@@ -339,7 +332,6 @@ export function AgendaView({
             <AppointmentDetail
               appointment={selected}
               priceLabel={servicePriceLabel(selected.priceCop, f.locale)}
-              toClose={isToClose(selected)}
             >
               <ReminderStatus summary={reminders[selected.id] ?? null} />
               {selected.status === "completed" ? (
@@ -356,12 +348,11 @@ export function AgendaView({
               {error ? <InlineError>{error}</InlineError> : null}
               <Actions
                 appointment={selected}
-                started={started(selected)}
+                canMarkNoShow={canMarkNoShow(selected)}
                 disabled={pendingAction}
                 onApprove={() => run(() => decideAction(selected.id, true))}
                 onReject={() => run(() => decideAction(selected.id, false))}
-                onAttend={() => toMode("attend")}
-                onNoShow={() => run(() => noShowAction(selected.id))}
+                onNoShow={() => toMode("noShow")}
                 onMove={() => navigate(`/panel/cita/${selected.id}/mover`)}
                 onCancel={() => {
                   setError(null);
@@ -422,28 +413,26 @@ function Card({
 
 function Actions({
   appointment: a,
-  started,
+  canMarkNoShow,
   disabled,
   onApprove,
   onReject,
-  onAttend,
   onNoShow,
   onMove,
   onCancel,
 }: {
   appointment: AgendaAppointment;
-  started: boolean;
+  canMarkNoShow: boolean;
   disabled: boolean;
   onApprove: () => void;
   onReject: () => void;
-  onAttend: () => void;
   onNoShow: () => void;
   onMove: () => void;
   onCancel: () => void;
 }) {
   const t = useTranslations("web.agenda");
   const open = a.status === "pending_approval" || a.status === "booked" || a.status === "confirmed";
-  if (!open) return null;
+  if (!open && !canMarkNoShow) return null;
   return (
     <div className="grid grid-cols-2 gap-2">
       {a.status === "pending_approval" ? (
@@ -460,27 +449,74 @@ function Actions({
             {t("reject")}
           </Button>
         </>
-      ) : started ? (
+      ) : null}
+      {canMarkNoShow ? (
+        <Button
+          variant="secondary"
+          className="col-span-2 text-danger"
+          disabled={disabled}
+          onClick={onNoShow}
+        >
+          {t("noShow")}
+        </Button>
+      ) : null}
+      {open ? (
         <>
-          <Button disabled={disabled} onClick={onAttend}>
-            {t("came")}
+          <Button variant="secondary" disabled={disabled} onClick={onMove}>
+            {t("move")}
           </Button>
           <Button
             variant="secondary"
             className="text-danger"
             disabled={disabled}
-            onClick={onNoShow}
+            onClick={onCancel}
           >
-            {t("noShow")}
+            {t("cancel")}
           </Button>
         </>
       ) : null}
-      <Button variant="secondary" disabled={disabled} onClick={onMove}>
-        {t("move")}
-      </Button>
-      <Button variant="secondary" className="text-danger" disabled={disabled} onClick={onCancel}>
-        {t("cancel")}
-      </Button>
+    </div>
+  );
+}
+
+/**
+ * Confirmación de "No vino": suma una inasistencia y, si la cita ya se cerró y se cobró, anula
+ * el cobro. No se deshace desde el panel.
+ */
+function NoShowConfirm({
+  name,
+  voidsAmount,
+  pending,
+  error,
+  onBack,
+  onConfirm,
+}: {
+  name: string;
+  /** Valor del cobro que se anula ("$ 30.000"), o null si la cita no tiene cobro. */
+  voidsAmount: string | null;
+  pending: boolean;
+  error: string | null;
+  onBack: () => void;
+  onConfirm: () => void;
+}) {
+  const t = useTranslations("web.agenda");
+  return (
+    <div className="grid gap-4">
+      <div className="grid gap-1">
+        <p className="text-body">{t("noShowQuestion", { name })}</p>
+        {voidsAmount ? (
+          <p className="text-body tabular-nums">{t("noShowVoids", { amount: voidsAmount })}</p>
+        ) : null}
+      </div>
+      {error ? <InlineError>{error}</InlineError> : null}
+      <div className="grid gap-2">
+        <Button variant="danger" disabled={pending} aria-busy={pending} onClick={onConfirm}>
+          {pending ? t("marking") : t("noShowConfirm")}
+        </Button>
+        <Button variant="ghost" onClick={onBack}>
+          {t("back")}
+        </Button>
+      </div>
     </div>
   );
 }

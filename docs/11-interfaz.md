@@ -55,7 +55,7 @@ Decisión del 19/11/2026: monocromo más un acento. El gris del logo, medido en 
 
 Escala subida un escalón el 20/11/2026 (pedido de Juan: el inicio se veía plano y muy oscuro). Con `#0B0B0B` y `#151515` las tarjetas casi no se separaban del fondo (1,08:1) y el borde tampoco se notaba (1,21:1 sobre la tarjeta); la pantalla parecía apagada de día. La guía de modo oscuro de Material y de la skill de interfaz pide superficies en capas de gris, no negro. Con la escala nueva, que es la de elevación de Material (`#121212` de fondo y `#1E1E1E` para 1 dp), la app se ve más clara, cada capa sube un tono que se nota (`#121212`, `#1E1E1E`, `#292929`) y el borde se ve (1,38:1 sobre la tarjeta). `--fg-subtle` y `--border-strong` subieron para seguir cumpliendo 4,5:1 y 3:1 sobre `--surface-2`. `--accent-fg` sigue en `#0B0B0B`: es texto sobre el amarillo, no fondo. Una prueba fija los mínimos de separación entre capas.
 
-Matices del amarillo (20/11/2026, pedido de Juan: al inicio le faltaban matices amarillos). El neón es un amarillo verdoso (tono 111 en OKLCH): si se oscurece o se pone con transparencia sobre el fondo, se ve oliva, y así salió la primera prueba. Por eso el matiz oscuro (`--accent-muted`) gira hacia lo cálido (tono 104), sin llegar al ámbar de `--warning` (tono 72), que significa "Sin confirmar". El botón principal presionado deja de ser el amarillo al 85 %, que también se veía oliva, y pasa a `--accent-pressed`. Una prueba verifica que sea más cálido que el neón y que quede lejos del ámbar. Se probaron fondos teñidos de amarillo (un tinte `#2A2403`, cálido para no verse oliva): el brillo detrás del logo, el adicional marcado, las iniciales del barbero y la tarjeta "Tu próxima cita". Juan prefirió el brillo gris de antes y solo contornos, así que el tinte se quitó (20/11/2026).
+Matices del amarillo (20/11/2026, pedido de Juan: al inicio le faltaban matices amarillos). El neón es un amarillo verdoso (tono 111 en OKLCH): si se oscurece o se pone con transparencia sobre el fondo, se ve oliva, y así salió la primera prueba. Por eso el matiz oscuro (`--accent-muted`) gira hacia lo cálido (tono 104), sin llegar al ámbar de `--warning` (tono 72), que significa "Pendiente de aprobación". El botón principal presionado deja de ser el amarillo al 85 %, que también se veía oliva, y pasa a `--accent-pressed`. Una prueba verifica que sea más cálido que el neón y que quede lejos del ámbar. Se probaron fondos teñidos de amarillo (un tinte `#2A2403`, cálido para no verse oliva): el brillo detrás del logo, el adicional marcado, las iniciales del barbero y la tarjeta "Tu próxima cita". Juan prefirió el brillo gris de antes y solo contornos, así que el tinte se quitó (20/11/2026).
 
 | Token | Valor | Contraste sobre `--bg` | Uso |
 |---|---|---|---|
@@ -73,12 +73,13 @@ Matices del amarillo (20/11/2026, pedido de Juan: al inicio le faltaban matices 
 | `--accent-pressed` | `#E3E200` | 13,5 (14,2 con `--accent-fg` encima) | Botón principal al pasar o presionar |
 | `--accent-muted` | `#8D8317` | 4,8 (4,3 sobre `--surface`; 3,7 sobre `--surface-2`) | Subrayado de los enlaces del inicio. No se usa para texto |
 | `--success` | `#00F818` | 12,9 | Solo el estado "Confirmada" (punto y texto) |
-| `--warning` | `#F5A524` | 9,2 | "Sin confirmar", "Pendiente de aprobación", "Por cerrar" |
+| `--warning` | `#F5A524` | 9,2 | "Pendiente de aprobación", "Falta registrar el cobro" |
 | `--danger` | `#FF6B6B` | 6,8 | Errores, "Cancelar cita", "No vino" |
 
 Reglas:
 
-- El color nunca es la única señal: cada estado lleva texto ("Confirmada", "Sin confirmar"). Así lo entiende quien no distingue el verde.
+- El color nunca es la única señal: cada estado lleva texto ("Confirmada", "Reservada"). Así lo entiende quien no distingue el verde.
+- "Reservada" (`booked`) va en gris, como "Completada": una reserva no es una alarma (20/11/2026, pedido de Juan; antes era "Sin confirmar" en ámbar).
 - El verde y el ámbar no se usan en botones; solo en estados.
 - Los matices del amarillo nunca son el relleno de un botón ni de lo elegido: eso es `--accent`. Tampoco hay fondos teñidos: el amarillo que no es relleno va como trazo o contorno.
 - Modo claro: no en el MVP. El amarillo y el verde neón no sirven como texto sobre blanco ([07](07-stack.md)), así que un modo claro necesita otros tonos de acento.
@@ -339,20 +340,23 @@ Aparece si hay más de un servicio activo o si el único tiene adicionales. List
 ```
 ┌──────────────────────────────────┐
 │ Hoy · jue 20 nov      [+ Cita]   │
-│ 6 citas · 1 sin confirmar        │
+│ 6 citas · 1 cobro por registrar  │
 │                                  │
-│ Por cerrar (1)                   │  solo si hay citas pasadas sin marcar
+│ Cobros por registrar (1)         │  solo si hay atendidas sin cobro
 │ ┌──────────────────────────────┐ │
-│ │ 9:00 a. m. Carlos R.         │ │
-│ │ [ Vino ]      [ No vino ]    │ │
+│ │ mié 19 nov, 9:00 a. m.       │ │
+│ │ Carlos R.                    │ │
+│ │ Falta registrar el cobro     │ │
+│ │ [     Registrar cobro      ] │ │
 │ └──────────────────────────────┘ │
 │ Pendientes de aprobar (0)        │
 │                                  │
+│  9:00 ─ Carlos R.   ● Completada │  se cerró sola al terminar
 │ 10:00 ─ Andrés M.   ● Confirmada │
 │ 11:00 ─ libre                    │
 │ 12:00 ─ bloqueado (almuerzo)     │
 │ ── ahora ─────────────────────── │  línea amarilla
-│  2:00 ─ Julián P.  ● Sin confirm.│
+│  2:00 ─ Julián P.    ● Reservada │
 │  3:00 ─ libre                    │
 ├──────────────────────────────────┤
 │  Hoy   Semana   Clientes   Más   │  navegación inferior
@@ -361,16 +365,20 @@ Aparece si hay más de un servicio activo o si el único tiene adicionales. List
 
 - Es una lista por hora, no una grilla de calendario: con un barbero y turnos de 60 minutos se lee mejor y cabe en 390 px.
 - Tocar una hora libre abre "Nueva cita" con esa hora. Tocar una cita abre su detalle en una hoja inferior.
-- Arriba van solo números que piden una acción: citas de hoy, sin confirmar, por cerrar y pendientes de aprobar.
+- Arriba van solo números que piden una acción: citas de hoy, cobros por registrar y pendientes de aprobar.
+- **Asistencia por omisión** (20/11/2026, pedido de Juan). La cita que termina sin marca cuenta como atendida: se cierra sola ("Completada") y se cobra con el precio de la reserva. El barbero solo marca "No vino". Ya no hay "Vino" ni "Por cerrar"; lo único que queda por hacer a mano son los cobros de las citas sin precio ([PENDIENTE]), en "Cobros por registrar".
 
 ### Detalle de una cita (hoja inferior)
 
 - Nombre del cliente, botón "WhatsApp" (abre el chat con su número), servicio, hora y estado.
 - Estado del recordatorio (F7), bajo "WhatsApp al cliente": el último mensaje ("Confirmación entregada", "Recordatorio leído", "El recordatorio falló: revisa el número"...) con su hora, y el próximo ("Próximo recordatorio: sáb 21 nov, 7:00 a. m."). El estado va con punto y texto, no solo con color. Si la cita no tiene mensajes, no aparece. En la agenda, la fila de una cita cuyo último mensaje falló dice "El recordatorio falló" con un ícono de alerta.
-- Acciones según el estado: "Vino" y "No vino" (después de la hora), "Mover", "Cancelar". Cancelar pide un motivo.
+- Acciones según el estado: "No vino" (desde la hora de inicio; sobre una cita ya cerrada, el barbero solo la de hoy y el administrador cualquiera), "Mover" y "Cancelar" (mientras la cita está abierta). Cancelar pide un motivo.
+- "No vino" pide confirmación en la misma hoja, porque no se deshace: "¿Marcar que Carlos R. no vino? Se le suma una inasistencia." y, si la cita ya tenía cobro, "También se anula el cobro de $30.000.". Botones "Sí, no vino" (rojo) y "No, volver".
 - Notas privadas del barbero sobre el cliente, abajo.
 
-### Cobro al marcar "Vino"
+### Cobro de una cita sin precio
+
+Desde el 20/11/2026 el cobro se registra solo al cerrarse la cita. Esta hoja queda para las citas atendidas que no se cobraron solas (servicio sin precio, barbero sin porcentaje o cita de hace más de 3 días): se abre con "Registrar cobro" desde "Cobros por registrar" o desde la cita. Con "Corregir valor", la misma hoja corrige un cobro.
 
 ```
 ┌──────────────────────────────────┐
@@ -388,7 +396,7 @@ Aparece si hay más de un servicio activo o si el único tiene adicionales. List
 └──────────────────────────────────┘
 ```
 
-- "Vino" abre esta hoja; al guardar, la cita queda `completed` y el cobro registrado. "No vino" no abre nada.
+- Al guardar, el cobro queda registrado.
 - El reparto se recalcula mientras se escribe el valor, con cifras tabulares.
 - El barbero corrige el valor el mismo día desde el detalle de la cita; después, solo el administrador puede anularlo.
 
@@ -554,15 +562,15 @@ Pantallas del barbero y del administrador. Los avisos de éxito salen arriba (`t
 | Lugar | Texto |
 |---|---|
 | Pestañas | "Hoy", "Semana", "Clientes" y "Más". Solo en esas cuatro pantallas; las de una tarea tienen atrás y su barra con la acción |
-| Hoy | "Hoy · jue 20 nov" (otro día: "vie 21 nov" y "Hoy" para volver), botón "Cita", resumen "6 citas · 1 sin confirmar · 1 por cerrar · 1 por aprobar". Filas "Libre" (crea una cita a esa hora), "Bloqueado" con el motivo o "Todo el día", y la línea amarilla "Ahora". Sin horario ni citas: "Este día no tiene horario de atención ni citas. Puedes cambiar el horario en Más." |
+| Hoy | "Hoy · jue 20 nov" (otro día: "vie 21 nov" y "Hoy" para volver), botón "Cita", resumen "6 citas · 1 cobro por registrar · 1 por aprobar". Filas "Libre" (crea una cita a esa hora), "Bloqueado" con el motivo o "Todo el día", y la línea amarilla "Ahora". Sin horario ni citas: "Este día no tiene horario de atención ni citas. Puedes cambiar el horario en Más." |
 | Administrador con varios barberos o sin agenda | Selector "Agenda de" con los barberos ("(inactivo)" si lo está). Sin barberos: "Todavía no hay barberos" y "Crear un barbero" |
-| Por cerrar y pendientes | "Por cerrar (n)" con "Vino" y "No vino"; las atendidas sin cobro dicen "Falta registrar el cobro" con "Registrar cobro". "Pendientes de aprobar (n)" con "Aprobar" y "Rechazar" |
+| Cobros por registrar y pendientes | "Cobros por registrar (n)": las atendidas sin cobro dicen "Falta registrar el cobro" con "Registrar cobro". "Pendientes de aprobar (n)" con "Aprobar" y "Rechazar" |
 | Hoja de la cita | Nombre del cliente, servicio, fecha y hora; "WhatsApp" (o "Este cliente no tiene celular registrado."), "Fecha y hora", "Servicio", "Estado", "Valor de la reserva", "Origen" ("La reservó el cliente" o "La creó el personal"), "WhatsApp al cliente" (F7), "Notas sobre el cliente" ("Sin notas."). Acciones "Aprobar", "Rechazar", "No vino", "Mover" y "Cancelar" según el estado |
+| "No vino" desde la hoja | "¿Marcar que [cliente] no vino? Se le suma una inasistencia.", con cobro "También se anula el cobro de [valor].", "Sí, no vino" (rojo, "Marcando...") y "No, volver" |
 | Cancelar desde la hoja | "¿Cancelar esta cita? La hora queda libre para otros clientes.", campo "Motivo", "Sí, cancelar la cita" (rojo) y "No, volver" |
 | Avisos | "Creaste la cita", "Moviste la cita", "Cancelaste la cita", "Aprobaste la reserva", "Rechazaste la reserva", "Marcaste que no vino", "Guardaste el cobro", "Corregiste el cobro", "Anulaste el cobro", "Reiniciaste las inasistencias" |
 | Hoja de cobro | Título "Cobro", "[cliente] · [servicio]", "Valor cobrado" con "$" (prellenado con el precio de la cita; sin precio: "El servicio no tiene precio definido: escribe lo que se cobró."), "Para ti (50 %)" o "Para el barbero (50 %)" y "Para la barbería (50 %)" en vivo, "Guardar cobro" ("Guardando...") y "Volver". Sin valor: "Escribe el valor cobrado". Sin porcentaje: "Falta definir el porcentaje de este barbero" |
 | Cobro en la hoja de la cita | "Cobro" con el valor y "Barbero $... (50 %) · Barbería $...", "Corregir valor" (el barbero, solo hoy; el administrador, siempre) y "Anular cobro" (administrador). Anulado: tachado y "Anulado: [motivo]" |
-| Cobro registrado a medias | "La cita quedó como atendida, pero falta registrar el cobro. Intenta de nuevo desde Por cerrar: [error]" |
 | Anular un cobro | Hoja "Anular cobro": "¿Anular este cobro? Deja de contar en la liquidación, pero no se borra.", "Motivo", "Sí, anular el cobro" (rojo) y "Volver" |
 | Liquidación | Periodos "Hoy", "Esta semana", "Esta quincena", "Este mes" y "Rango" ("Desde", "Hasta", "Ver el rango"). Administrador: "Liquidación de" con "Toda la barbería" y cada barbero. "Total cobrado", "Para ti (50 % hoy)" o "Para el barbero", "Para la barbería", "n servicios", "Cada cobro guarda el porcentaje que había ese día: cambiarlo no cambia los periodos anteriores. Los anulados no cuentan." Lista "Cobros" (vacía: "No hay cobros en este periodo."). Un barbero que abre un cobro de otro día: "Solo puedes corregir los cobros del mismo día." |
 | Ficha del cliente | "WhatsApp", "Celular", "Cuenta" ("Tiene cuenta en la app" o "Sin cuenta (lo registró el personal)"), "Recordatorios por WhatsApp", "Autorización de datos" ("Desde el ..." o "Sin autorización registrada"), "Inasistencias" con "Necesita aprobación", "Reiniciar inasistencias" (administrador). "Notas" ("Sin notas."), "Nota nueva" ("Privada: el cliente no la ve."), "Guardar nota", "Borrar". "Historial" ("Sin citas.") |
@@ -628,7 +636,7 @@ El dueño compartió dos capturas del inicio de Beunik PRO desde su cuenta (reci
 | 15 accesos al mismo nivel | Cuatro pestañas (Hoy, Semana, Clientes, Más). Lo poco frecuente va en "Más" |
 | 1.276 agendamientos históricos | Sirve para estimar volumen. Con un barbero, es consistente con la estimación de [03](03-recordatorios-whatsapp.md) |
 | 161 reseñas con 5,0 | Es un activo del negocio que se queda en Beunik. Hay que preguntar si se pueden exportar o enlazar ([10](10-riesgos-decisiones-abiertas.md)) |
-| 652 facturas | El dueño aclaró (19/11/2026) que solo reparten el valor de cada servicio entre el barbero y la barbería con un porcentaje. Entra en el MVP como "Cobros" y "Liquidación" ([abajo](#cobro-al-marcar-vino)). No se llama "factura" para no confundirla con la factura electrónica de la DIAN |
+| 652 facturas | El dueño aclaró (19/11/2026) que solo reparten el valor de cada servicio entre el barbero y la barbería con un porcentaje. Entra en el MVP como "Cobros" y "Liquidación" ([abajo](#cobro-de-una-cita-sin-precio)). No se llama "factura" para no confundirla con la factura electrónica de la DIAN |
 | Productos, Combos, Promociones | Productos y combos: fase 3. Promociones: fuera de los recordatorios, por la regla de plantillas de utilidad |
 
 Sigue pendiente ver el flujo de reserva del lado del cliente en la app de Beunik, para que el sitio nuevo se le parezca donde convenga ([01](01-beunik.md)).

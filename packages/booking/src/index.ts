@@ -45,7 +45,6 @@ export {
   dayBounds,
   dayOccupancy,
   isoWeekday,
-  isToClose,
   weekStart,
   type AgendaAppointment,
   type AgendaBlock,
@@ -82,7 +81,7 @@ export {
   QUICK_SLOTS_LIMIT,
   type QuickSlotDay,
 } from "./internal/quick-slots";
-export { APPOINTMENT_STATUS_DISPLAY, TO_CLOSE_DISPLAY } from "./internal/status";
+export { APPOINTMENT_STATUS_DISPLAY } from "./internal/status";
 export {
   atTime,
   canChange,
