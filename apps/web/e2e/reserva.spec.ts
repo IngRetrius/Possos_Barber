@@ -302,6 +302,55 @@ test("la portada lleva el logo, el nombre y Reservar, y el tijeretazo se repite 
   await calm.close();
 });
 
+test("las secciones de abajo del inicio aparecen al bajar, una sola vez, y con movimiento reducido no se esconden", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await page.goto("/");
+  const contact = page.locator('section[aria-labelledby="contacto"]');
+  const title = contact.getByRole("heading", { name: "Contacto" });
+  const social = contact.getByRole("list", { name: "Redes sociales" });
+  await expect(contact).toHaveAttribute("data-reveal", "pending");
+  await expect(title).toHaveCSS("opacity", "0");
+  // Solo espera lo que estaba debajo de la pantalla al cargar: lo que ya se ve no parpadea.
+  const pendingOnScreen = await page.evaluate(
+    () =>
+      [...document.querySelectorAll('[data-reveal="pending"]')].filter(
+        (el) => el.getBoundingClientRect().top < window.innerHeight,
+      ).length,
+  );
+  expect(pendingOnScreen).toBe(0);
+  await expect(page.locator("#portada")).not.toHaveAttribute("data-reveal");
+
+  // Al bajar aparece: primero el título y 70 ms después el resto, en 200 ms cada uno.
+  await title.scrollIntoViewIfNeeded();
+  await expect(contact).toHaveAttribute("data-reveal", "");
+  await expect(title).toHaveCSS("opacity", "1");
+  await expect(social).toHaveCSS("opacity", "1");
+  await expect(social).toHaveCSS("translate", "none");
+
+  // Una sola vez: al subir y volver a bajar ya no se anima.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await title.scrollIntoViewIfNeeded();
+  expect(await contact.evaluate((el) => el.getAnimations({ subtree: true }).length)).toBe(0);
+  await context.close();
+
+  // Con movimiento reducido no se esconde nada.
+  const calm = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    reducedMotion: "reduce",
+  });
+  const calmPage = await calm.newPage();
+  await calmPage.goto("/");
+  await expect(bottomBar(calmPage)).toHaveAttribute("data-state", "hidden");
+  await expect(calmPage.locator('[data-reveal="pending"]')).toHaveCount(0);
+  await expect(
+    calmPage.locator('section[aria-labelledby="contacto"]').getByRole("heading"),
+  ).toHaveCSS("opacity", "1");
+  await calm.close();
+});
+
 test("con varios servicios, Reservar de la barra sube a la lista", async ({ page }) => {
   try {
     await addTestService(`${E2E_PREFIX} servicio de la barra`);

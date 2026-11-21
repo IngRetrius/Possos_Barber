@@ -196,6 +196,22 @@
   }
 }
 
+/*
+ * Secciones que aparecen al bajar (`ScrollReveal`, docs/11, "Inicio"). Mientras esperan, sus hijos
+ * no se ven ni ocupan otro lugar: la opacidad y `translate` no mueven el layout. Fuera de capa para
+ * ganarle a cualquier utilidad de opacidad de un hijo. Al imprimir se ve todo.
+ */
+[data-reveal="pending"] > * {
+  opacity: 0;
+  translate: 0 12px;
+}
+@media print {
+  [data-reveal] > * {
+    opacity: 1 !important;
+    translate: none !important;
+  }
+}
+
 /* vaul anima en 0,5 s; docs/11 pide 150 a 200 ms. */
 [data-slot="sheet-content"][data-vaul-drawer] {
   animation-duration: 200ms;

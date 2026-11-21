@@ -70,6 +70,7 @@ export {
 export { LinkPending } from "./internal/components/link-pending";
 export { Logo, type LogoProps } from "./internal/components/logo";
 export { LogoIntro } from "./internal/components/logo-intro";
+export { ScrollReveal } from "./internal/components/scroll-reveal";
 export { Sheet, SheetClose, SheetTrigger, type SheetProps } from "./internal/components/sheet";
 export { SlotGrid, SlotGridSkeleton, type SlotGridProps } from "./internal/components/slot-grid";
 export { slotClass } from "./internal/components/slot";

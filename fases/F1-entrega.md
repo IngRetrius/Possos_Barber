@@ -43,6 +43,7 @@ Estado de `packages/ui` al cerrar [F1](F1-sistema-diseno.md), el 19/11/2026. Es 
 - **`StatusBadge` recibe un tono** (`success`, `warning`, `danger`, `neutral`) y un texto, porque `ui` no conoce las citas. La tabla de estado a tono y texto está en la página de muestras y debe pasar a `@possos/booking`: `confirmed` Confirmada (success), `booked` Sin confirmar (warning), `pending_approval` Pendiente de aprobación (warning), "Por cerrar" (warning), `no_show` No vino (danger), `completed` Completada, `cancelled` Cancelada y `rejected` Rechazada (neutral).
 - **`Toaster` no está en el layout raíz**; solo en la página de muestras. Se agrega al layout cuando la primera pantalla real use `toast`.
 - **`Logo`** pinta el SVG en línea con `currentColor` en `--brand`. `label=""` lo vuelve decorativo (cuando el nombre ya está escrito al lado). `LogoIntro` es el mismo logo con el tijeretazo de la portada del inicio ([docs/11](../docs/11-interfaz.md#logo)).
+- **`ScrollReveal`** no pinta nada: se monta una vez en la página y hace aparecer al bajar cada sección marcada con `data-reveal=""` ([docs/11](../docs/11-interfaz.md), "Secciones al bajar"). Anima los hijos directos de la sección, así que el título debe ser el primero.
 
 ### Formato
 

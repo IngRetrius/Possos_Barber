@@ -25,7 +25,7 @@ import { getMyProfile } from "@possos/customers/server";
 import { createClient } from "@possos/supabase/server";
 import { parseLocale } from "@possos/config/constants";
 import type { Enums } from "@possos/supabase";
-import { Button, formatters, LogoIntro, StatusBadge } from "@possos/ui";
+import { Button, formatters, LogoIntro, ScrollReveal, StatusBadge } from "@possos/ui";
 import { BUSINESS, mapsEmbedUrl, mapsUrl, SHOW_PENDING, siteUrl } from "../../lib/business";
 import { loadBookingFlow, loadServiceEntries, timeStepHref } from "../../lib/booking-flow";
 import { MY_APPOINTMENTS_PATH, PROFILE_PATH, STAFF_HOME } from "../../lib/session";
@@ -253,7 +253,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         ) : null}
 
         {works.length > 0 || SHOW_PENDING ? (
-          <section aria-labelledby="trabajos" className="grid gap-3">
+          <section aria-labelledby="trabajos" data-reveal="" className="grid gap-3">
             <div className="flex items-baseline justify-between gap-3">
               <h2 id="trabajos" className="text-heading">
                 {t("works")}
@@ -277,6 +277,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         <section
           id="lista-servicios"
           aria-labelledby="servicios"
+          data-reveal=""
           className="grid scroll-mt-4 gap-3"
         >
           <h2 id="servicios" tabIndex={-1} data-scroll-focus className="text-heading">
@@ -303,7 +304,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           )}
         </section>
 
-        <section aria-labelledby="barbero" className="grid gap-3">
+        <section aria-labelledby="barbero" data-reveal="" className="grid gap-3">
           <h2 id="barbero" className="text-heading">
             {barberList.length > 1 ? t("barbers") : t("barber")}
           </h2>
@@ -323,7 +324,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           )}
         </section>
 
-        <section aria-labelledby="ubicacion" className="grid gap-3">
+        <section aria-labelledby="ubicacion" data-reveal="" className="grid gap-3">
           <h2 id="ubicacion" className="text-heading">
             {t("location")}
           </h2>
@@ -354,14 +355,14 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           ) : null}
         </section>
 
-        <section aria-labelledby="horario" className="grid gap-3">
+        <section aria-labelledby="horario" data-reveal="" className="grid gap-3">
           <h2 id="horario" className="text-heading">
             {t("hours")}
           </h2>
           <OpeningHoursList groups={groups} className="text-body text-fg-muted" />
         </section>
 
-        <section aria-labelledby="contacto" className="grid gap-3">
+        <section aria-labelledby="contacto" data-reveal="" className="grid gap-3">
           <h2 id="contacto" className="text-heading">
             {t("contact")}
           </h2>
@@ -411,6 +412,8 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         hideWhileVisible={["portada", "lista-servicios"]}
         scrollToTarget={chooseService}
       />
+      {/* Las secciones con data-reveal que están debajo de la pantalla aparecen al bajar. */}
+      <ScrollReveal />
     </div>
   );
 }
