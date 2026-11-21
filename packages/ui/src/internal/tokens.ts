@@ -19,7 +19,6 @@ export const colors = {
   "accent-fg": "#0B0B0B",
   "accent-pressed": "#E3E200",
   "accent-muted": "#8D8317",
-  "accent-tint": "#2A2403",
   success: "#00F818",
   warning: "#F5A524",
   danger: "#FF6B6B",

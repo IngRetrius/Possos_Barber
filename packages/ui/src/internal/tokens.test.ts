@@ -78,16 +78,7 @@ describe("contrastes", () => {
     expect(ratio(edge, surface)).toBeGreaterThanOrEqual(3);
   });
 
-  // La próxima cita, el adicional marcado y las iniciales del barbero van sobre el tinte amarillo.
-  it.each(
-    (["fg", "fg-muted", "fg-subtle", "accent", "success", "warning", "danger"] as ColorToken[]).map(
-      (text) => [text] as const,
-    ),
-  )("texto %s sobre --accent-tint cumple 4,5:1", (text) => {
-    expect(ratio(text, "accent-tint")).toBeGreaterThanOrEqual(4.5);
-  });
-
-  it.each((["bg", "surface", "surface-2", "accent-tint"] as ColorToken[]).map((s) => [s] as const))(
+  it.each((["bg", "surface", "surface-2"] as ColorToken[]).map((s) => [s] as const))(
     "borde --accent-muted sobre %s cumple 3:1",
     (surface) => {
       expect(ratio("accent-muted", surface)).toBeGreaterThanOrEqual(3);
@@ -114,25 +105,21 @@ describe("separación entre capas", () => {
   it("el borde se nota sobre la tarjeta", () => {
     expect(ratio("border", "surface")).toBeGreaterThanOrEqual(1.3);
   });
-
-  it("el tinte amarillo se separa del fondo", () => {
-    expect(ratio("accent-tint", "bg")).toBeGreaterThanOrEqual(1.1);
-  });
 });
 
 /*
  * Matices del amarillo (docs/11, "Color", 20/11/2026). El neón es un amarillo verdoso: oscurecido
- * con el mismo tono se ve oliva, que fue la primera prueba. Los tonos oscuros giran hacia lo cálido,
+ * con el mismo tono se ve oliva, que fue la primera prueba. El tono oscuro gira hacia lo cálido,
  * pero sin llegar al ámbar de --warning, que significa "Sin confirmar".
  */
 describe("matices del amarillo", () => {
   const hue = (token: ColorToken) => oklch(colors[token])!.h!;
 
-  it.each(["accent-muted", "accent-tint"] as const)("%s es más cálido que el neón", (token) => {
-    expect(hue(token)).toBeLessThan(hue("accent"));
+  it("--accent-muted es más cálido que el neón", () => {
+    expect(hue("accent-muted")).toBeLessThan(hue("accent"));
   });
 
-  it.each(["accent-muted", "accent-tint"] as const)("%s no se confunde con --warning", (token) => {
-    expect(hue(token) - hue("warning")).toBeGreaterThanOrEqual(20);
+  it("--accent-muted no se confunde con --warning", () => {
+    expect(hue("accent-muted") - hue("warning")).toBeGreaterThanOrEqual(20);
   });
 });

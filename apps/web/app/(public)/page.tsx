@@ -256,9 +256,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         {upcoming ? (
           <Link
             href={MY_APPOINTMENTS_ROUTES.detail(upcoming.id)}
-            // La tarjeta más importante para quien ya reservó: tinte amarillo con el trazo neón a la
-            // izquierda (docs/11, "Color"). Al pasar o presionar se enciende el borde.
-            className="grid gap-2 rounded-card border border-l-3 border-accent-muted border-l-accent bg-accent-tint p-4 transition-colors hover:border-accent active:border-accent"
+            // La tarjeta más importante para quien ya reservó: solo el contorno amarillo, sin fondo
+            // teñido (pedido de Juan, 20/11/2026; docs/11, "Color").
+            className="grid gap-2 rounded-card border border-accent bg-surface p-4 transition-colors hover:bg-surface-2 active:bg-surface-2"
           >
             <span className="text-caption text-fg-muted">{t("upcoming.label")}</span>
             <span className="text-heading tabular-nums">

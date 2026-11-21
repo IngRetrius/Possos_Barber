@@ -61,7 +61,6 @@ const SWATCH: Record<ColorToken, string> = {
   "accent-fg": "bg-accent-fg",
   "accent-pressed": "bg-accent-pressed",
   "accent-muted": "bg-accent-muted",
-  "accent-tint": "bg-accent-tint",
   success: "bg-success",
   warning: "bg-warning",
   danger: "bg-danger",
@@ -301,13 +300,13 @@ export function Muestras() {
           Tu cita quedó <Highlight>reservada</Highlight>
         </p>
         <SectionTitle>Servicios</SectionTitle>
-        <div className="grid gap-2 rounded-card border border-l-3 border-accent-muted border-l-accent bg-accent-tint p-4">
-          <span className="text-caption text-fg-muted">Tarjeta con tinte</span>
+        <div className="grid gap-2 rounded-card border border-accent bg-surface p-4">
+          <span className="text-caption text-fg-muted">Tarjeta con contorno</span>
           <span className="text-heading">jue 20 nov, 3:00 p. m.</span>
         </div>
         <p className="text-caption text-fg-muted">
-          Trazos a mano en el neón y tintes cálidos: solo en el inicio, en Listo y en lo que el
-          cliente marcó. El relleno amarillo sigue siendo la acción.
+          Trazos a mano y contornos en el neón: solo en el inicio, en Listo y en lo que el cliente
+          marcó. El relleno amarillo sigue siendo la acción; no hay fondos teñidos.
         </p>
       </Section>
 

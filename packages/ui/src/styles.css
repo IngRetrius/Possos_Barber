@@ -26,10 +26,9 @@
   --brand: #bcbcbc;
   --accent: #f2f824;
   --accent-fg: #0b0b0b;
-  /* Matices del amarillo (docs/11, 20/11/2026): más oscuros y más cálidos, para no verse oliva. */
+  /* Matices del amarillo (docs/11, 20/11/2026): el oscuro gira a lo cálido para no verse oliva. */
   --accent-pressed: #e3e200;
   --accent-muted: #8d8317;
-  --accent-tint: #2a2403;
   --success: #00f818;
   --warning: #f5a524;
   --danger: #ff6b6b;
@@ -75,7 +74,6 @@
   --color-accent-fg: var(--accent-fg);
   --color-accent-pressed: var(--accent-pressed);
   --color-accent-muted: var(--accent-muted);
-  --color-accent-tint: var(--accent-tint);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
