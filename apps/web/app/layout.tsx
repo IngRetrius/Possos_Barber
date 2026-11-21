@@ -33,7 +33,10 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   return (
-    <html lang={HTML_LANG[locale]} className={GeistSans.variable}>
+    // suppressHydrationWarning: algunas extensiones del navegador agregan atributos a <html> antes
+    // de que React hidrate (pasó el 20/11/2026 con `__gcruniqueid`). Solo cubre los atributos de
+    // esta etiqueta, no a sus hijos.
+    <html lang={HTML_LANG[locale]} className={GeistSans.variable} suppressHydrationWarning>
       <body className="min-h-dvh font-sans antialiased">
         {/* Entrega el idioma y los textos a los componentes de cliente: solo los que usan fuera
             del panel (i18n/messages.ts). */}
