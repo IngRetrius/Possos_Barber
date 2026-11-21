@@ -3,7 +3,7 @@
 -- cancel_window_min y el enlace a la cita que reemplazó a una reprogramada.
 begin;
 \ir ../fixtures/setup.psql
-select plan(19);
+select plan(20);
 
 -- Citas de cust1: una próxima (en 2 días) y una pasada atendida. Una de cust2.
 insert into public.appointments (id, barber_id, customer_id, service_id, period, status, source, price_cop)
@@ -176,6 +176,25 @@ select is(
   (select count(*)::integer from public.list_my_appointments(:'new_id')),
   0,
   'Otro cliente no ve la cita reprogramada de nadie'
+);
+reset role;
+
+-- Desempate: a la misma hora, primero la más reciente. Si no, con más citas que el límite a esa
+-- hora (cancelar y volver a reservar), la vigente podía quedar fuera de la lista.
+insert into public.appointments (id, barber_id, customer_id, service_id, period, status, source, created_at)
+values
+  ('f5000000-0000-0000-0000-000000000011', 'aaaaaaaa-0000-0000-0000-000000000001',
+   'c1000000-0000-0000-0000-000000000001', '5e000000-0000-0000-0000-000000000001',
+   tstzrange(tests.at(6, '10:00'), tests.at(6, '11:00'), '[)'), 'booked', 'customer', now()),
+  ('f5000000-0000-0000-0000-000000000012', 'aaaaaaaa-0000-0000-0000-000000000001',
+   'c1000000-0000-0000-0000-000000000001', '5e000000-0000-0000-0000-000000000001',
+   tstzrange(tests.at(6, '10:00'), tests.at(6, '11:00'), '[)'), 'cancelled', 'customer',
+   now() - interval '1 hour');
+select tests.login('c0000000-0000-0000-0000-000000000001');
+select is(
+  (select id from public.list_my_appointments(null, 1)),
+  'f5000000-0000-0000-0000-000000000011'::uuid,
+  'A la misma hora, la cita más reciente va primero'
 );
 reset role;
 
