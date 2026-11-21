@@ -26,6 +26,10 @@
   --brand: #bcbcbc;
   --accent: #f2f824;
   --accent-fg: #0b0b0b;
+  /* Matices del amarillo (docs/11, 20/11/2026): más oscuros y más cálidos, para no verse oliva. */
+  --accent-pressed: #e3e200;
+  --accent-muted: #8d8317;
+  --accent-tint: #2a2403;
   --success: #00f818;
   --warning: #f5a524;
   --danger: #ff6b6b;
@@ -69,6 +73,9 @@
   --color-brand: var(--brand);
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
+  --color-accent-pressed: var(--accent-pressed);
+  --color-accent-muted: var(--accent-muted);
+  --color-accent-tint: var(--accent-tint);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
@@ -141,6 +148,18 @@
       translate: 0 8px;
     }
   }
+
+  /* Trazo a mano que se dibuja de izquierda a derecha (`Highlight`, docs/11, "Marcas"). */
+  --animate-draw: draw 360ms var(--ease-out) both;
+
+  @keyframes draw {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
 }
 
 /* Zonas seguras del iPhone con la PWA instalada (requiere viewport-fit=cover). */
@@ -205,10 +224,63 @@
   opacity: 0;
   translate: 0 12px;
 }
+/*
+ * El trazo bajo el título de una sección (`SectionTitle`) se dibuja cuando la sección aparece: mientras
+ * espera está recortado y, al quitarse "pending", la transición lo descubre de izquierda a derecha
+ * después de que el título sube. Lo que ya se ve al cargar no se anima.
+ */
+[data-slot="title-mark"] {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 360ms var(--ease-out) 150ms;
+}
+[data-reveal="pending"] [data-slot="title-mark"] {
+  clip-path: inset(0 100% 0 0);
+}
+
+/*
+ * Fotos en gris que toman color al señalarlas (`ColorReveal`, docs/11, "El barbero"). 500 ms: es la
+ * foto que se revela, no una transición de la interfaz. Con movimiento reducido, el cambio es
+ * inmediato (la regla de `base` deja solo la opacidad).
+ */
+[data-slot="color-reveal"] img {
+  filter: grayscale(1);
+  /* El acercamiento va hacia la cara, que suele estar en el tercio de arriba. */
+  transform-origin: 50% 25%;
+  transition:
+    filter 500ms var(--ease-out),
+    transform 500ms var(--ease-out);
+}
+[data-slot="color-reveal"][data-color] img {
+  filter: none;
+}
+@media (hover: hover) {
+  [data-slot="color-reveal"]:hover img {
+    filter: none;
+  }
+}
+/*
+ * Al tomar color, la foto se acerca un 5 % y vuelve a su tamaño cuando regresa a gris (pedido de
+ * Juan, 20/11/2026). `transform` y no `scale`, que no llega a navegadores viejos. Con movimiento
+ * reducido no se acerca: solo cambia el color.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  [data-slot="color-reveal"][data-color] img {
+    transform: scale(1.05);
+  }
+  @media (hover: hover) {
+    [data-slot="color-reveal"]:hover img {
+      transform: scale(1.05);
+    }
+  }
+}
+
 @media print {
   [data-reveal] > * {
     opacity: 1 !important;
     translate: none !important;
+  }
+  [data-reveal] [data-slot="title-mark"] {
+    clip-path: none !important;
   }
 }
 

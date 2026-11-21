@@ -36,7 +36,9 @@ export {
   type BottomBarProps,
   type TabBarItem,
 } from "./internal/components/bars";
+export { Highlight, SectionTitle, type HighlightProps } from "./internal/components/brand-mark";
 export { Button, buttonVariants, type ButtonProps } from "./internal/components/button";
+export { ColorReveal, type ColorRevealProps } from "./internal/components/color-reveal";
 export {
   DateStrip,
   type DateStripDay,

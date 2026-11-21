@@ -39,6 +39,6 @@ Actualizado el 18/11/2026.
 | Precio y duración de cada servicio | Se cargan por servicio, con la opción de cambiarlos para un barbero. Solo se conoce "corte normal, 60 min"; el resto queda **[PENDIENTE]** | [10](10-riesgos-decisiones-abiertas.md) |
 | Clientes y citas en Beunik | No hay migración en el MVP. Hay que averiguar si Beunik permite exportar la lista de clientes | [10](10-riesgos-decisiones-abiertas.md) |
 | Anticipación de las reservas | Desde 1 hora hasta 30 días antes | [04](04-agendamiento.md) |
-| Identidad visual | Actualizado el 19/11/2026: monocromo tomado del logo (gris `#BCBCBC` sobre negro) con el amarillo `#F2F824` de los videos como único acento y el verde `#00F818` solo para "Confirmada". Modo oscuro. Tipografía Geist propuesta | [11](11-interfaz.md) |
+| Identidad visual | Actualizado el 19/11/2026: monocromo tomado del logo (gris `#BCBCBC` sobre negro) con el amarillo `#F2F824` de los videos como único acento y el verde `#00F818` solo para "Confirmada". El 20/11/2026 el amarillo suma matices y trazos a mano, como los de los videos. Modo oscuro. Tipografía Geist propuesta | [11](11-interfaz.md) |
 | Alcance del sitio | Página pública (servicios, barbero, ubicación, horario, Instagram) más la agenda. Sin tienda | [05](05-alcance.md) |
 | Fidelización | Tarjeta de sellos en la fase 2 | [05](05-alcance.md) |

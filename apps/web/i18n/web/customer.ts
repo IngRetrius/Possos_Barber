@@ -40,7 +40,7 @@ const es = {
     completeProfileButton: "Completar mi perfil",
   },
   done: {
-    title: "Tu cita quedó reservada",
+    title: "Tu cita quedó <mark>reservada</mark>",
     pendingTitle: "Tu reserva quedó pendiente",
     whatsapp: "Te llega un WhatsApp para confirmar un día antes.",
     fallbackService: "Tu servicio",
@@ -135,7 +135,7 @@ const en: typeof es = {
     completeProfileButton: "Complete my profile",
   },
   done: {
-    title: "Your appointment is booked",
+    title: "Your appointment is <mark>booked</mark>",
     pendingTitle: "Your booking is pending",
     whatsapp: "You'll get a WhatsApp message to confirm the day before.",
     fallbackService: "Your service",

@@ -152,6 +152,7 @@ export type BarberPatch = Partial<
   Pick<
     Barber,
     | "display_name"
+    | "job_title"
     | "bio"
     | "whatsapp_url"
     | "slot_interval_min"

@@ -15,6 +15,7 @@ import {
   formatPrice,
   formatTime,
   formatTimeRange,
+  Highlight,
   InlineError,
   Input,
   List,
@@ -22,6 +23,7 @@ import {
   ListRow,
   Logo,
   PhoneInput,
+  SectionTitle,
   Sheet,
   SheetClose,
   SheetTrigger,
@@ -57,6 +59,9 @@ const SWATCH: Record<ColorToken, string> = {
   brand: "bg-brand",
   accent: "bg-accent",
   "accent-fg": "bg-accent-fg",
+  "accent-pressed": "bg-accent-pressed",
+  "accent-muted": "bg-accent-muted",
+  "accent-tint": "bg-accent-tint",
   success: "bg-success",
   warning: "bg-warning",
   danger: "bg-danger",
@@ -285,6 +290,24 @@ export function Muestras() {
         <p className="text-caption text-fg-muted">
           PNG recortado del logo actual, a 1x, 2x y 3x. Se reemplaza por el SVG cuando el dueño lo
           entregue.
+        </p>
+      </Section>
+
+      <Section id="marcas" title="Marcas">
+        <p className="text-body text-fg-muted">
+          ¡El barbero <Highlight>más viral</Highlight> de Girardot!
+        </p>
+        <p className="text-title">
+          Tu cita quedó <Highlight>reservada</Highlight>
+        </p>
+        <SectionTitle>Servicios</SectionTitle>
+        <div className="grid gap-2 rounded-card border border-l-3 border-accent-muted border-l-accent bg-accent-tint p-4">
+          <span className="text-caption text-fg-muted">Tarjeta con tinte</span>
+          <span className="text-heading">jue 20 nov, 3:00 p. m.</span>
+        </div>
+        <p className="text-caption text-fg-muted">
+          Trazos a mano en el neón y tintes cálidos: solo en el inicio, en Listo y en lo que el
+          cliente marcó. El relleno amarillo sigue siendo la acción.
         </p>
       </Section>
 

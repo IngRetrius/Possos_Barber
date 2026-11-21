@@ -305,6 +305,58 @@ test("foto y portafolio del barbero con una imagen real", async ({ page }) => {
   await expect(works).toHaveCount(before);
 });
 
+test("con foto y cargo, el barbero sale en un cuadro grande que toma color al tocarlo", async ({
+  page,
+}) => {
+  await signIn(page, SEED.admin, `/panel/barberos/${SEED.barberId}`);
+  await page.getByLabel(/Subir una foto|Cambiar la foto/).setInputFiles(IMAGE);
+  await expect(page.getByRole("img", { name: /^Foto de / })).toBeVisible();
+  await page.getByLabel("Cargo").fill("CEO y barbero");
+  await bottomBar(page).getByRole("button", { name: "Guardar" }).click();
+  await expect(page.getByText("Guardaste los cambios").first()).toBeVisible();
+
+  try {
+    await page.goto("/");
+    const frame = page.locator('[data-slot="color-reveal"]').first();
+    await frame.scrollIntoViewIfNeeded();
+    // Abajo, encima de la foto: el cargo y el nombre (docs/11, "El barbero").
+    await expect(frame.getByText("CEO y barbero")).toBeVisible();
+    await expect(frame.getByRole("heading", { level: 3 })).toBeVisible();
+    const photo = frame.getByRole("img", { name: /^Foto de / });
+    const filter = () => photo.evaluate((img) => getComputedStyle(img).filter);
+    expect(await filter()).toBe("grayscale(1)");
+    await expectAccessible(page);
+
+    // El dedo fuera de la foto no la pinta; el que pasa por encima, sí.
+    const box = (await frame.boundingBox())!;
+    await page.touchscreen.tap(box.x + box.width / 2, Math.max(box.y - 40, 1));
+    await expect(frame).not.toHaveAttribute("data-color");
+    await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 3);
+    await expect(frame).toHaveAttribute("data-color", "");
+    await expect.poll(filter).toBe("none");
+    // Y se acerca un 5 % hacia la cara.
+    const transform = () => photo.evaluate((img) => getComputedStyle(img).transform);
+    await expect.poll(transform).toBe("matrix(1.05, 0, 0, 1.05, 0, 0)");
+
+    // Se queda en color mientras se ve; al salir de la pantalla vuelve a gris.
+    // Con un solo servicio la foto asoma arriba: se baja hasta que quede toda por encima.
+    await page.evaluate(() => (document.body.style.paddingBottom = "100vh"));
+    await frame.evaluate((el) =>
+      window.scrollTo(0, el.getBoundingClientRect().bottom + window.scrollY + 1),
+    );
+    await expect(frame).not.toHaveAttribute("data-color");
+    await frame.scrollIntoViewIfNeeded();
+    await expect.poll(filter).toBe("grayscale(1)");
+    await expect.poll(transform).toBe("none");
+  } finally {
+    // Sin cargo, como en la semilla. La foto se queda, como la del barbero dos.
+    await page.goto(`/panel/barberos/${SEED.barberId}`);
+    await page.getByLabel("Cargo").fill("");
+    await bottomBar(page).getByRole("button", { name: "Guardar" }).click();
+    await expect(page.getByText("Guardaste los cambios").first()).toBeVisible();
+  }
+});
+
 test("un barbero sin rol de administrador ve solo lo suyo", async ({ page }) => {
   await signIn(page, SEED.barber2);
   await expect(page).toHaveURL("/panel");

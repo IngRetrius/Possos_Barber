@@ -47,7 +47,7 @@ Funciones `security definer` con `set search_path = ''`: `is_admin()` y `has_rol
 
 | Tabla | Columnas principales |
 |---|---|
-| `barbers` | `id`, `user_id` (único, → auth.users), `display_name`, `bio`, `photo_path`, `active`, `slot_interval_min` (60), `whatsapp_url` |
+| `barbers` | `id`, `user_id` (único, → auth.users), `display_name`, `job_title` (cargo sobre la foto, hasta 40 caracteres; 20/11/2026), `bio`, `photo_path`, `active`, `slot_interval_min` (60), `whatsapp_url` |
 | `barber_services` | `barber_id`, `service_id`, `price_cop_override`, `duration_min_override`; PK (`barber_id`, `service_id`) |
 | `working_hours` | `id`, `barber_id`, `weekday` (1 a 7, ISO), `start_time`, `end_time` (hora local de Bogotá; `end_time > start_time`). Varios rangos por día permiten el almuerzo |
 | `time_off` | `id`, `barber_id`, `period` (`tstzrange`), `reason`. Exclusión entre bloqueos del mismo barbero |

@@ -202,6 +202,7 @@ export type Database = {
           created_at: string;
           display_name: string;
           id: string;
+          job_title: string | null;
           photo_path: string | null;
           slot_interval_min: number;
           updated_at: string;
@@ -215,6 +216,7 @@ export type Database = {
           created_at?: string;
           display_name: string;
           id?: string;
+          job_title?: string | null;
           photo_path?: string | null;
           slot_interval_min?: number;
           updated_at?: string;
@@ -227,6 +229,7 @@ export type Database = {
           created_at?: string;
           display_name?: string;
           id?: string;
+          job_title?: string | null;
           photo_path?: string | null;
           slot_interval_min?: number;
           updated_at?: string;

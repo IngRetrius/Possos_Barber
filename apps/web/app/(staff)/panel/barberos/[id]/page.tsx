@@ -52,6 +52,7 @@ export default async function EditBarberPage({ params }: PageProps<"/panel/barbe
           <h2 id="foto" className="text-heading">
             {t("photo")}
           </h2>
+          <p className="text-body text-fg-muted">{t("photoIntro")}</p>
           <div className="flex items-center gap-4">
             {photo ? (
               <Image
@@ -60,7 +61,7 @@ export default async function EditBarberPage({ params }: PageProps<"/panel/barbe
                 width={80}
                 height={80}
                 sizes="80px"
-                className="size-20 shrink-0 rounded-pill border border-border object-cover"
+                className="size-20 shrink-0 rounded-pill border border-border object-cover object-[50%_25%]"
               />
             ) : (
               <span className="flex size-20 shrink-0 items-center justify-center rounded-pill border border-border text-caption text-fg-muted">

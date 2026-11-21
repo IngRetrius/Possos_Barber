@@ -6,7 +6,7 @@ Investigado el 19/11/2026. Fuentes en [fuentes.md](fuentes.md#interfaz). Este do
 
 | # | Decisión | Por qué |
 |---|---|---|
-| 1 | **Monocromo con un solo acento.** Negro, blancos y grises tomados del logo. El amarillo neón solo marca la acción principal y lo que el cliente eligió | Decisión del 19/11/2026. El logo es gris sobre negro; el amarillo mantiene el vínculo con los videos de Instagram sin llenar la pantalla |
+| 1 | **Monocromo con un solo acento.** Negro, blancos y grises tomados del logo. El amarillo neón marca la acción principal y lo que el cliente eligió y, desde el 20/11/2026, también va en trazos a mano y en unos pocos matices ([Marcas](#marcas)) | Decisión del 19/11/2026. El logo es gris sobre negro; el amarillo mantiene el vínculo con los videos de Instagram sin llenar la pantalla. Los matices y las marcas, pedido de Juan el 20/11/2026: el inicio se veía apagado |
 | 2 | **Una decisión por pantalla**, con la acción principal en una barra fija abajo, al alcance del pulgar | Flujo por pasos (NN/g, *Wizards*) y diseño para el celular primero (regla 9) |
 | 3 | **El flujo se acorta solo**: si hay un barbero, se salta su paso; si hay un servicio, se preselecciona y el flujo empieza en el horario | Menos toques. El indicador de progreso muestra solo los pasos que el cliente va a recorrer (Baymard) |
 | 4 | **Días en una tira horizontal y horas en una cuadrícula vertical** | Las horas son muchas y se leen mejor en vertical; los días son pocos (máximo 30) y ordenados. Nada de selectores giratorios |
@@ -21,7 +21,7 @@ Investigado el 19/11/2026. Fuentes en [fuentes.md](fuentes.md#interfaz). Este do
 Son reglas que se pueden revisar en cada pantalla:
 
 1. **Una pregunta por pantalla.** "¿Qué servicio?", "¿Qué día y a qué hora?", "¿Confirmas?".
-2. **Un solo elemento amarillo a la vez por zona**: la hora elegida en la cuadrícula y el botón que avanza en la barra inferior. Títulos, íconos y enlaces no usan el acento.
+2. **Un solo relleno amarillo a la vez por zona**: la hora elegida en la cuadrícula o el botón que avanza en la barra inferior. Además, el amarillo puede ir como trazo o contorno, que no compite con el relleno: el subrayado a mano de una palabra clave, el trazo bajo los títulos del inicio ([Marcas](#marcas)), el contorno del adicional marcado y el subrayado de los enlaces del inicio. Íconos y texto corrido no usan el acento.
 3. **Texto antes que íconos.** Todo ícono de navegación lleva su etiqueta. Sin emojis, sin ilustraciones decorativas, sin fotos de banco.
 4. **Bordes de 1 px en lugar de sombras.** En fondo negro las sombras no se ven; la jerarquía sale del tono de la superficie y del espacio.
 5. **Cifras tabulares** en horas, precios y contadores, para que las columnas no bailen.
@@ -55,6 +55,8 @@ Decisión del 19/11/2026: monocromo más un acento. El gris del logo, medido en 
 
 Escala subida un escalón el 20/11/2026 (pedido de Juan: el inicio se veía plano y muy oscuro). Con `#0B0B0B` y `#151515` las tarjetas casi no se separaban del fondo (1,08:1) y el borde tampoco se notaba (1,21:1 sobre la tarjeta); la pantalla parecía apagada de día. La guía de modo oscuro de Material y de la skill de interfaz pide superficies en capas de gris, no negro. Con la escala nueva, que es la de elevación de Material (`#121212` de fondo y `#1E1E1E` para 1 dp), la app se ve más clara, cada capa sube un tono que se nota (`#121212`, `#1E1E1E`, `#292929`) y el borde se ve (1,38:1 sobre la tarjeta). `--fg-subtle` y `--border-strong` subieron para seguir cumpliendo 4,5:1 y 3:1 sobre `--surface-2`. `--accent-fg` sigue en `#0B0B0B`: es texto sobre el amarillo, no fondo. Una prueba fija los mínimos de separación entre capas.
 
+Matices del amarillo (20/11/2026, pedido de Juan: al inicio le faltaban matices amarillos). El neón es un amarillo verdoso (tono 111 en OKLCH): si se oscurece o se pone con transparencia sobre el fondo, se ve oliva, y así salió la primera prueba. Por eso los matices oscuros giran hacia lo cálido (tonos 99 a 104), sin llegar al ámbar de `--warning` (tono 72), que significa "Sin confirmar". El botón principal presionado deja de ser el amarillo al 85 %, que también se veía oliva, y pasa a `--accent-pressed`. Una prueba verifica que los matices sean más cálidos que el neón y que queden lejos del ámbar. Se probaron un brillo amarillo detrás del logo y el adicional marcado con fondo teñido; Juan prefirió el brillo gris de antes y solo el contorno.
+
 | Token | Valor | Contraste sobre `--bg` | Uso |
 |---|---|---|---|
 | `--bg` | `#121212` | | Fondo de la app |
@@ -68,6 +70,9 @@ Escala subida un escalón el 20/11/2026 (pedido de Juan: el inicio se veía plan
 | `--brand` | `#BCBCBC` | 9,9 | El gris del logo. Logo, nombre del negocio |
 | `--accent` | `#F2F824` | 16,3 | Botón principal, hora elegida, anillo de foco, línea de "ahora" en la agenda |
 | `--accent-fg` | `#0B0B0B` | 17,1 sobre el acento | Texto sobre el amarillo |
+| `--accent-pressed` | `#E3E200` | 13,5 (14,2 con `--accent-fg` encima) | Botón principal al pasar o presionar |
+| `--accent-muted` | `#8D8317` | 4,8 (4,3 sobre `--surface`; 3,7 sobre `--surface-2`) | Subrayado de los enlaces del inicio y borde de la tarjeta "Tu próxima cita". No se usa para texto |
+| `--accent-tint` | `#2A2403` | 1,2 | Fondo de la tarjeta "Tu próxima cita". El texto encima cumple 4,5:1 (`--fg-muted`, 6,0; `--accent`, 13,5) |
 | `--success` | `#00F818` | 12,9 | Solo el estado "Confirmada" (punto y texto) |
 | `--warning` | `#F5A524` | 9,2 | "Sin confirmar", "Pendiente de aprobación", "Por cerrar" |
 | `--danger` | `#FF6B6B` | 6,8 | Errores, "Cancelar cita", "No vino" |
@@ -76,6 +81,7 @@ Reglas:
 
 - El color nunca es la única señal: cada estado lleva texto ("Confirmada", "Sin confirmar"). Así lo entiende quien no distingue el verde.
 - El verde y el ámbar no se usan en botones; solo en estados.
+- Los matices del amarillo nunca son el relleno de un botón ni de lo elegido: eso es `--accent`. `--accent-tint` es el único fondo teñido y va solo en la tarjeta "Tu próxima cita".
 - Modo claro: no en el MVP. El amarillo y el verde neón no sirven como texto sobre blanco ([07](07-stack.md)), así que un modo claro necesita otros tonos de acento.
 - En Tailwind v4 los tokens van en CSS con `@theme`, como variables que leen los componentes de shadcn/ui (`--background`, `--primary`, etc.). Se escriben en hex o en OKLCH; el valor visible debe ser el de esta tabla.
 
@@ -104,7 +110,7 @@ Reglas:
 - Respeta las zonas seguras del iPhone con la PWA instalada: `padding-bottom: env(safe-area-inset-bottom)` en la barra inferior y `viewport-fit=cover`.
 - Íconos: Lucide (viene con shadcn/ui), trazo de 1,5, 20 px, siempre con etiqueta en la navegación.
 - Redes (20/11/2026, pedido de Juan): Instagram y TikTok van en Contacto solo con su ícono, en línea en `apps/web/app/_components/social-links.tsx`. Son de Phosphor 2.1.1, peso regular (MIT), porque Lucide ya no trae marcas; son de contorno y con el mismo grosor de trazo que Lucide a 24 px. Van monocromos (`--fg`), sin los colores de cada marca. Es la única excepción a "siempre con etiqueta": el nombre ("Instagram @possosbarber") va en `aria-label`, cada enlace mide 48 × 48 px con 8 px entre ellos, y el borde se refuerza al pasar o presionar. La lista se llama "Redes sociales". Las dos cuentas también van en `sameAs` de los datos estructurados.
-- Movimiento: 150 a 200 ms con *ease-out* para entrar, sin rebotes. Con `prefers-reduced-motion: reduce`, solo cambios de opacidad.
+- Movimiento: 150 a 200 ms con *ease-out* para entrar, sin rebotes. Con `prefers-reduced-motion: reduce`, solo cambios de opacidad. Las excepciones son las firmas de la marca: el tijeretazo ([Logo](#logo)) y el trazo que se dibuja ([Marcas](#marcas)), y la foto del barbero que toma color ([Inicio público](#inicio-público)).
 
 ### Logo
 
@@ -114,6 +120,16 @@ Reglas:
 - **Tijeretazo** (`LogoIntro`, solo en la portada del inicio): el mango gira 14° hacia el otro aro y vuelve, en 520 ms, 300 ms después de hidratar. Es la excepción a los 150 a 200 ms de [Espacio, forma y movimiento](#espacio-forma-y-movimiento): es la firma de la marca, no una transición de la interfaz. No esconde nada (antes de hidratar y sin JavaScript el logo se ve quieto) y no sale con `prefers-reduced-motion`.
   - **Se repite cada 8 s** mientras el logo está en pantalla y la pestaña se ve (pedido de Juan, 20/11/2026: "es algo pequeñito"; antes salía una vez por sesión). Al primer toque, tecla, rueda o desplazamiento con el dedo se queda quieto hasta que se vuelva a cargar el inicio: WCAG 2.2.2 (nivel A) pide que lo que se mueve solo por más de 5 s se pueda pausar o detener, y una animación decorativa que se repite sin fin distrae. El tijeretazo que esté en curso termina.
 - Usos: encabezados de las pantallas de cuenta (28 px de alto), portada del inicio (128 px), ícono de la PWA (monograma centrado sobre `#0B0B0B`, con margen para la versión *maskable*) y pantalla de inicio de la PWA. Los íconos de la PWA (`apps/web/public/icons/`) siguen saliendo del recorte en PNG de F1.
+
+### Marcas
+
+Las marcas a mano de los videos de Instagram (el editor las describe como "círculo o subrayado a mano en amarillo"), pedidas por Juan el 20/11/2026 para darle vida al inicio. Viven en `packages/ui/src/internal/components/brand-mark.tsx`.
+
+- Son trazos rellenos que adelgazan en las puntas, como un pincel, en `--accent`. Son decorativas: van con `aria-hidden` y el lector oye solo las palabras.
+- **`Highlight`** subraya una palabra clave. Una por pantalla: "más viral" en la frase del inicio, la misma palabra que va en amarillo en los videos, y "reservada" en el título de "Listo". En `BUSINESS.tagline`, la palabra va entre llaves, la convención del editor de videos. En los mensajes de la interfaz va entre `<mark>`. Mide en `em`, así que sirve igual en el cuerpo que en un título.
+- **`SectionTitle`**: los títulos de sección del inicio van en mayúsculas espaciadas (0,06 em), como el nombre de la portada, con un trazo corto debajo.
+- **Se dibujan** de izquierda a derecha en 360 ms con *ease-out*. El subrayado de la frase arranca cuando la frase termina de subir (340 ms). El de un título arranca 150 ms después de que su sección aparece al bajar (`ScrollReveal`). Lo que ya se ve al cargar, sin JavaScript, con movimiento reducido o al imprimir aparece ya dibujado.
+- **Dónde no van**: en el flujo de reserva (salvo "Listo"), en Mis citas ni en el panel. Ahí el amarillo sigue siendo solo la acción y lo elegido, y los chips de filtro del panel siguen invertidos (fondo blanco).
 
 ## Pantallas del cliente
 
@@ -130,11 +146,13 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 │               ▀▀▀                │
 │        P O S S O S  B A R B E R  │  el nombre es el título (h1), en mayúsculas
 │                                  │  espaciadas y en el gris del logo
-│  ¡El barbero más viral de        │  frase del dueño, en gris
+│  ¡El barbero más viral de        │  frase del dueño, en gris; "más viral"
+│              ‾‾‾‾‾‾‾‾‾           │  subrayado a mano en amarillo
 │            Girardot!             │
 │ [           Reservar           ] │  amarillo: el único de la zona
 │                                  │
-│ Trabajos    Ver más en Instagram │
+│ TRABAJOS    Ver más en Instagram │  títulos en mayúsculas con su trazo
+│ ‾‾‾                              │  amarillo; enlaces subrayados en matiz
 │ ┌───────────┐ ┌───────────┐ ┌──  │  fotos 3:4 que se deslizan de lado;
 │ │           │ │           │ │    │  se ven dos y asoma la tercera
 │ │   foto    │ │   foto    │ │    │
@@ -148,7 +166,7 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 │ │ Servicio de corte que…       │ │
 │ │ Agrega                       │ │
 │ │ ┌──────────────────────────┐ │ │  panel --surface-2: una sola zona
-│ │ │(+ Barba +$15.000 · +60 m)│ │ │  chips; marcado: invertido (✓)
+│ │ │(+ Barba +$15.000 · +60 m)│ │ │  chips; marcado: contorno amarillo (✓)
 │ │ │(✓ Cejas +$5.000)(+ Dis…) │ │ │
 │ │ │ ──────────────────────── │ │ │
 │ │ │ Total    $30.000 · 60 min│ │ │  se anuncia al cambiar
@@ -169,7 +187,15 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 │ ├──────────────────────────────┤ │
 │ │ Global platinado  $170.000 ˅ │ │
 │ └──────────────────────────────┘ │
-│ El barbero · foto y presentación │
+│ EL BARBERO                       │
+│ ┌──────────────────────────────┐ │  cuadro 4:5 a todo el ancho: la foto en gris
+│ │                              │ │  toma color con el mouse encima o al tocarla
+│ │        foto en gris          │ │
+│ │ CEO Y BARBERO                │ │  cargo en amarillo, encima de la foto
+│ │ Santiago Possos              │ │  nombre grande, sobre un degradado
+│ ├──────────────────────────────┤ │
+│ │ Presentación                 │ │
+│ └──────────────────────────────┘ │
 │ Ubicación · mapa · horario       │
 │ [IG] [TikTok] · WhatsApp         │  redes solo con ícono, 48 px
 │ ──────────────────────────────── │
@@ -180,7 +206,7 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 ```
 
 - **Portada** (20/11/2026, pedido del dueño: "le falta como un toque: el logo, medio animación, un tiz de color"; referencia: la portada de El Acicale, en Cali). Antes el logo solo salía a 28 px junto al nombre y el amarillo casi no se veía en el inicio, porque la barra "Reservar" se esconde mientras están los servicios.
-  - El monograma a 128 px con su tijeretazo ([Logo](#logo)) y un brillo detrás: un degradado radial de `--brand` al 12 % que se desvanece, monocromo. Debajo, el nombre como título (h1) en mayúsculas espaciadas (0,2 em) y en `--brand`, la frase del dueño y "Reservar" a todo el ancho (hasta 320 px en escritorio).
+  - El monograma a 128 px con su tijeretazo ([Logo](#logo)) y un brillo detrás: un degradado radial de `--brand` al 12 % que se desvanece, monocromo. Debajo, el nombre como título (h1) en mayúsculas espaciadas (0,2 em) y en `--brand`, la frase del dueño con "más viral" subrayado a mano ([Marcas](#marcas)) y "Reservar" a todo el ancho (hasta 320 px en escritorio).
   - El amarillo de la zona es "Reservar", que es la acción principal (principio 2 del color). Lleva a lo mismo que la barra: con un solo servicio sin adicionales, al horario; si no, sube a la lista y pone el foco en "Servicios". Mientras la portada se ve, la barra se esconde.
   - Entrada: el logo, el nombre, la frase y el botón aparecen y suben 8 px en 200 ms cada uno, escalonados cada 70 ms (`animate-rise`, en `@possos/ui/styles.css`). Con movimiento reducido aparecen sin moverse.
   - El Acicale usa dorado; aquí no se agrega otro color: el toque es el amarillo de los videos del dueño.
@@ -188,7 +214,7 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
   - Solo se esconde lo que está debajo de la pantalla cuando la página termina de cargar. Lo que ya se ve no parpadea, la primera foto de Trabajos (que puede ser la que mide el LCP) no espera, y sin JavaScript o con movimiento reducido no se esconde nada. Cada sección aparece una sola vez; si se salta y entra por arriba, aparece sin animarse. Al imprimir se ve todo.
   - Las filas de servicios, las horas y las fotos no se animan una por una: sería mucho movimiento en la tarea principal.
   - Se descartaron, tras medirlas en Chromium con la CPU frenada 4 veces (ninguna perdió cuadros, así que decidió el comportamiento): la animación atada al scroll (`animation-timeline: view()`), que deja bloques a medias si la persona se detiene y tiene errores abiertos en Safari 26; `animation-trigger`, que solo está en Chrome 146; el desenfoque, que fue la más cara; y escuchar el evento `scroll`.
-- Si el cliente ya tiene una cita próxima, su tarjeta va justo debajo de la portada ("Tu cita: jue 20 nov, 3:00 p. m.").
+- Si el cliente ya tiene una cita próxima, su tarjeta va justo debajo de la portada ("Tu cita: jue 20 nov, 3:00 p. m."). Desde el 20/11/2026 es la tarjeta con tinte: fondo `--accent-tint`, borde `--accent-muted` y un trazo `--accent` de 3 px a la izquierda; al pasar o presionar se enciende el borde.
 - **Próxima hora libre** se probó el 20/11/2026 (una tarjeta arriba con la hora más cercana del primer servicio y el botón amarillo a "Confirmar") y se quitó el mismo día por pedido de Juan: no hacía falta. Las próximas horas siguen en la tarjeta abierta de cada servicio.
 - **Trabajos** (20/11/2026, con las primeras fotos de Juan). El portafolio sube de la ficha del barbero a una sección arriba de "Servicios": en una barbería el cliente elige por los cortes que ve, y es lo que le da imagen al inicio sin usar el amarillo.
   - Una fila que se desliza de lado (`PortfolioStrip` de `@possos/barbers/ui`), con *scroll snap* y sin flechas, puntos ni rotación automática. Cada foto ocupa el 44 % del ancho: se ven dos y asoma la tercera, que es la pista de que hay más (NN/g, *Mobile Carousels*: el deslizamiento es familiar, pero lo que queda fuera de pantalla se descubre menos, así que aquí solo va contenido de apoyo). En escritorio caben tres sin deslizar. La fila es enfocable para moverla con el teclado.
@@ -198,7 +224,15 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
   - Las dos primeras cargan de inmediato y las demás al acercarse. Sin fotos, en producción la sección no aparece; en local dice "Portafolio [PENDIENTE]".
   - **Formato.** Las fotos se suben desde el panel (Barberos, Portafolio). El navegador las reduce a 1600 px como máximo, las guarda en JPEG (al volver a codificarlas se borran los metadatos, como la ubicación) y van al bucket `portfolio` con caché de un año. `next/image` las entrega en AVIF, o en WebP al navegador que no lo lea, del ancho que pide cada pantalla: una foto de WhatsApp de 83 KB llega en unos 11 KB. No se convierten a WebP antes de subirlas porque el panel las volvería a pasar a JPEG y `next/image` ya entrega el formato moderno.
   - **Las fotos de clientes nunca van al repo**, que es público: `fotos/` está en `.gitignore`. Son datos personales (Ley 1581): el dueño debe tener la autorización de cada cliente que aparece.
-- **Lo que falta no se ve en producción** (20/11/2026). La frase, la presentación y la foto del barbero, los trabajos, el mapa y el WhatsApp que el dueño todavía no entrega dicen [PENDIENTE] en local, en las pruebas y en las vistas previas de Vercel, y se omiten en producción (`SHOW_PENDING` en `apps/web/lib/business.ts`), porque el cliente veía una página a medio hacer. Sin foto, el barbero muestra sus iniciales. Los precios sin confirmar siguen diciendo [PENDIENTE] también en producción: el cliente debe saber que el valor falta antes de reservar.
+- **El barbero** (20/11/2026, pedido de Juan: el cuadro y la foto más grandes, en gris mientras se baja y con color al pasar el dedo; el cargo y el nombre encima de la foto). Es `BarberProfile` de `@possos/barbers/ui`.
+  - Con foto, un cuadro 4:5 a todo el ancho (hasta 672 px en escritorio). La foto llena el cuadro con el punto de interés en el 25 % de arriba, donde suele ir la cara. Abajo, encima de la foto, el cargo en mayúsculas espaciadas y en `--accent` (la línea amarilla de los videos) y el nombre en `title`. Debajo del cuadro, la presentación.
+  - Un degradado de `--surface` sube desde el borde de abajo hasta la mitad del cuadro, sólido en el primer 15 %, así el texto cumple 4,5:1 aunque la foto sea clara (el piso blanco de una piscina, por ejemplo) y la foto se funde con la presentación.
+  - El cuadro toma el alto de la foto (la imagen lleva ancho y alto, y `aspect-ratio` la recorta a 4:5), no de un contenedor con `aspect-ratio` y la foto en `fill`: así, en un celular, el contenedor quedó en 0 px y la foto no se veía (20/11/2026). Si un navegador no aplica `aspect-ratio`, la foto sale con su proporción original.
+  - **Gris que toma color** (`ColorReveal` de `@possos/ui`): la foto está en escala de grises. Con mouse, toma color mientras está encima. Con el dedo, toma color apenas el dedo toca la foto o pasa por encima, también si viene deslizando la página desde otra parte, y se queda así hasta que el cuadro sale de la pantalla; al volver, está otra vez en gris. Si el dedo baja la página por fuera de la foto, sigue en gris. Al tomar color, la foto se acerca un 5 % hacia la cara (`transform-origin` en el 25 % de arriba) y vuelve a su tamaño cuando regresa a gris, también en 500 ms (pedido de Juan, 20/11/2026); el cuadro recorta lo que crece. Con movimiento reducido no se acerca. La primera versión solo pintaba con un toque corto y dejaba en gris el dedo que deslizaba, y Juan no veía el efecto (20/11/2026). Escucha el dedo en todo el documento con oyentes pasivos y solo mientras la foto está en pantalla. El cambio dura 500 ms con *ease-out* (es la foto que se revela, no una transición de la interfaz). Con movimiento reducido es inmediato. El color no lleva información: quien no lo ve no pierde nada.
+  - **Cargo** (`barbers.job_title`, 40 caracteres como máximo): lo escribe el administrador en el panel ("Cargo", por ejemplo "CEO y barbero"). Vacío, no sale. Se muestra igual en los dos idiomas, como la presentación.
+  - Sin foto, la ficha compacta de siempre: iniciales en gris, cargo, nombre y presentación.
+  - El panel pide la foto vertical y con la cara en el tercio de arriba, y su vista previa redonda también se centra en ese tercio.
+- **Lo que falta no se ve en producción** (20/11/2026). La frase, la presentación y la foto del barbero, los trabajos, el mapa y el WhatsApp que el dueño todavía no entrega dicen [PENDIENTE] en local, en las pruebas y en las vistas previas de Vercel, y se omiten en producción (`SHOW_PENDING` en `apps/web/lib/business.ts`), porque el cliente veía una página a medio hacer. Sin foto, el barbero muestra sus iniciales, en gris (`--brand` sobre `--surface-2`). Se probaron en amarillo sobre `--accent-tint` y Juan prefirió quitarles el fondo amarillo (20/11/2026). Los precios sin confirmar siguen diciendo [PENDIENTE] también en producción: el cliente debe saber que el valor falta antes de reservar.
 - La página se renderiza en el servidor para búsquedas locales ([05](05-alcance.md)).
 - Cada servicio es una fila que se despliega en el sitio (acordeón con `<details>`; abrir una cierra la otra) con la descripción completa. No es hoja inferior (principio 6) y se abre sin JavaScript. Pedido de Juan el 19/11/2026: la descripción cortada no se leía y desde el inicio no se podía reservar un servicio concreto.
 - **Próximas horas** (pedido de Juan el 19/11/2026, para reservar más rápido): al abrir un servicio con un solo barbero aparecen hasta 6 horas libres de sus dos primeros días con horas, agrupadas por día ("Hoy · jue 20 nov", "Mañana · vie 21 nov" o "sáb 22 nov"; la fecha evita confundir "Mañana" con la franja de la mañana). Cada hora va completa ("3:00 p. m.") en una cuadrícula de 3 columnas de 48 px y es un enlace a "Confirmar": desde el inicio se reserva en 3 toques (abrir el servicio, la hora y "Reservar"). El lector de pantalla oye la hora y el día ("3:00 p. m., hoy, jue 20 nov"). Debajo, "Ver todas las horas" (botón secundario) abre el paso de horario de ese servicio sin pasar por el del barbero. Sin horas en la ventana: "No hay horas libres en los próximos días."
@@ -206,7 +240,7 @@ Todas se diseñan a 390 px de ancho. Los horarios y precios de los bocetos son e
 - Un servicio con varios barberos no muestra horas: "Reservar este servicio" lleva a elegir barbero.
 - **Grupos y adicionales** (pedido de Juan el 20/11/2026: los combos de Beunik repetían "Corte con…" en cada fila). Los servicios se separan en Corte, Corte a domicilio y Color de cabello:
   - Los servicios sin grupo van juntos en una tarjeta. Los que tienen el mismo `category` van en su propia tarjeta bajo un título pequeño ("Color de cabello"), así el nombre del grupo no se repite en cada servicio.
-  - Lo que antes eran combos ahora son **adicionales** dentro del servicio: "Agrega" con un chip por adicional (Barba +$15.000 · +60 min, Cejas +$5.000, Diseño +$5.000). Cada chip es una casilla nativa dentro de un `fieldset` (el lector anuncia "marcada"), de 48 px de alto, con ícono más o chulo: el color no es la única señal. Marcado se invierte (fondo blanco, texto negro) y no usa el amarillo, que en esta zona ya tiene la barra "Reservar" (principio 2 del color).
+  - Lo que antes eran combos ahora son **adicionales** dentro del servicio: "Agrega" con un chip por adicional (Barba +$15.000 · +60 min, Cejas +$5.000, Diseño +$5.000). Cada chip es una casilla nativa dentro de un `fieldset` (el lector anuncia "marcada"), de 48 px de alto, con ícono más o chulo: el color no es la única señal. Marcado lleva solo el contorno en `--accent` y el chulo en blanco (20/11/2026, pedido de Juan; antes se invertía a fondo blanco). No es un relleno, así que no compite con la barra "Reservar" (principio 2). Es el mismo chip del paso Servicio.
   - Se pueden combinar todos; cada uno suma su precio y sus minutos (decisión del 20/11/2026). "Total $45.000 · 2 h" cambia al instante y se anuncia completo (`role="status"`).
   - Marcar un chip vuelve a pedir el inicio con `?servicio=…&adicional=…` sin mover el scroll, porque las próximas horas dependen de la duración (la barba suma 1 h). La tarjeta vuelve abierta. Sin JavaScript, el botón "Ver horas con lo que agregaste" hace lo mismo.
   - Las horas rápidas, "Ver todas las horas", el resumen de "Confirmar", "Listo", Mis citas, la agenda y los avisos nombran la cita con sus adicionales: "Corte + Barba + Cejas". El total del resumen dice solo "Total".
@@ -282,7 +316,7 @@ Aparece si hay más de un servicio activo o si el único tiene adicionales. List
 
 ### Listo
 
-- Título "Tu cita quedó reservada" y el mismo resumen.
+- Título "Tu cita quedó reservada", con "reservada" subrayado a mano ([Marcas](#marcas)), y el mismo resumen. "Tu reserva quedó pendiente" no lleva marca: no hay nada que celebrar todavía.
 - "Te llega un WhatsApp para confirmar un día antes." (Solo si aceptó WhatsApp).
 - Botones secundarios: "Agregar al calendario" (.ics en iPhone, iPad y Mac; Google Calendar en Android y lo demás) y, si la app no está instalada, "Instalar la app" con la guía de iOS.
 
@@ -546,7 +580,7 @@ Pantallas del barbero y del administrador. Los avisos de éxito salen arriba (`t
 | Horario semanal | "Las horas que ven los clientes salen de aquí. Para el almuerzo, usa dos rangos. Las citas que ya existen no cambian." Por día: "Cerrado", "Agregar rango", "Igual que el [día anterior]". Errores junto al día: "Cada rango debe terminar después de empezar", "Dos rangos de este día se cruzan". Botón "Guardar horario"; después, "Guardaste el horario" |
 | Bloqueos | "Nuevo bloqueo", con la nota "Lo que se repite cada semana, como el almuerzo, va en el Horario semanal con dos rangos por día. Los bloqueos son para fechas puntuales: vacaciones, una diligencia o un festivo." ("Horario semanal" es un enlace). "Todo el día" va primero; sin marcar, cada fecha lleva su hora al lado: "Desde" con "Hora de inicio" y "Hasta" con "Hora de fin". Con fechas distintas y horas: "Con fechas distintas, el bloqueo va de corrido: empieza el primer día a la hora de inicio y termina el último día a la hora de fin. Para unas horas todos los días, usa el Horario semanal." (20/11/2026: el dueño probó el almuerzo como bloqueo "del 21 de noviembre a 2030, de 1 a 2" esperando que se repitiera cada día, y le salió de corrido; antes las dos fechas iban en una fila y las dos horas debajo, y el ejemplo del motivo decía "Almuerzo". Ahora dice "Vacaciones, diligencia..."). "Motivo" (ayuda "Opcional. Solo lo ve el personal."), "Bloquear". Con citas debajo: "Bloqueaste ese horario, pero hay 1 cita debajo. Muévelas o cancélalas:" y un enlace por cita; sin citas: "Bloqueaste ese horario. No había citas." "Próximos bloqueos" con "Borrar" ("No tienes bloqueos."). "Festivos": "Festivos de Colombia de los próximos meses. Bloquea los que no vas a atender." con "Bloquear" o "Bloqueado"; el motivo queda "Festivo: [nombre]" |
 | Servicios (administrador) | "Los clientes los ven en este orden. Un servicio sin precio dice [PENDIENTE]." Filas con duración, precio o [PENDIENTE] e "Inactivo"; "Subir" y "Bajar". Formulario: "Nombre", "Duración en minutos" ("En múltiplos de 5."), "Precio en pesos" ("Déjalo vacío si todavía no está definido: los clientes verán [PENDIENTE]."), "Descripción", "Activo" ("Si lo desactivas, los clientes ya no lo pueden reservar. Las citas que existen no cambian."), "Crear servicio" o "Guardar" |
-| Barberos (administrador) | Lista con "Activo" o "Inactivo" y "con cuenta" o "sin cuenta". Nuevo: "Nombre visible" y "Porcentaje para el barbero" ("Del valor de cada servicio. El resto es para la barbería."). Perfil: "Foto" ("Subir una foto" o "Cambiar la foto"), "Portafolio" ("Agregar una foto", "Quitar"), "Presentación", "WhatsApp", "Intervalo de las horas", "Servicios que hace", "Activo". Error de imagen: "No pudimos leer esa imagen. Usa una foto JPG o PNG." |
+| Barberos (administrador) | Lista con "Activo" o "Inactivo" y "con cuenta" o "sin cuenta". Nuevo: "Nombre visible" y "Porcentaje para el barbero" ("Del valor de cada servicio. El resto es para la barbería."). Perfil: "Foto" ("Sale grande en la página pública, en un cuadro vertical 4:5. Se ve mejor vertical y con la cara en el tercio de arriba."; "Subir una foto" o "Cambiar la foto"), "Portafolio" ("Agregar una foto", "Quitar"), "Nombre visible", "Cargo" ("Sale sobre la foto en la página pública, por ejemplo: CEO y barbero. Vacío, no sale."), "Presentación", "WhatsApp", "Intervalo de las horas", "Servicios que hace", "Activo". Error de imagen: "No pudimos leer esa imagen. Usa una foto JPG o PNG." |
 
 ### PWA y avisos (F8)
 

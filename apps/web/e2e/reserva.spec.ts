@@ -329,6 +329,10 @@ test("las secciones de abajo del inicio aparecen al bajar, una sola vez, y con m
   await expect(title).toHaveCSS("opacity", "1");
   await expect(social).toHaveCSS("opacity", "1");
   await expect(social).toHaveCSS("translate", "none");
+  // El trazo amarillo bajo el título termina de dibujarse 510 ms después (docs/11, "Marcas").
+  await expect
+    .poll(() => contact.evaluate((el) => el.getAnimations({ subtree: true }).length))
+    .toBe(0);
 
   // Una sola vez: al subir y volver a bajar ya no se anima.
   await page.evaluate(() => window.scrollTo(0, 0));

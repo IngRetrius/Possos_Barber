@@ -100,8 +100,10 @@ export function AddonPicker({
                   className={cn(
                     "inline-flex min-h-12 cursor-pointer items-center gap-1.5 rounded-pill border px-3.5 text-label transition-colors",
                     "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent",
+                    // Marcado: solo el contorno en amarillo (pedido de Juan, 20/11/2026). El
+                    // ícono cambia de más a chulo: el color no es la única señal.
                     on
-                      ? "border-fg bg-fg text-bg"
+                      ? "border-accent text-fg"
                       : "border-border-strong text-fg hover:border-fg-muted active:border-fg-muted",
                   )}
                 >
@@ -119,11 +121,7 @@ export function AddonPicker({
                     <Plus aria-hidden="true" strokeWidth={1.5} className="size-4 shrink-0" />
                   )}
                   <span>{addon.name}</span>
-                  <span
-                    className={cn("text-caption tabular-nums", on ? "text-bg" : "text-fg-muted")}
-                  >
-                    {extra(addon)}
-                  </span>
+                  <span className="text-caption text-fg-muted tabular-nums">{extra(addon)}</span>
                 </label>
               );
             })}

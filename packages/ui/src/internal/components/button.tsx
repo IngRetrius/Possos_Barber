@@ -14,9 +14,10 @@ const buttonVariants = cva(
     variants: {
       variant: {
         /** Amarillo. Una sola vez por zona: la acción que avanza. */
+        // Presionado baja un matiz (`--accent-pressed`): el amarillo con transparencia se veía oliva.
         // Deshabilitado no se ve amarillo apagado: pasa a gris, con texto que sigue legible.
         primary:
-          "bg-accent text-accent-fg active:bg-accent/85 disabled:bg-surface-2 disabled:text-fg-subtle disabled:opacity-100",
+          "bg-accent text-accent-fg hover:bg-accent-pressed active:bg-accent-pressed disabled:bg-surface-2 disabled:text-fg-subtle disabled:opacity-100",
         secondary: "border border-border-strong text-fg hover:bg-surface-2 active:bg-surface-2",
         ghost: "text-fg hover:bg-surface-2 active:bg-surface-2",
         danger:

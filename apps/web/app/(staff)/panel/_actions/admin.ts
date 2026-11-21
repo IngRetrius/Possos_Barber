@@ -198,6 +198,7 @@ export async function updateBarberAction(
   const id = text(form, "id");
   const valid = validateBarberProfile({
     displayName: text(form, "nombre"),
+    jobTitle: text(form, "cargo"),
     bio: text(form, "bio"),
     whatsappUrl: text(form, "whatsapp"),
     slotIntervalMin: text(form, "intervalo"),

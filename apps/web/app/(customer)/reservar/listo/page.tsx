@@ -9,7 +9,7 @@ import { AppointmentSummary } from "@possos/booking/ui";
 import { servicePriceLabel } from "@possos/catalog";
 import { listActiveServices } from "@possos/catalog/server";
 import { createClient } from "@possos/supabase/server";
-import { Button, Logo } from "@possos/ui";
+import { Button, Highlight, Logo } from "@possos/ui";
 import { addressLabel } from "../../../../lib/business";
 import { whatsappRemindersEnabled } from "../../../../lib/whatsapp";
 import { currentFormatters } from "../../../../lib/i18n";
@@ -61,7 +61,14 @@ export default async function DonePage({ searchParams }: PageProps<"/reservar/li
       </header>
       <main className="grid flex-1 content-start gap-6 px-gutter pt-2 pb-8">
         <div className="grid gap-2">
-          <h1 className="text-title">{pending ? t("done.pendingTitle") : t("done.title")}</h1>
+          <h1 className="text-title">
+            {pending
+              ? t("done.pendingTitle")
+              : // La palabra que celebra va subrayada a mano, como en los videos (docs/11, "Marcas").
+                t.rich("done.title", {
+                  mark: (chunks) => <Highlight delay={150}>{chunks}</Highlight>,
+                })}
+          </h1>
           {pending ? <p className="text-body text-warning">{t("approval")}</p> : null}
           {whatsappRemindersEnabled() && profile.whatsapp_opt_in && !pending ? (
             <p className="text-body text-fg-muted">{t("done.whatsapp")}</p>

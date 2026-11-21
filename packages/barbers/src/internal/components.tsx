@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { List, ListRow } from "@possos/ui";
+import { ColorReveal, List, ListRow } from "@possos/ui";
 import type { Barber, OpeningHoursGroup } from "../index";
 
 export interface BarberListProps {
@@ -49,40 +49,67 @@ export function initials(name: string): string {
   return picked.map((word) => word[0]!.toLocaleUpperCase()).join("");
 }
 
+/** Cargo en mayúsculas espaciadas y en amarillo, como la línea marcada de los videos. */
+const jobTitleClass = "text-label tracking-[0.06em] text-accent uppercase";
+
 /**
- * El barbero en la página pública: foto, nombre y presentación. Lo que el dueño todavía no
- * entrega dice [PENDIENTE], o se omite con `showPending={false}`. El portafolio va aparte, arriba
- * del inicio (`PortfolioStrip`).
+ * El barbero en la página pública (docs/11, "El barbero"). Con foto, un cuadro grande 4:5: la foto
+ * en gris que toma color al señalarla (`ColorReveal`), y abajo, encima de la foto, el cargo y el
+ * nombre. Sin foto, la ficha compacta con las iniciales. Lo que el dueño todavía no entrega dice
+ * [PENDIENTE], o se omite con `showPending={false}`. El portafolio va aparte (`PortfolioStrip`).
  */
 export function BarberProfile({ barber, photoUrl, showPending = true }: BarberProfileProps) {
   const t = useTranslations("barbers.profile");
   const name = barber.display_name;
-  return (
-    <article className="rounded-card border border-border bg-surface p-4">
-      <div className="flex items-center gap-4">
-        {photoUrl ? (
+  const bio = barber.bio || showPending ? (barber.bio ?? t("bioPending")) : null;
+
+  if (photoUrl) {
+    return (
+      <article className="overflow-hidden rounded-card border border-border bg-surface">
+        {/* El cuadro toma el alto de la foto, no de `aspect-ratio`: con `fill`, un navegador que no
+            le daba alto al contenedor dejaba la foto en 0 px (20/11/2026). */}
+        <ColorReveal className="relative overflow-hidden">
           <Image
             src={photoUrl}
             alt={t("photoAlt", { name })}
-            width={64}
-            height={64}
-            sizes="64px"
-            className="size-16 shrink-0 rounded-pill border border-border object-cover"
+            width={800}
+            height={1000}
+            sizes="(min-width: 768px) 672px, calc(100vw - 32px)"
+            // La cara suele ir en el tercio de arriba: así no se corta al recortar a 4:5.
+            className="block aspect-[4/5] h-auto w-full object-cover object-[50%_25%]"
           />
-        ) : (
+          {/* Degradado al color de la tarjeta: el texto cumple 4,5:1 sobre cualquier foto y la foto
+              se funde con la presentación. Baja 1 px de más para que no asome el borde de la foto. */}
           <div
-            className="flex size-16 shrink-0 items-center justify-center rounded-pill bg-surface-2 text-heading text-brand"
             aria-hidden="true"
-          >
-            {initials(name)}
+            className="absolute inset-x-0 -bottom-px h-1/2 bg-linear-to-t from-surface from-15% via-surface/80 via-45% to-transparent"
+          />
+          <div className="absolute inset-x-0 bottom-0 grid gap-1 p-4">
+            {barber.job_title ? <p className={jobTitleClass}>{barber.job_title}</p> : null}
+            <h3 className="text-title text-fg">{name}</h3>
           </div>
-        )}
+        </ColorReveal>
+        {bio ? <p className="p-4 text-body text-fg-muted">{bio}</p> : null}
+      </article>
+    );
+  }
+
+  return (
+    <article className="rounded-card border border-border bg-surface p-4">
+      <div className="flex items-center gap-4">
+        <div
+          className="flex size-16 shrink-0 items-center justify-center rounded-pill bg-surface-2 text-heading text-brand"
+          aria-hidden="true"
+        >
+          {initials(name)}
+        </div>
         <div className="grid min-w-0 gap-0.5">
-          <h3 className="text-label text-fg">{barber.display_name}</h3>
-          {barber.bio || showPending ? (
+          {barber.job_title ? <p className={jobTitleClass}>{barber.job_title}</p> : null}
+          <h3 className="text-label text-fg">{name}</h3>
+          {bio ? (
             <p className="text-caption text-fg-muted">
-              {barber.bio ?? t("bioPending")}
-              {photoUrl || !showPending ? null : <span className="block">{t("photoPending")}</span>}
+              {bio}
+              {showPending ? <span className="block">{t("photoPending")}</span> : null}
             </p>
           ) : null}
         </div>

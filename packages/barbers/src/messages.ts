@@ -30,6 +30,9 @@ const es = {
   },
   form: {
     name: "Nombre visible",
+    jobTitle: "Cargo",
+    jobTitleHint:
+      "Sale sobre la foto en la página pública, por ejemplo: CEO y barbero. Vacío, no sale.",
     bio: "Presentación",
     bioHint: "Una o dos frases para la página pública. Vacía, dice [PENDIENTE].",
     whatsapp: "WhatsApp",
@@ -48,6 +51,7 @@ const es = {
     errors: {
       nameRequired: "Escribe el nombre",
       nameTooLong: "Máximo {maxName} caracteres",
+      jobTitleTooLong: "Máximo {maxJobTitle} caracteres",
       bioTooLong: "Máximo {maxBio} caracteres",
       whatsappInvalid: "Escribe el celular de 10 dígitos o un enlace https://wa.me/...",
       intervalInvalid: "Elige un intervalo de la lista",
@@ -121,6 +125,9 @@ const en: typeof es = {
   },
   form: {
     name: "Display name",
+    jobTitle: "Role",
+    jobTitleHint:
+      "Shown over the photo on the public page, for example: CEO & barber. If empty, it doesn't show.",
     bio: "Introduction",
     bioHint: "One or two sentences for the public page. If empty, it says [PENDING].",
     whatsapp: "WhatsApp",
@@ -139,6 +146,7 @@ const en: typeof es = {
     errors: {
       nameRequired: "Enter the name",
       nameTooLong: "{maxName} characters at most",
+      jobTitleTooLong: "{maxJobTitle} characters at most",
       bioTooLong: "{maxBio} characters at most",
       whatsappInvalid: "Enter the 10-digit mobile number or a https://wa.me/... link",
       intervalInvalid: "Choose an interval from the list",

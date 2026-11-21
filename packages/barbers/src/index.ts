@@ -32,6 +32,7 @@ export {
 export {
   MAX_BARBER_NAME,
   MAX_BIO,
+  MAX_JOB_TITLE,
   normalizeWhatsappUrl,
   SLOT_INTERVALS,
   validateBarberProfile,

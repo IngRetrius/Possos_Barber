@@ -22,10 +22,13 @@ export const SHOW_PENDING = process.env.VERCEL_ENV !== "production";
 
 export const BUSINESS = {
   name: "Possos Barber",
-  /** Frase de presentación, en cada idioma (Juan, 20/11/2026). */
+  /**
+   * Frase de presentación, en cada idioma (Juan, 20/11/2026). Entre llaves, la palabra que va
+   * subrayada en amarillo, la misma convención y la misma palabra que en los videos ("MÁS VIRAL").
+   */
   tagline: {
-    es: "¡El barbero más viral de Girardot!",
-    en: "The most viral barber in Girardot!",
+    es: "¡El barbero {más viral} de Girardot!",
+    en: "The {most viral} barber in Girardot!",
   } as Record<Locale, string> | null,
   /** Dirección para mostrar, el .ics y los datos estructurados (dueño, 19/11/2026). */
   address: "Manzana 26 Casa 13, barrio Kennedy" as string | null,

@@ -193,6 +193,8 @@ const es = {
       withoutAccount: "sin cuenta",
       newTitle: "Nuevo barbero",
       photo: "Foto",
+      photoIntro:
+        "Sale grande en la página pública, en un cuadro vertical 4:5. Se ve mejor vertical y con la cara en el tercio de arriba.",
       photoAlt: "Foto de {name}",
       noPhoto: "Sin foto",
       changePhoto: "Cambiar la foto",
@@ -450,6 +452,8 @@ const en: typeof es = {
       withoutAccount: "without an account",
       newTitle: "New barber",
       photo: "Photo",
+      photoIntro:
+        "It shows large on the public page, in a 4:5 portrait frame. It looks best vertical, with the face in the top third.",
       photoAlt: "Photo of {name}",
       noPhoto: "No photo",
       changePhoto: "Change the photo",

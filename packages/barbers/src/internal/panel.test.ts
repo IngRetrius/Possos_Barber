@@ -44,9 +44,25 @@ describe("perfil del barbero", () => {
     expect(normalizeWhatsappUrl("https://ejemplo.com")).toBeUndefined();
   });
 
+  it("el cargo es opcional, se recorta y tiene un máximo", () => {
+    const base = {
+      displayName: "Santiago Possos",
+      bio: "",
+      whatsappUrl: "",
+      slotIntervalMin: "60",
+    };
+    const ok = validateBarberProfile({ ...base, jobTitle: "  CEO y barbero " });
+    expect(ok.ok && ok.data.job_title).toBe("CEO y barbero");
+    const empty = validateBarberProfile({ ...base, jobTitle: "   " });
+    expect(empty.ok && empty.data.job_title).toBeNull();
+    const long = validateBarberProfile({ ...base, jobTitle: "a".repeat(41) });
+    expect(!long.ok && long.errors.jobTitle).toBe("jobTitleTooLong");
+  });
+
   it("valida nombre e intervalo", () => {
     const result = validateBarberProfile({
       displayName: " ",
+      jobTitle: "",
       bio: "",
       whatsappUrl: "",
       slotIntervalMin: "7",

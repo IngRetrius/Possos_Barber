@@ -14,6 +14,7 @@ import {
 import {
   MAX_BARBER_NAME,
   MAX_BIO,
+  MAX_JOB_TITLE,
   SLOT_INTERVALS,
   type BarberProfileError,
   type BarberProfileErrors,
@@ -33,6 +34,7 @@ export interface BarberFormProps {
   initial: {
     id: string;
     display_name: string;
+    job_title: string | null;
     bio: string | null;
     whatsapp_url: string | null;
     slot_interval_min: number;
@@ -45,7 +47,7 @@ export interface BarberFormProps {
 }
 
 /**
- * Perfil del barbero para el administrador (docs/11, "Más"): nombre, presentación, enlace de
+ * Perfil del barbero para el administrador (docs/11, "Más"): nombre, cargo, presentación, enlace de
  * WhatsApp, intervalo de las horas, servicios que hace y si está activo.
  */
 export function BarberForm({ action, initial, services, children }: BarberFormProps) {
@@ -53,7 +55,13 @@ export function BarberForm({ action, initial, services, children }: BarberFormPr
   const [state, formAction, pending] = useActionState(action, {});
   const errors = state.fieldErrors ?? {};
   const error = (key: BarberProfileError | undefined) =>
-    key ? t(`errors.${key}`, { maxName: MAX_BARBER_NAME, maxBio: MAX_BIO }) : undefined;
+    key
+      ? t(`errors.${key}`, {
+          maxName: MAX_BARBER_NAME,
+          maxJobTitle: MAX_JOB_TITLE,
+          maxBio: MAX_BIO,
+        })
+      : undefined;
   return (
     <form
       action={formAction}
@@ -71,6 +79,14 @@ export function BarberForm({ action, initial, services, children }: BarberFormPr
             maxLength={MAX_BARBER_NAME}
             autoComplete="off"
             required
+          />
+        </Field>
+        <Field label={t("jobTitle")} hint={t("jobTitleHint")} error={error(errors.jobTitle)}>
+          <Input
+            name="cargo"
+            defaultValue={initial.job_title ?? ""}
+            maxLength={MAX_JOB_TITLE}
+            autoComplete="organization-title"
           />
         </Field>
         <Field label={t("bio")} hint={t("bioHint")} error={error(errors.bio)}>

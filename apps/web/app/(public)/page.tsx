@@ -25,7 +25,15 @@ import { getMyProfile } from "@possos/customers/server";
 import { createClient } from "@possos/supabase/server";
 import { parseLocale } from "@possos/config/constants";
 import type { Enums } from "@possos/supabase";
-import { Button, formatters, LogoIntro, ScrollReveal, StatusBadge } from "@possos/ui";
+import {
+  Button,
+  formatters,
+  Highlight,
+  LogoIntro,
+  ScrollReveal,
+  SectionTitle,
+  StatusBadge,
+} from "@possos/ui";
 import { BUSINESS, mapsEmbedUrl, mapsUrl, SHOW_PENDING, siteUrl } from "../../lib/business";
 import { loadBookingFlow, loadServiceEntries, timeStepHref } from "../../lib/booking-flow";
 import { MY_APPOINTMENTS_PATH, PROFILE_PATH, STAFF_HOME } from "../../lib/session";
@@ -63,7 +71,15 @@ const ISO_DAY = [
   "Sunday",
 ] as const;
 
-const linkClass = "text-fg underline underline-offset-4 hover:text-fg-muted";
+/** Enlaces del inicio: subrayado en un matiz apagado del amarillo, que se enciende al pasar. */
+const linkClass =
+  "text-fg underline decoration-accent-muted underline-offset-4 hover:decoration-accent";
+
+/** "¡El barbero {más viral} de Girardot!" → lo de antes, la palabra marcada y lo de después. */
+function splitMark(text: string): [string, string | null, string] {
+  const match = /^(.*?)\{(.+?)\}(.*)$/s.exec(text);
+  return match ? [match[1]!, match[2]!, match[3]!] : [text, null, ""];
+}
 
 /**
  * Inicio público: marca, servicios, barbero, ubicación, horario y contacto, renderizado en el
@@ -134,6 +150,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
   const map = mapsEmbedUrl(f.locale);
   const mapLink = mapsUrl();
   const tagline = BUSINESS.tagline?.[f.locale] ?? (SHOW_PENDING ? t("taglinePending") : null);
+  const taglineParts = tagline ? splitMark(tagline) : (["", null, ""] as const);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -221,7 +238,10 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             </h1>
             {tagline ? (
               <p className="animate-rise text-body text-fg-muted [animation-delay:140ms]">
-                {tagline}
+                {taglineParts[0]}
+                {/* El subrayado se dibuja cuando la frase termina de subir (140 + 200 ms). */}
+                {taglineParts[1] ? <Highlight delay={340}>{taglineParts[1]}</Highlight> : null}
+                {taglineParts[2]}
               </p>
             ) : null}
           </div>
@@ -236,7 +256,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         {upcoming ? (
           <Link
             href={MY_APPOINTMENTS_ROUTES.detail(upcoming.id)}
-            className="grid gap-2 rounded-card border border-border bg-surface p-4 transition-colors hover:bg-surface-2 active:bg-surface-2"
+            // La tarjeta más importante para quien ya reservó: tinte amarillo con el trazo neón a la
+            // izquierda (docs/11, "Color"). Al pasar o presionar se enciende el borde.
+            className="grid gap-2 rounded-card border border-l-3 border-accent-muted border-l-accent bg-accent-tint p-4 transition-colors hover:border-accent active:border-accent"
           >
             <span className="text-caption text-fg-muted">{t("upcoming.label")}</span>
             <span className="text-heading tabular-nums">
@@ -248,16 +270,16 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                 {APPOINTMENT_STATUS_DISPLAY[f.locale][upcoming.status].label}
               </StatusBadge>
             </span>
-            <span className="text-label underline underline-offset-4">{t("upcoming.open")}</span>
+            <span className="text-label underline decoration-accent underline-offset-4">
+              {t("upcoming.open")}
+            </span>
           </Link>
         ) : null}
 
         {works.length > 0 || SHOW_PENDING ? (
           <section aria-labelledby="trabajos" data-reveal="" className="grid gap-3">
             <div className="flex items-baseline justify-between gap-3">
-              <h2 id="trabajos" className="text-heading">
-                {t("works")}
-              </h2>
+              <SectionTitle id="trabajos">{t("works")}</SectionTitle>
               <a
                 href={BUSINESS.instagram.url}
                 className={`text-label ${linkClass}`}
@@ -280,9 +302,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           data-reveal=""
           className="grid scroll-mt-4 gap-3"
         >
-          <h2 id="servicios" tabIndex={-1} data-scroll-focus className="text-heading">
+          <SectionTitle id="servicios" tabIndex={-1} data-scroll-focus>
             {t("services")}
-          </h2>
+          </SectionTitle>
           {flow.services.length ? (
             <ServiceList
               services={flow.services}
@@ -305,9 +327,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         </section>
 
         <section aria-labelledby="barbero" data-reveal="" className="grid gap-3">
-          <h2 id="barbero" className="text-heading">
+          <SectionTitle id="barbero">
             {barberList.length > 1 ? t("barbers") : t("barber")}
-          </h2>
+          </SectionTitle>
           {barberList.length ? (
             barberList.map((barber) => (
               <BarberProfile
@@ -325,9 +347,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         </section>
 
         <section aria-labelledby="ubicacion" data-reveal="" className="grid gap-3">
-          <h2 id="ubicacion" className="text-heading">
-            {t("location")}
-          </h2>
+          <SectionTitle id="ubicacion">{t("location")}</SectionTitle>
           <p className="text-body">
             {BUSINESS.address ?? t("addressPending")}
             {BUSINESS.addressReference ? (
@@ -356,16 +376,12 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         </section>
 
         <section aria-labelledby="horario" data-reveal="" className="grid gap-3">
-          <h2 id="horario" className="text-heading">
-            {t("hours")}
-          </h2>
+          <SectionTitle id="horario">{t("hours")}</SectionTitle>
           <OpeningHoursList groups={groups} className="text-body text-fg-muted" />
         </section>
 
         <section aria-labelledby="contacto" data-reveal="" className="grid gap-3">
-          <h2 id="contacto" className="text-heading">
-            {t("contact")}
-          </h2>
+          <SectionTitle id="contacto">{t("contact")}</SectionTitle>
           <SocialLinks
             label={t("social")}
             links={[
